@@ -1,0 +1,7 @@
+# built binaries
+/graffiti
+/graffiti.exe
+/dist/
+*.test
+# MCP scratch dir (already present in the working tree)
+/.playwright-mcp/

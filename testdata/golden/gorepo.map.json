@@ -1,0 +1,176 @@
+{
+  "communities": [],
+  "edges": [
+    {
+      "from": "greet-greet-go:greet-greet-go",
+      "to": "greet-greet-go:hello",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greet-greet-go:greet-greet-go",
+      "to": "greet-greet-go:upper",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greet-greet-go:greet-greet-go",
+      "to": "module-strings:strings",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greet-greet-go:hello",
+      "to": "greet-greet-go:upper",
+      "relation": "calls",
+      "confidence": "INFERRED"
+    },
+    {
+      "from": "greet-greet-go:upper",
+      "to": "module-strings:strings",
+      "relation": "calls",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greet-greet-helper-go:formatter-format",
+      "to": "greet-greet-go:hello",
+      "relation": "calls",
+      "confidence": "INFERRED"
+    },
+    {
+      "from": "greet-greet-helper-go:greet-greet-helper-go",
+      "to": "greet-greet-helper-go:formatter",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greet-greet-helper-go:greet-greet-helper-go",
+      "to": "greet-greet-helper-go:formatter-format",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "main-go:main",
+      "to": "module-example-com-gorepo-greet:greet",
+      "relation": "calls",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "main-go:main",
+      "to": "module-fmt:fmt",
+      "relation": "calls",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "main-go:main-go",
+      "to": "main-go:main",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "main-go:main-go",
+      "to": "module-example-com-gorepo-greet:greet",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "main-go:main-go",
+      "to": "module-fmt:fmt",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    }
+  ],
+  "generated_at": "2026-06-14T00:00:00Z",
+  "nodes": [
+    {
+      "id": "greet-greet-go:greet-greet-go",
+      "label": "greet/greet.go",
+      "kind": "file",
+      "file": "greet/greet.go",
+      "line": 1,
+      "community": -1
+    },
+    {
+      "id": "greet-greet-go:hello",
+      "label": "Hello",
+      "kind": "function",
+      "file": "greet/greet.go",
+      "line": 5,
+      "community": -1
+    },
+    {
+      "id": "greet-greet-go:upper",
+      "label": "upper",
+      "kind": "function",
+      "file": "greet/greet.go",
+      "line": 9,
+      "community": -1
+    },
+    {
+      "id": "greet-greet-helper-go:formatter",
+      "label": "Formatter",
+      "kind": "class",
+      "file": "greet/greet_helper.go",
+      "line": 3,
+      "community": -1
+    },
+    {
+      "id": "greet-greet-helper-go:formatter-format",
+      "label": "Formatter.Format",
+      "kind": "method",
+      "file": "greet/greet_helper.go",
+      "line": 7,
+      "community": -1
+    },
+    {
+      "id": "greet-greet-helper-go:greet-greet-helper-go",
+      "label": "greet/greet_helper.go",
+      "kind": "file",
+      "file": "greet/greet_helper.go",
+      "line": 1,
+      "community": -1
+    },
+    {
+      "id": "main-go:main",
+      "label": "main",
+      "kind": "function",
+      "file": "main.go",
+      "line": 9,
+      "community": -1
+    },
+    {
+      "id": "main-go:main-go",
+      "label": "main.go",
+      "kind": "file",
+      "file": "main.go",
+      "line": 1,
+      "community": -1
+    },
+    {
+      "id": "module-example-com-gorepo-greet:greet",
+      "label": "greet",
+      "kind": "module",
+      "file": "main.go",
+      "line": 6,
+      "community": -1
+    },
+    {
+      "id": "module-fmt:fmt",
+      "label": "fmt",
+      "kind": "module",
+      "file": "main.go",
+      "line": 4,
+      "community": -1
+    },
+    {
+      "id": "module-strings:strings",
+      "label": "strings",
+      "kind": "module",
+      "file": "greet/greet.go",
+      "line": 3,
+      "community": -1
+    }
+  ],
+  "root": "001",
+  "version": "1"
+}

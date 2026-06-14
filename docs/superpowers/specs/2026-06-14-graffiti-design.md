@@ -117,10 +117,50 @@ No inference call is made by graffiti. The Claude Code model reasons over the re
 
 ## 8. Visual artifact (`map.html`)
 
-- **Self-contained**: all JS/CSS/data inlined via `embed.FS`; opens from `file://` offline, no CDN, CSP-safe.
-- **Default view = readable architecture map**: communities rendered as labeled boxes; inter-community edges drawn as call-flow; intra-community detail hidden until drill-in.
-- **Semantic zoom**: community → file → symbol. Large graphs render at community level first and drill in on click — scales past 5,000 nodes by clustering, never by collapsing into an unreadable blob.
-- HTML/JS emitters escape all interpolated content (XSS-safe self-contained file).
+The default artifact is a **readable architecture map — a "city map" of the codebase ("Districts")**, not a force-directed hairball. A vibe coder should be able to *name what the program does* before touching a control: the screen reads like a subway/city map of labeled neighborhoods, not a network of dots.
+
+### 8.1 Self-contained, offline, CSP-safe
+- All JS/CSS/data inlined via `embed.FS` into **one** `map.html`; opens from `file://` offline with **no CDN, no external `<link>`/`<script src>`**.
+- **Zero third-party JS.** The only "library" is our own ~25–30KB hand-written vanilla-ES renderer (no modules, no `eval`, no `new Function`), embedded from `render/viewer/`.
+- Data ships as a `<script type="application/json" id="graffiti-data">` island, read via `getElementById` + `JSON.parse` (never `eval`, never a JS literal). The `<` and closing-`</script>` sequences are escaped.
+- A **strict `sha256` meta CSP** is emitted by the binary at write time (`default-src 'none'; script-src 'sha256-…'; style-src 'sha256-…'; img-src data:`). System font stack only (no font blob).
+- HTML/JS emitters escape all interpolated labels/paths (XSS-safe self-contained file, per §5/§6).
+
+### 8.2 Rendering & layout — Canvas2D, layout baked in Go
+- **Rendering tech: a single full-window Canvas2D layer** (HiDPI via `devicePixelRatio`). Not SVG (collapses around 10–20k interactive elements on weak hardware), not WebGL for v1 (glyph atlas, picking buffer, context-loss, and shader strings fight byte-determinism and CSP cleanliness; revisit only above ~150k nodes). SVG is reserved for the rail, tooltips, search, and the accessibility mirror.
+- **Layout is precomputed in Go and baked as integer coordinates** into the data island — the only way to satisfy the §14 byte-identical guarantee (a browser force simulation is seed/timing/float dependent and can never be byte-stable; it also reintroduces settling-jitter hairball). The browser does **no layout and no physics** — only camera transform, viewport cull, batched paint, and analytic hit-test.
+- The Go layout pipeline is hierarchical and deterministic (seeded, sorted, integer-quantized): a **squarified treemap** packs the 10–40 community boxes (no top-tier force in v1); **file-shelf** layout lays files out inside an opened district; a bounded fixed-seed pass places symbols. Inter-community edges are **aggregated into one bundle per ordered `(A→B)` pair** and routed as orthogonal/elbow polylines in the gutters (transit-map look). Bundle control points and community hulls are baked in Go.
+- Renderer rules (measured): **batch primitives by color** into single paths (per-node fill is ~6× slower); **labels are the cost center**, so cap them at ~300–500/frame with hide-on-collision and none below a pixel-size threshold; redraw only on camera change (`requestAnimationFrame` + dirty flag); cache the static district layer to an offscreen canvas. The **pick index** (uniform grid/quadtree) is rebuilt in-JS on load from the baked coords (smaller file, stays deterministic).
+
+### 8.3 Default view
+On open (already framed, no spinner, no settling), the screen shows **8–40 rounded, tinted, named district boxes** tiled like neighborhoods, on a **light theme** (deterministic and doc/PR-embeddable). Each box shows its human label (e.g. *Auth & Sessions*, *HTTP Routing*, *Parser*), a kind hint, and a count ("31 things"). **Box area** encodes subsystem size; **border weight** encodes centrality. A small number (typically 6–15) of **thick labeled flow-arrows** connect districts, arrow thickness = bundled edge count ("142 calls"). A few **god nodes** appear as starred **landmark pins** with a halo on their district; **surprising cross-community links** are dashed, brightly-tinted gutter arcs. No symbol-level dots at this tier. A left rail holds: search, a **Start here** list of the 3 suggested questions, a **Landmarks** (god-node) list, a **Surprising links** toggle, kind/confidence filters, and a legend. The top bar reinforces the `0 API calls · $0` promise.
+
+**District names** come from a deterministic heuristic in the cluster/analyze stage (§5): the **dominant source directory** of the community's members (e.g. `internal/auth` → "Auth"), falling back to the **most-central member's label** when the directory is generic/root. The metaphor is only as good as the names, so this heuristic is part of v1 and is covered by the determinism test.
+
+### 8.4 Semantic zoom (community → file → symbol)
+Three tiers, driven by wheel/pinch zoom and click-to-drill (Esc / breadcrumb to back out):
+- **Tier 1 — Districts (default):** named community boxes + bundled labeled flows + ~7 god-node pins (rest in the Landmarks list) + dashed surprising-link arcs. Visible primitives are `O(communities)` regardless of total node count, so the first frame is never a mesh.
+- **Tier 2 — District interior:** the opened district shows its files as shelves with top symbols; siblings dim; edges to siblings appear as labeled boundary stubs. A district exceeding ~1500 visible cells sub-shelves and lazily paints only on-screen shelves.
+- **Tier 3 — Symbol:** an individual symbol with `file:line`, kind icon, and its direct callers/callees (edges colored by relation); everything else desaturates for focus.
+
+Click a bundled arrow to list the real underlying edges (true endpoints + true count — bundling never invents a route). Click a Start-here question or a Landmark/surprising-link chip to fly the camera and highlight the matching subgraph, closing the loop with `graffiti query`.
+
+### 8.5 Encoding god nodes, surprises, and confidence
+- **God nodes** (high-degree hubs from `analyze`): starred halo pins, capped at ~7 on the map; the rest in the Landmarks list with **degree in words** ("touched by 47 things — change carefully").
+- **Surprising connections** (cross-community edges): dashed brightly-tinted arcs + an isolate toggle.
+- **Confidence** (line style + plain-English legend): **EXTRACTED** = solid ("definite"); **INFERRED** = thin ("inferred"); **AMBIGUOUS** = dashed + muted + "?" ("guessed — verify"). **Relation** is a fixed, colorblind-safe hue per type. The assistant's uncertainty is always visible, never hidden (honesty-first, per §16.2's under-link policy).
+
+### 8.6 Scale: cluster, never collapse
+Readability and performance at 10k+ nodes come from the same move: **always aggregate by meaning and only paint the current tier** — the inverse of collapsing above ~5,000. The default frame paints ~10–60 district boxes + ~30 bundled arrows + ~7 pins — trivial to draw and legible because a human reads named districts, not 10k dots. Viewport culling + LOD make off-screen and sub-pixel detail free; heavy repaints split across `requestAnimationFrame` with a low-detail proxy so the tab never freezes. **File weight, not render speed, is the real wall** (no `file://` transport gzip): the data island uses a **compact columnar encoding** (interned string table, integer coords, flat integer edge arrays, sorted keys) — ~1.3 MB at 10k nodes versus ~4.6 MB naive. v1 targets `map.html` < 1.5 MB at 10k. Above ~50k nodes the deepest symbol tier renders on-demand per visible district (deferred).
+
+### 8.7 Accessibility
+Canvas has no accessibility tree, so the binary also emits a **hidden, ordered DOM mirror** (districts → files → symbols) so screen readers and browser find-in-page work. Ships in **v1**.
+
+### 8.8 Determinism
+Same graph → **byte-identical `map.html` modulo the single `generated_at` timestamp**. Guaranteed by: layout baked in Go, integer-quantized coordinates, JSON keys and arrays sorted, and CSP hashes computed as pure functions of the (deterministic) inlined content (§14).
+
+### 8.9 Workspace extension (§16.7)
+The renderer is authored as a reusable module with an alias-ready coordinate format. The workspace **lanes** view (a tinted, labeled column per project, each lane this same community-box map, with cross-project links as bundled counted gutter connectors and a workspace-overview zoom tier) drops in as a **pure additive layer** — no second renderer and no data-format change.
 
 ## 9. Claude Code integration (`graffiti init`)
 

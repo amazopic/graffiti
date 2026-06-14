@@ -93,6 +93,10 @@ type Document struct {
 	Nodes       []Node      `json:"nodes"`
 	Edges       []Edge      `json:"edges"`
 	Communities []Community `json:"communities"`
+
+	// nodeHighWaterMark tracks the maximum node count ever committed via Merge,
+	// enabling the anti-shrink guard to detect out-of-band pruning.
+	nodeHighWaterMark int
 }
 
 // NewDocument returns an empty Document with non-nil slices and the current schema version.

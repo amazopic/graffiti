@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -29,5 +30,17 @@ func TestRun_UnknownCommand_Errors(t *testing.T) {
 	}
 }
 
-// Keep os import referenced even before Task 13 adds the build E2E test.
-var _ = os.Args
+func TestRun_BuildPrintsSuccessLine(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n\nfunc main() {}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "build", dir}, &out, &errOut)
+	if code != 0 {
+		t.Fatalf("exit code = %d (stderr=%q)", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), "Done. 0 API calls, $0.") {
+		t.Fatalf("missing success line, got %q", out.String())
+	}
+}

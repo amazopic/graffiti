@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"time"
+
+	"github.com/evgeniy-achin/graffiti/internal/app"
 )
 
 func main() {
@@ -47,8 +50,14 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, "  build <path>   build the map for <path> (default .)")
 }
 
-// runBuild is a stub so the CLI compiles; Task 13 Step 5 replaces this body verbatim.
 func runBuild(root string, stdout, stderr io.Writer) int {
-	fmt.Fprintln(stderr, "graffiti: build not yet wired")
-	return 1
+	generatedAt := time.Now().UTC().Format(time.RFC3339)
+	stats, err := app.Build(root, generatedAt)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: build failed: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "✓ Done. 0 API calls, $0.  %d files → %d nodes, %d edges, %d communities.\n",
+		stats.Files, stats.Nodes, stats.Edges, stats.Communities)
+	return 0
 }

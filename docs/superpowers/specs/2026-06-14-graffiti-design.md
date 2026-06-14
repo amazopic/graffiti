@@ -173,7 +173,7 @@ The renderer is authored as a reusable module with an alias-ready coordinate for
 ## 10. Tech stack & distribution
 
 - **Language:** Go 1.26.
-- **Parsing:** tree-sitter grammars compiled to **WASM**, executed via **wazero** (pure-Go WASM runtime). No CGO → trivial static cross-compilation. Grammars embedded via `embed.FS`.
+- **Parsing (ratified 2026-06-14):** the **pure-Go tree-sitter runtime `github.com/odvcencio/gotreesitter`** (a CGO-free Go reimplementation with embedded grammars), behind graffiti's own swappable `parse.Parser` interface. A feasibility spike found no maintained way to load tree-sitter grammar `.wasm` for the 6 target languages today, so the original "tree-sitter→WASM via wazero" intent is **superseded** as the primary path. gotreesitter satisfies every hard constraint (pure-Go, no CGO, single static cross-compilable binary, offline, deterministic). Because the backend sits behind `parse.Parser`, a **`wazero` + tree-sitter-WASM backend remains the documented fallback** for any single language whose pure-Go grammar fidelity proves inadequate. The library is young/AI-generated, so: pin & vendor the version, and validate parse-tree fidelity per language against golden fixtures before trusting it (see §14).
 - **Graph:** a small custom directed adjacency model in `internal/graph` (no heavy dependency, keeps the binary lean and the data model fully under our control); Louvain implemented in-package.
 - **Viewer assets:** embedded via `embed.FS`.
 - **MCP:** Go MCP SDK over stdio.

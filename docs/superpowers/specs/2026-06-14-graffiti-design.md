@@ -43,6 +43,7 @@ These three reinforce one moat: a **deterministic, local, zero-cost extraction c
 - A **merged** cross-repo "global" graph / second materialized store (the workspace in §16 is a computed overlay, not a merge); external databases (Neo4j/FalkorDB/Postgres), PR triage, HTTP MCP server with auth.
 - Obsidian vault / wiki / SVG / GraphML / Canvas exports.
 - Fuzzy/LLM entity dedup; README translations.
+- **3D graph rendering** — considered and rejected for v1/default: it worsens legibility (occlusion, depth ambiguity), breaks the baked-deterministic Canvas2D layout (§8/§14), and blows the offline single-file / CSP / <1.5 MB budget. A fenced, optional "showcase" 3D view may be revisited later as a marketing artifact — never the default.
 
 ## 5. Architecture
 

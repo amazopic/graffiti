@@ -1,5 +1,35 @@
 {
-  "communities": [],
+  "communities": [
+    {
+      "id": 0,
+      "label": "Greet",
+      "members": [
+        "greet-greet-go:greet-greet-go",
+        "greet-greet-go:hello",
+        "greet-greet-go:upper",
+        "module-strings:strings"
+      ]
+    },
+    {
+      "id": 1,
+      "label": "Greet",
+      "members": [
+        "greet-greet-helper-go:formatter",
+        "greet-greet-helper-go:formatter-format",
+        "greet-greet-helper-go:greet-greet-helper-go"
+      ]
+    },
+    {
+      "id": 2,
+      "label": "main",
+      "members": [
+        "main-go:main",
+        "main-go:main-go",
+        "module-example-com-gorepo-greet:greet",
+        "module-fmt:fmt"
+      ]
+    }
+  ],
   "edges": [
     {
       "from": "greet-greet-go:greet-greet-go",
@@ -88,7 +118,7 @@
       "kind": "file",
       "file": "greet/greet.go",
       "line": 1,
-      "community": -1
+      "community": 0
     },
     {
       "id": "greet-greet-go:hello",
@@ -96,7 +126,7 @@
       "kind": "function",
       "file": "greet/greet.go",
       "line": 5,
-      "community": -1
+      "community": 0
     },
     {
       "id": "greet-greet-go:upper",
@@ -104,7 +134,7 @@
       "kind": "function",
       "file": "greet/greet.go",
       "line": 9,
-      "community": -1
+      "community": 0
     },
     {
       "id": "greet-greet-helper-go:formatter",
@@ -112,7 +142,7 @@
       "kind": "class",
       "file": "greet/greet_helper.go",
       "line": 3,
-      "community": -1
+      "community": 1
     },
     {
       "id": "greet-greet-helper-go:formatter-format",
@@ -120,7 +150,7 @@
       "kind": "method",
       "file": "greet/greet_helper.go",
       "line": 7,
-      "community": -1
+      "community": 1
     },
     {
       "id": "greet-greet-helper-go:greet-greet-helper-go",
@@ -128,7 +158,7 @@
       "kind": "file",
       "file": "greet/greet_helper.go",
       "line": 1,
-      "community": -1
+      "community": 1
     },
     {
       "id": "main-go:main",
@@ -136,7 +166,7 @@
       "kind": "function",
       "file": "main.go",
       "line": 9,
-      "community": -1
+      "community": 2
     },
     {
       "id": "main-go:main-go",
@@ -144,7 +174,7 @@
       "kind": "file",
       "file": "main.go",
       "line": 1,
-      "community": -1
+      "community": 2
     },
     {
       "id": "module-example-com-gorepo-greet:greet",
@@ -152,7 +182,7 @@
       "kind": "module",
       "file": "main.go",
       "line": 6,
-      "community": -1
+      "community": 2
     },
     {
       "id": "module-fmt:fmt",
@@ -160,7 +190,7 @@
       "kind": "module",
       "file": "main.go",
       "line": 4,
-      "community": -1
+      "community": 2
     },
     {
       "id": "module-strings:strings",
@@ -168,7 +198,7 @@
       "kind": "module",
       "file": "greet/greet.go",
       "line": 3,
-      "community": -1
+      "community": 0
     }
   ],
   "root": "001",

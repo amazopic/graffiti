@@ -6,8 +6,10 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/evgeniy-achin/graffiti/internal/analyze"
 	"github.com/evgeniy-achin/graffiti/internal/build"
 	"github.com/evgeniy-achin/graffiti/internal/cache"
+	"github.com/evgeniy-achin/graffiti/internal/cluster"
 	"github.com/evgeniy-achin/graffiti/internal/graph"
 	"github.com/evgeniy-achin/graffiti/internal/parse"
 	"github.com/evgeniy-achin/graffiti/internal/render"
@@ -20,7 +22,8 @@ type Stats struct {
 	Nodes       int
 	Edges       int
 	Communities int
-	HasDocNode  bool // whether a markdown doc node was emitted
+	HasDocNode  bool     // whether a markdown doc node was emitted
+	Questions   []string // the 3 suggested questions (spec §11), deterministic
 }
 
 // Build runs the full pipeline against root, stamping generatedAt into the
@@ -77,7 +80,16 @@ func Build(root, generatedAt string) (Stats, error) {
 		return stats, err
 	}
 
+	// Plan 2: cluster, name communities, analyze — all deterministic, no I/O above render.
+	cluster.Cluster(doc)
+	deg := analyze.Degrees(doc)
+	doc.Communities = cluster.NameCommunities(doc, deg)
+	an := analyze.Analyze(doc, deg)
+
 	if err := render.WriteMapJSON(doc, absRoot); err != nil {
+		return stats, err
+	}
+	if err := render.WriteMapMD(doc, an, absRoot); err != nil {
 		return stats, err
 	}
 	if err := c.Flush(); err != nil {
@@ -87,6 +99,7 @@ func Build(root, generatedAt string) (Stats, error) {
 	stats.Nodes = len(doc.Nodes)
 	stats.Edges = len(doc.Edges)
 	stats.Communities = len(doc.Communities)
+	stats.Questions = an.Questions
 	return stats, nil
 }
 

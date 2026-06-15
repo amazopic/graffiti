@@ -3,5 +3,7 @@
 /graffiti.exe
 /dist/
 *.test
+# graffiti's own build output (smoke runs / goldens are produced in temp dirs)
+/.graffiti/
 # MCP scratch dir (already present in the working tree)
 /.playwright-mcp/

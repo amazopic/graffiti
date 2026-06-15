@@ -4,6 +4,8 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/evgeniy-achin/graffiti/internal/graph"
 )
@@ -109,7 +111,10 @@ func dirLabel(dir string) string {
 	parts := strings.FieldsFunc(base, func(r rune) bool { return r == '-' || r == '_' })
 	for i, p := range parts {
 		if p != "" {
-			parts[i] = strings.ToUpper(p[:1]) + p[1:]
+			// Title-case the first rune (not the first byte) so non-ASCII base
+			// segments (e.g. "über", "数据") produce valid-UTF-8 labels.
+			r, sz := utf8.DecodeRuneInString(p)
+			parts[i] = string(unicode.ToUpper(r)) + p[sz:]
 		}
 	}
 	if len(parts) == 0 {

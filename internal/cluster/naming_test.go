@@ -2,6 +2,7 @@ package cluster
 
 import (
 	"testing"
+	"unicode/utf8"
 
 	"github.com/evgeniy-achin/graffiti/internal/graph"
 )
@@ -53,6 +54,26 @@ func TestNameCommunities_TitleCasesBaseSegment(t *testing.T) {
 	comms := NameCommunities(doc, map[string]int{"a": 1, "b": 1})
 	if comms[0].Label != "Http Router" {
 		t.Fatalf("label = %q, want %q", comms[0].Label, "Http Router")
+	}
+}
+
+func TestNameCommunities_NonASCIIDirectoryLabelIsValidUTF8(t *testing.T) {
+	doc := graph.NewDocument("repo")
+	// Both members live under a non-ASCII directory whose base segment starts
+	// with a multibyte rune ("über"), so it is the dominant-dir label source.
+	doc.Nodes = []graph.Node{
+		{ID: "a", Label: "X", File: "über/a.go", Community: 0},
+		{ID: "b", Label: "Y", File: "über/b.go", Community: 0},
+	}
+	comms := NameCommunities(doc, map[string]int{"a": 1, "b": 1})
+	if len(comms) != 1 {
+		t.Fatalf("communities = %d, want 1", len(comms))
+	}
+	if !utf8.ValidString(comms[0].Label) {
+		t.Fatalf("label %q is not valid UTF-8", comms[0].Label)
+	}
+	if comms[0].Label != "Über" {
+		t.Fatalf("label = %q, want %q (first rune upper-cased)", comms[0].Label, "Über")
 	}
 }
 

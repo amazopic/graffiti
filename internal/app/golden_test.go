@@ -1,6 +1,8 @@
 package app
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -302,6 +304,142 @@ func sortedStrings(s []string) bool {
 		}
 	}
 	return true
+}
+
+// buildFixtureMapHTML builds the fixture into a temp dir and returns the produced
+// map.html bytes (companion to buildFixtureIntoTemp / buildFixtureMapMD).
+func buildFixtureMapHTML(t *testing.T) []byte {
+	t.Helper()
+	src := filepath.Join("..", "..", "testdata", "fixtures", "gorepo")
+	dst := t.TempDir()
+	copyTree(t, src, dst)
+	if _, err := Build(dst, fixtureGenAt); err != nil {
+		t.Fatalf("Build fixture: %v", err)
+	}
+	b, err := os.ReadFile(filepath.Join(dst, ".graffiti", "map.html"))
+	if err != nil {
+		t.Fatalf("read produced map.html: %v", err)
+	}
+	return b
+}
+
+// stripGeneratedAt blanks the two generated_at-bearing carriers (HTML comment +
+// body data-attribute) so two builds compare byte-equal modulo the timestamp.
+// The root also appears in the <title> and top-bar span; strip those too so
+// builds into different temp dirs (different roots) still compare equal.
+var reHTMLComment = regexp.MustCompile(`<!-- generated_at: [^>]*-->`)
+var reHTMLDataAttr = regexp.MustCompile(`data-generated-at="[^"]*"`)
+var reHTMLTitle = regexp.MustCompile(`<title>Graffiti Districts — [^<]*</title>`)
+var reHTMLTopBar = regexp.MustCompile(`Districts — [^<]*</span>`)
+
+func stripHTML(b []byte) []byte {
+	b = reHTMLComment.ReplaceAll(b, []byte(`<!-- generated_at: X -->`))
+	b = reHTMLDataAttr.ReplaceAll(b, []byte(`data-generated-at="X"`))
+	b = reHTMLTitle.ReplaceAll(b, []byte(`<title>Graffiti Districts — X</title>`))
+	b = reHTMLTopBar.ReplaceAll(b, []byte(`Districts — X</span>`))
+	return b
+}
+
+func TestMapHTML_TwoBuildsByteIdenticalModuloGeneratedAt(t *testing.T) {
+	a := stripHTML(buildFixtureMapHTML(t))
+	b := stripHTML(buildFixtureMapHTML(t))
+	if string(a) != string(b) {
+		t.Fatalf("two map.html builds not byte-identical modulo generated_at")
+	}
+}
+
+func TestMapHTML_SelfContainedAndCSP(t *testing.T) {
+	html := string(buildFixtureMapHTML(t))
+
+	for _, banned := range []string{"http://", "https://", "src=", "<link", "@import"} {
+		if strings.Contains(html, banned) {
+			t.Fatalf("self-containment violated: found %q", banned)
+		}
+	}
+	if regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9+.-]*://`).MatchString(html) {
+		t.Fatalf("self-containment violated: scheme:// URL present")
+	}
+
+	// Recompute the inlined style/script hashes and assert they're in the CSP.
+	extract := func(open, close string) string {
+		i := strings.Index(html, open)
+		if i < 0 {
+			t.Fatalf("marker %q not found", open)
+		}
+		i += len(open)
+		j := strings.Index(html[i:], close)
+		if j < 0 {
+			t.Fatalf("close %q not found", close)
+		}
+		return html[i : i+j]
+	}
+	h := func(s string) string {
+		sum := sha256.Sum256([]byte(s))
+		return "sha256-" + base64.StdEncoding.EncodeToString(sum[:])
+	}
+	var csp string
+	for _, l := range strings.Split(html, "\n") {
+		if strings.Contains(l, "Content-Security-Policy") {
+			csp = l
+		}
+	}
+	if csp == "" {
+		t.Fatal("no CSP meta line")
+	}
+	for _, want := range []string{
+		h(extract("<style>", "</style>")),
+		h(extract("<script>", "</script>")),
+		h(extract(`<script type="application/json" id="graffiti-data">`, "</script>")),
+	} {
+		if !strings.Contains(csp, want) {
+			t.Fatalf("CSP missing hash %q\nCSP=%s", want, csp)
+		}
+	}
+}
+
+func TestMapHTML_StructuralAndA11yMirror(t *testing.T) {
+	html := string(buildFixtureMapHTML(t))
+	for _, must := range []string{`<canvas id="canvas"`, `<nav id="a11y"`, `id="graffiti-data"`, "Start here", "Landmarks", "Confidence"} {
+		if !strings.Contains(html, must) {
+			t.Fatalf("map.html missing %q", must)
+		}
+	}
+	// Every clustered community label from the fixture appears in the a11y mirror.
+	var doc graph.Document
+	if err := json.Unmarshal(buildFixtureIntoTemp(t), &doc); err != nil {
+		t.Fatalf("unmarshal map.json: %v", err)
+	}
+	mi := strings.Index(html, `<nav id="a11y"`)
+	mirror := html[mi : mi+strings.Index(html[mi:], "</nav>")]
+	for _, c := range doc.Communities {
+		if !strings.Contains(mirror, c.Label) {
+			t.Fatalf("a11y mirror missing district %q", c.Label)
+		}
+	}
+}
+
+func mapHTMLGoldenPath() string {
+	return filepath.Join("..", "..", "testdata", "golden", "gorepo.map.html.strip")
+}
+
+// TestGolden_MapHTMLStrip locks the byte-exact map.html modulo generated_at. The
+// golden stores the stripped bytes; regenerate via UPDATE_GOLDEN=1.
+func TestGolden_MapHTMLStrip(t *testing.T) {
+	got := stripHTML(buildFixtureMapHTML(t))
+	if os.Getenv("UPDATE_GOLDEN") == "1" {
+		if err := os.WriteFile(mapHTMLGoldenPath(), got, 0o644); err != nil {
+			t.Fatalf("write map.html golden: %v", err)
+		}
+		t.Log("map.html strip golden updated")
+		return
+	}
+	want, err := os.ReadFile(mapHTMLGoldenPath())
+	if err != nil {
+		t.Fatalf("read map.html golden (run UPDATE_GOLDEN=1 to create): %v", err)
+	}
+	if string(got) != string(want) {
+		t.Fatalf("map.html differs from golden (modulo generated_at)")
+	}
 }
 
 // TestSuggestedQuestions_Shape asserts exactly 3 deterministic questions, with the

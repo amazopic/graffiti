@@ -59,5 +59,9 @@ func runBuild(root string, stdout, stderr io.Writer) int {
 	}
 	fmt.Fprintf(stdout, "✓ Done. 0 API calls, $0.  %d files → %d nodes, %d edges, %d communities.\n",
 		stats.Files, stats.Nodes, stats.Edges, stats.Communities)
+	fmt.Fprintln(stdout, "  The 3 most interesting questions your map can answer:")
+	for i, q := range stats.Questions {
+		fmt.Fprintf(stdout, "    %d) %s\n", i+1, q)
+	}
 	return 0
 }

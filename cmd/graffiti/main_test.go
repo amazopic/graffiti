@@ -40,7 +40,14 @@ func TestRun_BuildPrintsSuccessLine(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("exit code = %d (stderr=%q)", code, errOut.String())
 	}
-	if !strings.Contains(out.String(), "Done. 0 API calls, $0.") {
-		t.Fatalf("missing success line, got %q", out.String())
+	s := out.String()
+	if !strings.Contains(s, "Done. 0 API calls, $0.") {
+		t.Fatalf("missing success line, got %q", s)
+	}
+	if !strings.Contains(s, "The 3 most interesting questions your map can answer:") {
+		t.Fatalf("missing questions header, got %q", s)
+	}
+	if !strings.Contains(s, "1) ") || !strings.Contains(s, "2) ") || !strings.Contains(s, "3) ") {
+		t.Fatalf("expected 3 numbered questions, got %q", s)
 	}
 }

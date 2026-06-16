@@ -30,7 +30,7 @@ These three reinforce one moat: a **deterministic, local, zero-cost extraction c
 
 **Goals**
 - `graffiti .` builds a graph for a real repo in seconds, with **0 API calls / $0**, fully offline.
-- Six source languages: **Python, JavaScript/TypeScript, Go, Rust, Java**, plus **Markdown**.
+- Source languages: **Python, JavaScript, TypeScript, Go, Rust, Java, PHP**, plus **Markdown** (PHP added in Plan 6).
 - Three output artifacts: `map.html`, `MAP.md`, `map.json` (with a published JSON Schema).
 - LLM-free `graffiti query` returning a scoped subgraph under a token budget.
 - `graffiti init` wires Claude Code (skill + always-on block + optional hook).
@@ -70,6 +70,8 @@ scan → parse → build → cluster → analyze → render
 ### Extraction: two passes
 - **Pass 1 (per file):** walk the AST → emit definition nodes (function/method/class/module) and structural edges (`imports` = EXTRACTED, `contains`, `inherits`/`implements`). Unresolved call sites are stashed as raw calls.
 - **Pass 2 (cross-file):** build a global `label → [node_id]` index; resolve raw calls. A call backed by a matching `imports` edge is promoted to **EXTRACTED**, otherwise **INFERRED**. Ambiguous common names defined in ≥2 files with no disambiguating import are dropped (prevents "god node" inflation). Genuinely uncertain edges are tagged **AMBIGUOUS** and surfaced for review in `MAP.md`.
+
+**Implemented (Plan 6, 2026-06-16) — multi-language extraction:** the six non-Go languages share one **table-driven** Pass-1 extractor (`internal/parse.Extract`) parameterized by a per-language `LangSpec` (the tree-sitter node-kind/field vocabulary, verified empirically against `gotreesitter@v0.20.2`). It emits files, functions, classes/structs/interfaces/enums/traits (→ `KindClass`), methods labeled `Class.method` (Rust methods via `impl_item`), `contains`/`imports` edges, and raw calls. **Go keeps its bespoke `ParseGo`** (receiver-typed methods). Pass-2 `ResolveCalls` is reused unchanged — non-Go selector calls under-resolve by design (honesty-first; no false edges). The six grammars are gated by `grammar_subset_<lang>` tags; the subset binary is ~10.3 MB (< 16 MB guard). **Fidelity gate (offline):** gotreesitter's own upstream regression suites + a committed zero-ERROR-node assertion + per-language structural-shape assertions + golden determinism. True upstream-tree-sitter parity diffing is **deferred to CI (Plan 8)** — stated, not silently skipped.
 
 ## 6. Data model
 

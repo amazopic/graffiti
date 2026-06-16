@@ -80,6 +80,39 @@ func TestScan_AlwaysSkipsVendorDirs(t *testing.T) {
 	}
 }
 
+func TestScan_ClassifiesNewLanguages(t *testing.T) {
+	dir := t.TempDir()
+	files := map[string]Lang{
+		"a.py":   LangPython,
+		"b.js":   LangJavaScript,
+		"c.jsx":  LangJavaScript,
+		"d.mjs":  LangJavaScript,
+		"e.ts":   LangTypeScript,
+		"f.tsx":  LangTypeScript,
+		"g.rs":   LangRust,
+		"h.java": LangJava,
+		"i.php":  LangPHP,
+	}
+	for name := range files {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("x"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	refs, err := Scan(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]Lang{}
+	for _, r := range refs {
+		got[r.RelPath] = r.Lang
+	}
+	for name, want := range files {
+		if got[name] != want {
+			t.Errorf("%s: lang = %q, want %q", name, got[name], want)
+		}
+	}
+}
+
 func TestScan_LangClassification(t *testing.T) {
 	dir := t.TempDir()
 	writeFile(t, dir, "a.go", "package main")

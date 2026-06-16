@@ -1,0 +1,500 @@
+{
+  "communities": [
+    {
+      "id": 0,
+      "label": "app.js",
+      "members": [
+        "app-js:app",
+        "app-js:app-js",
+        "app-js:app-run",
+        "app-js:validate",
+        "module-auth-session-js:session"
+      ]
+    },
+    {
+      "id": 1,
+      "label": "Greeter.java",
+      "members": [
+        "greeter-java:greeter",
+        "greeter-java:greeter-greet",
+        "greeter-java:greeter-java",
+        "greeter-java:greeter-sanitize",
+        "module-java-util-list:list"
+      ]
+    },
+    {
+      "id": 2,
+      "label": "helper.php",
+      "members": [
+        "helper-php:helper",
+        "helper-php:helper-clean",
+        "helper-php:helper-php",
+        "helper-php:normalize",
+        "module-app-support-str:str"
+      ]
+    },
+    {
+      "id": 3,
+      "label": "lib.rs",
+      "members": [
+        "lib-rs:lib-rs",
+        "lib-rs:normalize",
+        "lib-rs:store",
+        "lib-rs:store-get",
+        "module-std-collections-hashmap:hashmap"
+      ]
+    },
+    {
+      "id": 4,
+      "label": "model.ts",
+      "members": [
+        "model-ts:fetchuser",
+        "model-ts:model",
+        "model-ts:model-load",
+        "model-ts:model-ts",
+        "model-ts:user"
+      ]
+    },
+    {
+      "id": 5,
+      "label": "svc.py",
+      "members": [
+        "module-auth-session:session",
+        "svc-py:service",
+        "svc-py:service-handle",
+        "svc-py:svc-py"
+      ]
+    },
+    {
+      "id": 6,
+      "label": "os",
+      "members": [
+        "module-os:os",
+        "svc-py:validate"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "app-js:app-js",
+      "to": "app-js:app",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "app-js:app-js",
+      "to": "app-js:app-run",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "app-js:app-js",
+      "to": "app-js:validate",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "app-js:app-js",
+      "to": "module-auth-session-js:session",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greeter-java:greeter-java",
+      "to": "greeter-java:greeter",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greeter-java:greeter-java",
+      "to": "greeter-java:greeter-greet",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greeter-java:greeter-java",
+      "to": "greeter-java:greeter-sanitize",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "greeter-java:greeter-java",
+      "to": "module-java-util-list:list",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "helper-php:helper-php",
+      "to": "helper-php:helper",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "helper-php:helper-php",
+      "to": "helper-php:helper-clean",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "helper-php:helper-php",
+      "to": "helper-php:normalize",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "helper-php:helper-php",
+      "to": "module-app-support-str:str",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "lib-rs:lib-rs",
+      "to": "lib-rs:normalize",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "lib-rs:lib-rs",
+      "to": "lib-rs:store",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "lib-rs:lib-rs",
+      "to": "lib-rs:store-get",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "lib-rs:lib-rs",
+      "to": "module-std-collections-hashmap:hashmap",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "model-ts:model-load",
+      "to": "model-ts:fetchuser",
+      "relation": "calls",
+      "confidence": "INFERRED"
+    },
+    {
+      "from": "model-ts:model-ts",
+      "to": "model-ts:fetchuser",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "model-ts:model-ts",
+      "to": "model-ts:model",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "model-ts:model-ts",
+      "to": "model-ts:model-load",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "model-ts:model-ts",
+      "to": "model-ts:user",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "model-ts:model-ts",
+      "to": "module-auth-session:session",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "svc-py:svc-py",
+      "to": "module-auth-session:session",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "svc-py:svc-py",
+      "to": "module-os:os",
+      "relation": "imports",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "svc-py:svc-py",
+      "to": "svc-py:service",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "svc-py:svc-py",
+      "to": "svc-py:service-handle",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "svc-py:svc-py",
+      "to": "svc-py:validate",
+      "relation": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "svc-py:validate",
+      "to": "module-os:os",
+      "relation": "calls",
+      "confidence": "EXTRACTED"
+    }
+  ],
+  "generated_at": "2026-06-16T18:56:54Z",
+  "nodes": [
+    {
+      "id": "app-js:app",
+      "label": "App",
+      "kind": "class",
+      "file": "app.js",
+      "line": 3,
+      "community": 0
+    },
+    {
+      "id": "app-js:app-js",
+      "label": "app.js",
+      "kind": "file",
+      "file": "app.js",
+      "line": 1,
+      "community": 0
+    },
+    {
+      "id": "app-js:app-run",
+      "label": "App.run",
+      "kind": "method",
+      "file": "app.js",
+      "line": 4,
+      "community": 0
+    },
+    {
+      "id": "app-js:validate",
+      "label": "validate",
+      "kind": "function",
+      "file": "app.js",
+      "line": 9,
+      "community": 0
+    },
+    {
+      "id": "greeter-java:greeter",
+      "label": "Greeter",
+      "kind": "class",
+      "file": "Greeter.java",
+      "line": 5,
+      "community": 1
+    },
+    {
+      "id": "greeter-java:greeter-greet",
+      "label": "Greeter.greet",
+      "kind": "method",
+      "file": "Greeter.java",
+      "line": 6,
+      "community": 1
+    },
+    {
+      "id": "greeter-java:greeter-java",
+      "label": "Greeter.java",
+      "kind": "file",
+      "file": "Greeter.java",
+      "line": 1,
+      "community": 1
+    },
+    {
+      "id": "greeter-java:greeter-sanitize",
+      "label": "Greeter.sanitize",
+      "kind": "method",
+      "file": "Greeter.java",
+      "line": 10,
+      "community": 1
+    },
+    {
+      "id": "helper-php:helper",
+      "label": "Helper",
+      "kind": "class",
+      "file": "helper.php",
+      "line": 6,
+      "community": 2
+    },
+    {
+      "id": "helper-php:helper-clean",
+      "label": "Helper.clean",
+      "kind": "method",
+      "file": "helper.php",
+      "line": 7,
+      "community": 2
+    },
+    {
+      "id": "helper-php:helper-php",
+      "label": "helper.php",
+      "kind": "file",
+      "file": "helper.php",
+      "line": 1,
+      "community": 2
+    },
+    {
+      "id": "helper-php:normalize",
+      "label": "normalize",
+      "kind": "function",
+      "file": "helper.php",
+      "line": 12,
+      "community": 2
+    },
+    {
+      "id": "lib-rs:lib-rs",
+      "label": "lib.rs",
+      "kind": "file",
+      "file": "lib.rs",
+      "line": 1,
+      "community": 3
+    },
+    {
+      "id": "lib-rs:normalize",
+      "label": "normalize",
+      "kind": "function",
+      "file": "lib.rs",
+      "line": 11,
+      "community": 3
+    },
+    {
+      "id": "lib-rs:store",
+      "label": "Store",
+      "kind": "class",
+      "file": "lib.rs",
+      "line": 3,
+      "community": 3
+    },
+    {
+      "id": "lib-rs:store-get",
+      "label": "Store.get",
+      "kind": "method",
+      "file": "lib.rs",
+      "line": 6,
+      "community": 3
+    },
+    {
+      "id": "model-ts:fetchuser",
+      "label": "fetchUser",
+      "kind": "function",
+      "file": "model.ts",
+      "line": 11,
+      "community": 4
+    },
+    {
+      "id": "model-ts:model",
+      "label": "Model",
+      "kind": "class",
+      "file": "model.ts",
+      "line": 5,
+      "community": 4
+    },
+    {
+      "id": "model-ts:model-load",
+      "label": "Model.load",
+      "kind": "method",
+      "file": "model.ts",
+      "line": 6,
+      "community": 4
+    },
+    {
+      "id": "model-ts:model-ts",
+      "label": "model.ts",
+      "kind": "file",
+      "file": "model.ts",
+      "line": 1,
+      "community": 4
+    },
+    {
+      "id": "model-ts:user",
+      "label": "User",
+      "kind": "class",
+      "file": "model.ts",
+      "line": 3,
+      "community": 4
+    },
+    {
+      "id": "module-app-support-str:str",
+      "label": "Str",
+      "kind": "module",
+      "file": "helper.php",
+      "line": 4,
+      "community": 2
+    },
+    {
+      "id": "module-auth-session-js:session",
+      "label": "session",
+      "kind": "module",
+      "file": "app.js",
+      "line": 1,
+      "community": 0
+    },
+    {
+      "id": "module-auth-session:session",
+      "label": "session",
+      "kind": "module",
+      "file": "model.ts",
+      "line": 1,
+      "community": 5
+    },
+    {
+      "id": "module-java-util-list:list",
+      "label": "List",
+      "kind": "module",
+      "file": "Greeter.java",
+      "line": 3,
+      "community": 1
+    },
+    {
+      "id": "module-os:os",
+      "label": "os",
+      "kind": "module",
+      "file": "svc.py",
+      "line": 1,
+      "community": 6
+    },
+    {
+      "id": "module-std-collections-hashmap:hashmap",
+      "label": "HashMap",
+      "kind": "module",
+      "file": "lib.rs",
+      "line": 1,
+      "community": 3
+    },
+    {
+      "id": "svc-py:service",
+      "label": "Service",
+      "kind": "class",
+      "file": "svc.py",
+      "line": 4,
+      "community": 5
+    },
+    {
+      "id": "svc-py:service-handle",
+      "label": "Service.handle",
+      "kind": "method",
+      "file": "svc.py",
+      "line": 5,
+      "community": 5
+    },
+    {
+      "id": "svc-py:svc-py",
+      "label": "svc.py",
+      "kind": "file",
+      "file": "svc.py",
+      "line": 1,
+      "community": 5
+    },
+    {
+      "id": "svc-py:validate",
+      "label": "validate",
+      "kind": "function",
+      "file": "svc.py",
+      "line": 8,
+      "community": 6
+    }
+  ],
+  "root": "tmp.Eng860VpoF",
+  "version": "1"
+}

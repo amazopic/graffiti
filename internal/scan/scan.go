@@ -17,15 +17,31 @@ import (
 type Lang string
 
 const (
-	LangGo       Lang = "go"
-	LangMarkdown Lang = "markdown"
+	LangGo         Lang = "go"
+	LangMarkdown   Lang = "markdown"
+	LangPython     Lang = "python"
+	LangJavaScript Lang = "javascript"
+	LangTypeScript Lang = "typescript"
+	LangRust       Lang = "rust"
+	LangJava       Lang = "java"
+	LangPHP        Lang = "php"
 )
 
 // extLang maps supported file extensions to their language (Plan 1 scope:
 // Go + Markdown only).
 var extLang = map[string]Lang{
-	".go": LangGo,
-	".md": LangMarkdown,
+	".go":   LangGo,
+	".md":   LangMarkdown,
+	".py":   LangPython,
+	".js":   LangJavaScript,
+	".jsx":  LangJavaScript,
+	".mjs":  LangJavaScript,
+	".cjs":  LangJavaScript,
+	".ts":   LangTypeScript,
+	".tsx":  LangTypeScript,
+	".rs":   LangRust,
+	".java": LangJava,
+	".php":  LangPHP,
 }
 
 // FileRef is a discovered, classified file.

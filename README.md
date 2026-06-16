@@ -3,24 +3,37 @@
 One command turns your repository into a directed knowledge graph your AI coding
 assistant reads instead of blindly grepping.
 
-> **Status:** Plans 1–5. `graffiti .` builds a deterministic, schema-valid
-> `.graffiti/map.json` (+ `MAP.md` + `map.html`) for a Go repository, with
-> clustering/analysis, an LLM-free `query`, an MCP `serve`r, and Claude Code
-> `init` integration. More languages and workspace federation are later plans.
+> **Status:** Plans 1–6. `graffiti .` builds a deterministic, schema-valid
+> `.graffiti/map.json` (+ `MAP.md` + `map.html`) for **Go, Python, JavaScript,
+> TypeScript, Rust, Java, and PHP** repositories, with clustering/analysis, an
+> LLM-free `query`, an MCP `serve`r, and Claude Code `init` integration. Workspace
+> federation is a later plan.
 
 ## Build
 
 ```bash
-make build      # builds ./graffiti (CGO-free, ~8MB, Go grammar only)
+make build      # builds ./graffiti (CGO-free, ~10MB, 7 language grammars)
 make test       # runs the full test suite with required build tags
 make xcompile   # cross-compiles static binaries for all v1 targets into dist/
 ```
 
-The build tags `grammar_subset grammar_subset_go grammar_subset_gomod` ship only
-the Go tree-sitter grammar (pure-Go runtime via `github.com/odvcencio/gotreesitter`,
-no CGO, no WASM). They are required for the ~8MB size target; without them the code
-still compiles but links the full grammar set (~31MB). Always pass them (the
-Makefile does this for you).
+The `grammar_subset` build tags ship only the grammars graffiti supports (Go,
+Python, JS, TS, Rust, Java, PHP, plus go.mod) via the pure-Go runtime
+`github.com/odvcencio/gotreesitter` (no CGO, no WASM). They keep the binary at
+~10 MB; without them the code still compiles but links the full grammar set
+(~31 MB). Always pass them (the Makefile does this for you).
+
+## Supported languages
+
+| Language | Extracted |
+|----------|-----------|
+| Go | files, functions, methods (by receiver), types, imports, resolved calls |
+| Python, JavaScript, TypeScript, Rust, Java, PHP | files, functions, classes/structs/interfaces/enums/traits, methods (`Class.method`), imports, intra-repo calls |
+| Markdown | doc nodes |
+
+Non-Go extraction is intentionally honest: it captures the common, high-value
+structure and **under-extracts** exotic constructs (decorators, generics, nested
+definitions, dynamic dispatch) rather than emitting guesses.
 
 ## Usage
 

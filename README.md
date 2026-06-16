@@ -67,6 +67,32 @@ graffiti init --user          # install into ~/.claude instead of the repo
 
 It is idempotent — re-run any time; existing `CLAUDE.md`/`settings.json` content is preserved.
 
+## Workspaces (multi-repo federation)
+
+Lay separate repos side by side and query across them — **without merging**:
+
+```bash
+graffiti link ../frontend ../backend          # federate (builds members if needed)
+graffiti query --workspace "where is the cart fetched and served"
+graffiti serve  --workspace                    # MCP over the federation
+graffiti update --workspace                    # rebuild changed members + recompute links
+```
+
+`graffiti link` writes a committable registry (`.graffiti-workspace/workspace.json`)
+and a derived, gitignorable cache (`.graffiti-workspace/overlay.json`). Each repo's
+own `.graffiti/map.json` is unchanged and still works standalone — the workspace is a
+thin computed overlay, never a merged blob.
+
+**Cross-project links (v1):** assert them explicitly in `.graffiti-workspace/links`,
+one per line — `frontend::main-go:fetchcart -> backend::main-go:getcart calls`
+(`#` comments allowed; endpoints are `alias::nodeid`). `graffiti links check` validates
+both endpoints resolve to real nodes; `graffiti federate --explain` lists every link.
+Federated query prefixes each node with its member alias and traverses cross-links.
+Automatic link discovery (shared symbols, HTTP routes, SDK base-URLs) and a
+`workspace.html` lanes view are planned follow-ons.
+
+Add `.graffiti-workspace/overlay.json` to `.gitignore` (it is derived and recomputable).
+
 ## Guarantees (Plan 1)
 
 - 0 API calls, $0, fully offline.

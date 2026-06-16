@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/evgeniy-achin/graffiti/internal/app"
@@ -13,6 +14,7 @@ import (
 	"github.com/evgeniy-achin/graffiti/internal/mcp"
 	"github.com/evgeniy-achin/graffiti/internal/query"
 	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/evgeniy-achin/graffiti/internal/workspace"
 )
 
 func main() {
@@ -37,6 +39,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		}
 		return runBuild(root, stdout, stderr)
 	case "update":
+		if hasFlag(args[2:], "--workspace") {
+			return updateWorkspace(stripFlag(args[2:], "--workspace"), stdout, stderr)
+		}
 		// update is currently a full rebuild; the incremental AST-only rebuild
 		// (spec §11) is a later optimization. Behaves exactly like `build`.
 		root := "."
@@ -45,6 +50,10 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		}
 		return runBuild(root, stdout, stderr)
 	case "query":
+		qargs := args[2:]
+		if hasFlag(qargs, "--workspace") {
+			return runQueryWorkspace(stripFlag(qargs, "--workspace"), stdout, stderr)
+		}
 		if len(args) < 3 {
 			fmt.Fprintln(stderr, "graffiti: query requires a question")
 			usage(stderr)
@@ -64,11 +73,23 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		}
 		return runQuery(root, question, stdout, stderr)
 	case "serve":
+		sargs := args[2:]
+		if hasFlag(sargs, "--workspace") {
+			return serveWorkspace(stripFlag(sargs, "--workspace"), stdin, stdout, stderr)
+		}
 		root := "."
 		if len(args) >= 3 {
 			root = args[2]
 		}
 		return serve(root, stdin, stdout, stderr)
+	case "link":
+		return runLink(args[2:], stdout, stderr)
+	case "workspace":
+		return runWorkspace(args[2:], stdout, stderr)
+	case "links":
+		return runLinksCheck(args[2:], stdout, stderr)
+	case "federate":
+		return runFederateExplain(args[2:], stdout, stderr)
 	case "init":
 		return runInit(args[2:], stdout, stderr)
 	case "hook":
@@ -97,6 +118,13 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, `  query "<q>" [path]  LLM-free scoped subgraph retrieval (soft 2000-token node budget)`)
 	fmt.Fprintln(w, "  serve [path]      MCP server over stdio (JSON-RPC 2.0)")
 	fmt.Fprintln(w, "  init [--user] [--hook]  install Claude Code integration (skill + CLAUDE.md [+ hook])")
+	fmt.Fprintln(w, "  link <pathA> <pathB> [...] [--name n]  federate projects into a workspace")
+	fmt.Fprintln(w, "  workspace <add|rm|list> [--root dir]  manage workspace members")
+	fmt.Fprintln(w, "  links check [--root dir]  validate explicit cross-project links resolve")
+	fmt.Fprintln(w, "  federate --explain [--root dir]  print the computed cross-project links")
+	fmt.Fprintln(w, `  query --workspace "<q>" [--root dir]  federated retrieval across the workspace`)
+	fmt.Fprintln(w, "  serve --workspace [--root dir]  MCP server over the federated index")
+	fmt.Fprintln(w, "  update --workspace [--root dir]  rebuild changed members + recompute links")
 }
 
 // runInit installs the Claude Code integration. Flags: --user (install into the
@@ -154,8 +182,381 @@ func runInit(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+// runLink builds any unbuilt members, auto-discovers the workspace root (nearest
+// common ancestor), writes workspace.json, computes the overlay from links, and
+// prints the success line. Flags: --name <name>.
+func runLink(args []string, stdout, stderr io.Writer) int {
+	name := "workspace"
+	var paths []string
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--name":
+			if i+1 >= len(args) {
+				fmt.Fprintln(stderr, "graffiti: --name requires a value")
+				return 2
+			}
+			i++
+			name = args[i]
+		default:
+			paths = append(paths, args[i])
+		}
+	}
+	if len(paths) < 2 {
+		fmt.Fprintln(stderr, "graffiti: link requires at least two project paths")
+		return 2
+	}
+
+	abs := make([]string, len(paths))
+	for i, p := range paths {
+		a, err := filepath.Abs(p)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		abs[i] = a
+	}
+	root := workspace.CommonAncestor(abs)
+
+	reg := &workspace.Registry{Version: workspace.SchemaVersion, Name: name, GeneratedAt: nowRFC3339()}
+	for _, a := range abs {
+		// build the member if it has no map.json yet
+		if _, err := os.Stat(filepath.Join(a, ".graffiti", "map.json")); err != nil {
+			if _, berr := app.Build(a, nowRFC3339()); berr != nil {
+				fmt.Fprintf(stderr, "graffiti: build %s: %v\n", a, berr)
+				return 1
+			}
+		}
+		rel, err := filepath.Rel(root, a)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		h, err := workspace.MapHash(a)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		workspace.AddMember(reg, workspace.Member{Alias: aliasFor(a), Path: filepath.ToSlash(rel), MapHash: h})
+	}
+	if err := workspace.SaveRegistry(root, reg); err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	ov, err := computeAndSaveOverlay(root, reg)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "✓ Linked %d projects. %d cross-project links (%d EXTRACTED, %d unresolved). 0 API calls, $0.\n",
+		len(reg.Members), len(ov.Links), len(ov.Links), len(ov.Unresolved))
+	return 0
+}
+
+// aliasFor derives a member alias from its directory base name.
+func aliasFor(absPath string) string { return filepath.Base(absPath) }
+
+// nowRFC3339 is the build/link timestamp (UTC, RFC3339).
+func nowRFC3339() string { return time.Now().UTC().Format(time.RFC3339) }
+
+// computeAndSaveOverlay reads <root>/.graffiti-workspace/links (if any), computes
+// the overlay against the registry's members, stamps generated_at, and saves it.
+func computeAndSaveOverlay(root string, reg *workspace.Registry) (*workspace.Overlay, error) {
+	var links []workspace.ParsedLink
+	if b, err := os.ReadFile(filepath.Join(root, workspace.WorkspaceDir, "links")); err == nil {
+		links, err = workspace.ParseLinks(b)
+		if err != nil {
+			return nil, err
+		}
+	}
+	ov, err := workspace.ComputeOverlay(root, reg, links)
+	if err != nil {
+		return nil, err
+	}
+	ov.GeneratedAt = nowRFC3339()
+	if err := workspace.SaveOverlay(root, ov); err != nil {
+		return nil, err
+	}
+	return ov, nil
+}
+
+// resolveWorkspaceRoot returns the workspace root: an explicit --root if present,
+// else discovered by walking up from cwd. The returned args have --root removed.
+func resolveWorkspaceRoot(args []string, stderr io.Writer) (root string, rest []string, code int) {
+	rest = make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--root" {
+			if i+1 >= len(args) {
+				fmt.Fprintln(stderr, "graffiti: --root requires a directory")
+				return "", nil, 2
+			}
+			root = args[i+1]
+			i++
+			continue
+		}
+		rest = append(rest, args[i])
+	}
+	if root == "" {
+		cwd, _ := os.Getwd()
+		root = workspace.FindRoot(cwd)
+		if root == "" {
+			fmt.Fprintln(stderr, "graffiti: no workspace found (run `graffiti link` first, or pass --root)")
+			return "", nil, 1
+		}
+	}
+	return root, rest, 0
+}
+
+func runWorkspace(args []string, stdout, stderr io.Writer) int {
+	root, rest, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	if len(rest) == 0 {
+		fmt.Fprintln(stderr, "graffiti: workspace <add|rm|list>")
+		return 2
+	}
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	switch rest[0] {
+	case "list":
+		for _, m := range reg.Members {
+			fmt.Fprintf(stdout, "%s\t%s\n", m.Alias, m.Path)
+		}
+		return 0
+	case "rm":
+		if len(rest) < 2 {
+			fmt.Fprintln(stderr, "graffiti: workspace rm <alias>")
+			return 2
+		}
+		if !workspace.RemoveMember(reg, rest[1]) {
+			fmt.Fprintf(stderr, "graffiti: no member %q\n", rest[1])
+			return 1
+		}
+	case "add":
+		// graffiti workspace add <path> --as <alias>
+		var path, alias string
+		for i := 1; i < len(rest); i++ {
+			if rest[i] == "--as" && i+1 < len(rest) {
+				alias = rest[i+1]
+				i++
+			} else {
+				path = rest[i]
+			}
+		}
+		if path == "" {
+			fmt.Fprintln(stderr, "graffiti: workspace add <path> [--as alias]")
+			return 2
+		}
+		absPath, _ := filepath.Abs(path)
+		if alias == "" {
+			alias = aliasFor(absPath)
+		}
+		if _, err := os.Stat(filepath.Join(absPath, ".graffiti", "map.json")); err != nil {
+			if _, berr := app.Build(absPath, nowRFC3339()); berr != nil {
+				fmt.Fprintf(stderr, "graffiti: build %s: %v\n", absPath, berr)
+				return 1
+			}
+		}
+		rel, _ := filepath.Rel(root, absPath)
+		h, _ := workspace.MapHash(absPath)
+		workspace.AddMember(reg, workspace.Member{Alias: alias, Path: filepath.ToSlash(rel), MapHash: h})
+	default:
+		fmt.Fprintf(stderr, "graffiti: unknown workspace subcommand %q\n", rest[0])
+		return 2
+	}
+	if err := workspace.SaveRegistry(root, reg); err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	if _, err := computeAndSaveOverlay(root, reg); err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	return 0
+}
+
+func runLinksCheck(args []string, stdout, stderr io.Writer) int {
+	root, rest, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	if len(rest) == 0 || rest[0] != "check" {
+		fmt.Fprintln(stderr, "graffiti: links check")
+		return 2
+	}
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	ov, err := computeAndSaveOverlay(root, reg)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "%d links OK.\n", len(ov.Links))
+	if len(ov.Unresolved) > 0 {
+		for _, l := range ov.Unresolved {
+			fmt.Fprintf(stdout, "UNRESOLVED: %s -> %s\n", l.From, l.To)
+		}
+		return 1
+	}
+	return 0
+}
+
+func runFederateExplain(args []string, stdout, stderr io.Writer) int {
+	root, _, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	ov, err := workspace.LoadOverlay(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	for _, l := range ov.Links {
+		fmt.Fprintf(stdout, "%s -%s-> %s (%s, via %s)\n", l.From, l.Relation, l.To, l.Confidence, l.Via)
+	}
+	for _, l := range ov.Ambiguous {
+		fmt.Fprintf(stdout, "AMBIGUOUS: %s -> %s (via %s)\n", l.From, l.To, l.Via)
+	}
+	return 0
+}
+
+func hasFlag(args []string, flag string) bool {
+	for _, a := range args {
+		if a == flag {
+			return true
+		}
+	}
+	return false
+}
+
+func stripFlag(args []string, flag string) []string {
+	out := make([]string, 0, len(args))
+	for _, a := range args {
+		if a != flag {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+// runQueryWorkspace loads the workspace, builds the combined alias-prefixed index,
+// runs the LLM-free query over it, and appends a staleness nudge if any member
+// changed since the overlay was computed. Args (after --workspace removed):
+// optional --root <dir>, then the question (and optional [name], ignored in v1).
+func runQueryWorkspace(args []string, stdout, stderr io.Writer) int {
+	root, rest, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	// the last non-flag arg is the question
+	if len(rest) == 0 {
+		fmt.Fprintln(stderr, "graffiti: query --workspace requires a question")
+		return 2
+	}
+	question := rest[len(rest)-1]
+
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	ov, err := workspace.LoadOverlay(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	idx, err := workspace.CombinedIndex(root, reg, ov)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprint(stdout, query.Query(idx, question, query.DefaultTokenBudget))
+
+	if stale, err := workspace.StaleMembers(root, reg, ov); err == nil && len(stale) > 0 {
+		fmt.Fprintf(stdout, "\n(overlay stale: %s changed — run: graffiti update --workspace)\n", strings.Join(stale, ", "))
+	}
+	return 0
+}
+
+func serveWorkspace(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
+	root, _, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	ov, err := workspace.LoadOverlay(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	idx, err := workspace.CombinedIndex(root, reg, ov)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	if err := mcp.NewServer(idx).Serve(stdin, stdout); err != nil {
+		fmt.Fprintf(stderr, "graffiti: serve: %v\n", err)
+		return 1
+	}
+	return 0
+}
+
+// updateWorkspace rebuilds members whose source changed since the registry's
+// recorded hash, then recomputes the overlay. --links-only skips member rebuild.
+func updateWorkspace(args []string, stdout, stderr io.Writer) int {
+	linksOnly := hasFlag(args, "--links-only")
+	root, _, code := resolveWorkspaceRoot(stripFlag(args, "--links-only"), stderr)
+	if code != 0 {
+		return code
+	}
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	rebuilt := 0
+	if !linksOnly {
+		for i := range reg.Members {
+			dir := filepath.Join(root, filepath.FromSlash(reg.Members[i].Path))
+			cur, err := workspace.MapHash(dir)
+			if err != nil || cur != reg.Members[i].MapHash {
+				if _, berr := app.Build(dir, nowRFC3339()); berr != nil {
+					fmt.Fprintf(stderr, "graffiti: rebuild %s: %v\n", reg.Members[i].Alias, berr)
+					return 1
+				}
+				if h, herr := workspace.MapHash(dir); herr == nil {
+					reg.Members[i].MapHash = h
+				}
+				rebuilt++
+			}
+		}
+		reg.GeneratedAt = nowRFC3339()
+		if err := workspace.SaveRegistry(root, reg); err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+	}
+	ov, err := computeAndSaveOverlay(root, reg)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "✓ Updated workspace: %d members rebuilt, overlay recomputed (%d links).\n", rebuilt, len(ov.Links))
+	return 0
+}
+
 func runBuild(root string, stdout, stderr io.Writer) int {
-	generatedAt := time.Now().UTC().Format(time.RFC3339)
+	generatedAt := nowRFC3339()
 	stats, err := app.Build(root, generatedAt)
 	if err != nil {
 		fmt.Fprintf(stderr, "graffiti: build failed: %v\n", err)

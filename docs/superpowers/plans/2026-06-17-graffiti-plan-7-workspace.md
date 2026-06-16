@@ -1416,7 +1416,9 @@ func TestRun_LinksCheck(t *testing.T) {
 	base := linkShop(t)
 	// write a links file: one resolvable, one ghost.
 	wsDir := filepath.Join(base, ".graffiti-workspace")
-	links := "frontend::fetchcart -> backend::getcart calls\nfrontend::ghost -> backend::getcart\n"
+	// Verified node-id slugs: FetchCart -> "main-go:fetchcart", GetCart -> "main-go:getcart".
+	// (alias::id splits on the FIRST "::", so the single colon inside the id is fine.)
+	links := "frontend::main-go:fetchcart -> backend::main-go:getcart calls\nfrontend::main-go:ghost -> backend::main-go:getcart\n"
 	if err := os.WriteFile(filepath.Join(wsDir, "links"), []byte(links), 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -2021,7 +2023,7 @@ mkdir -p "$BASE/frontend" "$BASE/backend"
 printf 'package web\nfunc FetchCart(){}\n' > "$BASE/frontend/main.go"
 printf 'package api\nfunc GetCart(){}\n'   > "$BASE/backend/main.go"
 ./graffiti link --name shop "$BASE/frontend" "$BASE/backend"
-printf 'frontend::fetchcart -> backend::getcart calls\n' > "$BASE/.graffiti-workspace/links"
+printf 'frontend::main-go:fetchcart -> backend::main-go:getcart calls\n' > "$BASE/.graffiti-workspace/links"
 ./graffiti links check --root "$BASE"
 ./graffiti update --workspace --root "$BASE"
 ./graffiti query --workspace --root "$BASE" "cart" | head -20

@@ -1,8 +1,8 @@
 // Package store is graffiti's read-side: it loads the .graffiti/map.json artifact
 // back into a *graph.Document (the mirror of render.WriteMapJSON) and builds a
-// deterministic in-memory Index (id->node, sorted out/in adjacency, term index)
-// that internal/query and internal/mcp consume. It performs the only I/O on the
-// read path and never touches the build pipeline.
+// deterministic in-memory Index (id->node, sorted out/in adjacency) that
+// internal/query and internal/mcp consume. It performs the only I/O on the read
+// path and never touches the build pipeline.
 package store
 
 import (
@@ -31,15 +31,16 @@ func Load(path string) (*graph.Document, error) {
 	return &doc, nil
 }
 
-// Index is a deterministic, read-only adjacency + term index over a Document.
-// Every exposed slice is sorted with an explicit total order so no Go-map
-// iteration ever feeds query/mcp output (spec §14).
+// Index is a deterministic, read-only adjacency index over a Document. Every
+// exposed slice is sorted with an explicit total order so no Go-map iteration
+// ever feeds query/mcp output (spec §14). IDF term scoring is computed by
+// internal/query over the nodes exposed here (it builds its own df/term-bag
+// tables per question), so the Index keeps no term index of its own.
 type Index struct {
 	nodes map[string]graph.Node
-	ids   []string              // all node ids, sorted ascending
+	ids   []string                // all node ids, sorted ascending
 	out   map[string][]graph.Edge // out-edges per id, sorted (relation,to,confidence)
 	in    map[string][]graph.Edge // in-edges per id, sorted (relation,from,confidence)
-	terms map[string][]string   // term -> node ids (sorted), term index for IDF
 }
 
 // NewIndex builds the Index from a loaded Document.
@@ -48,7 +49,6 @@ func NewIndex(doc *graph.Document) *Index {
 		nodes: make(map[string]graph.Node, len(doc.Nodes)),
 		out:   make(map[string][]graph.Edge),
 		in:    make(map[string][]graph.Edge),
-		terms: make(map[string][]string),
 	}
 	for _, n := range doc.Nodes {
 		idx.nodes[n.ID] = n

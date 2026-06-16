@@ -13,6 +13,7 @@ import (
 	"github.com/evgeniy-achin/graffiti/internal/mcp"
 	"github.com/evgeniy-achin/graffiti/internal/query"
 	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/evgeniy-achin/graffiti/internal/workspace"
 )
 
 func main() {
@@ -69,6 +70,8 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			root = args[2]
 		}
 		return serve(root, stdin, stdout, stderr)
+	case "link":
+		return runLink(args[2:], stdout, stderr)
 	case "init":
 		return runInit(args[2:], stdout, stderr)
 	case "hook":
@@ -97,6 +100,7 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, `  query "<q>" [path]  LLM-free scoped subgraph retrieval (soft 2000-token node budget)`)
 	fmt.Fprintln(w, "  serve [path]      MCP server over stdio (JSON-RPC 2.0)")
 	fmt.Fprintln(w, "  init [--user] [--hook]  install Claude Code integration (skill + CLAUDE.md [+ hook])")
+	fmt.Fprintln(w, "  link <pathA> <pathB> [...] [--name n]  federate projects into a workspace")
 }
 
 // runInit installs the Claude Code integration. Flags: --user (install into the
@@ -154,8 +158,105 @@ func runInit(args []string, stdout, stderr io.Writer) int {
 	return 0
 }
 
+// runLink builds any unbuilt members, auto-discovers the workspace root (nearest
+// common ancestor), writes workspace.json, computes the overlay from links, and
+// prints the success line. Flags: --name <name>.
+func runLink(args []string, stdout, stderr io.Writer) int {
+	name := "workspace"
+	var paths []string
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--name":
+			if i+1 >= len(args) {
+				fmt.Fprintln(stderr, "graffiti: --name requires a value")
+				return 2
+			}
+			i++
+			name = args[i]
+		default:
+			paths = append(paths, args[i])
+		}
+	}
+	if len(paths) < 2 {
+		fmt.Fprintln(stderr, "graffiti: link requires at least two project paths")
+		return 2
+	}
+
+	abs := make([]string, len(paths))
+	for i, p := range paths {
+		a, err := filepath.Abs(p)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		abs[i] = a
+	}
+	root := workspace.CommonAncestor(abs)
+
+	reg := &workspace.Registry{Version: workspace.SchemaVersion, Name: name, GeneratedAt: nowRFC3339()}
+	for _, a := range abs {
+		// build the member if it has no map.json yet
+		if _, err := os.Stat(filepath.Join(a, ".graffiti", "map.json")); err != nil {
+			if _, berr := app.Build(a, nowRFC3339()); berr != nil {
+				fmt.Fprintf(stderr, "graffiti: build %s: %v\n", a, berr)
+				return 1
+			}
+		}
+		rel, err := filepath.Rel(root, a)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		h, err := workspace.MapHash(a)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		workspace.AddMember(reg, workspace.Member{Alias: aliasFor(a), Path: filepath.ToSlash(rel), MapHash: h})
+	}
+	if err := workspace.SaveRegistry(root, reg); err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	ov, err := computeAndSaveOverlay(root, reg)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "✓ Linked %d projects. %d cross-project links (%d EXTRACTED, %d unresolved). 0 API calls, $0.\n",
+		len(reg.Members), len(ov.Links), len(ov.Links), len(ov.Unresolved))
+	return 0
+}
+
+// aliasFor derives a member alias from its directory base name.
+func aliasFor(absPath string) string { return filepath.Base(absPath) }
+
+// nowRFC3339 is the build/link timestamp (UTC, RFC3339).
+func nowRFC3339() string { return time.Now().UTC().Format(time.RFC3339) }
+
+// computeAndSaveOverlay reads <root>/.graffiti-workspace/links (if any), computes
+// the overlay against the registry's members, stamps generated_at, and saves it.
+func computeAndSaveOverlay(root string, reg *workspace.Registry) (*workspace.Overlay, error) {
+	var links []workspace.ParsedLink
+	if b, err := os.ReadFile(filepath.Join(root, workspace.WorkspaceDir, "links")); err == nil {
+		links, err = workspace.ParseLinks(b)
+		if err != nil {
+			return nil, err
+		}
+	}
+	ov, err := workspace.ComputeOverlay(root, reg, links)
+	if err != nil {
+		return nil, err
+	}
+	ov.GeneratedAt = nowRFC3339()
+	if err := workspace.SaveOverlay(root, ov); err != nil {
+		return nil, err
+	}
+	return ov, nil
+}
+
 func runBuild(root string, stdout, stderr io.Writer) int {
-	generatedAt := time.Now().UTC().Format(time.RFC3339)
+	generatedAt := nowRFC3339()
 	stats, err := app.Build(root, generatedAt)
 	if err != nil {
 		fmt.Fprintf(stderr, "graffiti: build failed: %v\n", err)

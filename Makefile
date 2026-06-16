@@ -1,7 +1,9 @@
 # graffiti build helpers. The grammar_subset tags ship only the Go grammar,
 # keeping the binary small (~8MB) and CGO-free. Without them the code still
 # builds, but links the full grammar set (~31MB).
-TAGS := grammar_subset grammar_subset_go grammar_subset_gomod
+TAGS := grammar_subset grammar_subset_go grammar_subset_gomod \
+        grammar_subset_python grammar_subset_javascript grammar_subset_typescript \
+        grammar_subset_rust grammar_subset_java grammar_subset_php
 PKG  := ./cmd/graffiti
 
 .PHONY: build test vet xcompile size-guard

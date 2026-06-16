@@ -51,6 +51,9 @@ func NewIndex(doc *graph.Document) *Index {
 		in:    make(map[string][]graph.Edge),
 	}
 	for _, n := range doc.Nodes {
+		if _, exists := idx.nodes[n.ID]; exists {
+			continue // dedup: first writer wins; skip duplicate ids
+		}
 		idx.nodes[n.ID] = n
 		idx.ids = append(idx.ids, n.ID)
 	}

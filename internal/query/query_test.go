@@ -71,7 +71,7 @@ func TestQuery_BudgetRespected(t *testing.T) {
 		t.Fatalf("tiny budget should still admit one seed, got:\n%s", out)
 	}
 	if nodeLines > 1 {
-		t.Fatalf("budget=8 admitted %d node lines (expected 1), got:\n%s", nodeLines, out)
+		t.Fatalf("budget=12 admitted %d node lines (expected 1), got:\n%s", nodeLines, out)
 	}
 }
 
@@ -88,11 +88,15 @@ func TestQuery_SeedTieBreakByID(t *testing.T) {
 		{ID: "a.go:widget", Label: "widget", Kind: graph.KindFunction, File: "a.go", Line: 1},
 		{ID: "c.go:gadget", Label: "gadget", Kind: graph.KindFunction, File: "c.go", Line: 1},
 	}
-	out := Query(idxFor(nodes, nil), "widget", 2000)
-	ia := strings.Index(out, "a.go:widget")
-	ib := strings.Index(out, "b.go:widget")
-	if ia < 0 || ib < 0 || ia > ib {
-		t.Fatalf("expected a.go:widget before b.go:widget (id-asc), got:\n%s", out)
+	// budget=9 admits exactly ONE node (estimateTokens(formatNode(...))=9 for these
+	// nodes; 9+9=18 > 9 blocks the second). With equal IDF scores the id-asc
+	// tie-break must select a.go:widget over b.go:widget.
+	out := Query(idxFor(nodes, nil), "widget", 9)
+	if !strings.Contains(out, "a.go:widget") {
+		t.Fatalf("expected a.go:widget selected (smallest id, id-asc tie-break), got:\n%s", out)
+	}
+	if strings.Contains(out, "b.go:widget") {
+		t.Fatalf("expected b.go:widget NOT selected (budget tight, id-asc tie-break should pick a.go first), got:\n%s", out)
 	}
 }
 

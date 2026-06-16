@@ -204,7 +204,10 @@ func serialize(idx *store.Index, selected map[string]bool) string {
 	var b strings.Builder
 	b.WriteString("NODES\n")
 	for _, id := range ids {
-		n, _ := idx.Node(id)
+		n, ok := idx.Node(id)
+		if !ok {
+			continue // skip unknown ids: no garbage line emitted
+		}
 		b.WriteString(formatNode(n))
 		b.WriteByte('\n')
 	}

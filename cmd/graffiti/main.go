@@ -35,6 +35,14 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			root = args[2]
 		}
 		return runBuild(root, stdout, stderr)
+	case "update":
+		// update is currently a full rebuild; the incremental AST-only rebuild
+		// (spec §11) is a later optimization. Behaves exactly like `build`.
+		root := "."
+		if len(args) >= 3 {
+			root = args[2]
+		}
+		return runBuild(root, stdout, stderr)
 	case "query":
 		if len(args) < 3 {
 			fmt.Fprintln(stderr, "graffiti: query requires a question")
@@ -77,6 +85,7 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, "commands:")
 	fmt.Fprintln(w, "  .                 build the map for the current repo")
 	fmt.Fprintln(w, "  build <path>      build the map for <path> (default .)")
+	fmt.Fprintln(w, "  update [path]     rebuild the map for <path> (default .)")
 	fmt.Fprintln(w, `  query "<q>" [path]  LLM-free scoped subgraph retrieval (soft 2000-token node budget)`)
 	fmt.Fprintln(w, "  serve [path]      MCP server over stdio (JSON-RPC 2.0)")
 }

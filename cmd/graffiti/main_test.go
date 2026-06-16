@@ -118,6 +118,18 @@ func TestRun_ServeViaRun(t *testing.T) {
 	}
 }
 
+func TestRun_UpdateRebuilds(t *testing.T) {
+	dir := buildTempRepo(t) // builds once; update should rebuild cleanly
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "update", dir}, bytes.NewReader(nil), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("update exit code = %d (stderr=%q)", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), "Done. 0 API calls, $0.") {
+		t.Fatalf("update missing success line, got %q", out.String())
+	}
+}
+
 func TestRun_QueryTooManyArgs_Errors(t *testing.T) {
 	dir := buildTempRepo(t)
 	var out, errOut bytes.Buffer

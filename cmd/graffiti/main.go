@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/evgeniy-achin/graffiti/internal/app"
@@ -46,6 +47,10 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		}
 		return runBuild(root, stdout, stderr)
 	case "query":
+		qargs := args[2:]
+		if hasFlag(qargs, "--workspace") {
+			return runQueryWorkspace(stripFlag(qargs, "--workspace"), stdout, stderr)
+		}
 		if len(args) < 3 {
 			fmt.Fprintln(stderr, "graffiti: query requires a question")
 			usage(stderr)
@@ -407,6 +412,64 @@ func runFederateExplain(args []string, stdout, stderr io.Writer) int {
 	}
 	for _, l := range ov.Ambiguous {
 		fmt.Fprintf(stdout, "AMBIGUOUS: %s -> %s (via %s)\n", l.From, l.To, l.Via)
+	}
+	return 0
+}
+
+func hasFlag(args []string, flag string) bool {
+	for _, a := range args {
+		if a == flag {
+			return true
+		}
+	}
+	return false
+}
+
+func stripFlag(args []string, flag string) []string {
+	out := make([]string, 0, len(args))
+	for _, a := range args {
+		if a != flag {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+// runQueryWorkspace loads the workspace, builds the combined alias-prefixed index,
+// runs the LLM-free query over it, and appends a staleness nudge if any member
+// changed since the overlay was computed. Args (after --workspace removed):
+// optional --root <dir>, then the question (and optional [name], ignored in v1).
+func runQueryWorkspace(args []string, stdout, stderr io.Writer) int {
+	root, rest, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	// the last non-flag arg is the question
+	if len(rest) == 0 {
+		fmt.Fprintln(stderr, "graffiti: query --workspace requires a question")
+		return 2
+	}
+	question := rest[len(rest)-1]
+
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	ov, err := workspace.LoadOverlay(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	idx, err := workspace.CombinedIndex(root, reg, ov)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprint(stdout, query.Query(idx, question, query.DefaultTokenBudget))
+
+	if stale, err := workspace.StaleMembers(root, reg, ov); err == nil && len(stale) > 0 {
+		fmt.Fprintf(stdout, "\n(overlay stale: %s changed — run: graffiti update --workspace)\n", strings.Join(stale, ", "))
 	}
 	return 0
 }

@@ -89,3 +89,20 @@ func TestRun_LinksCheck(t *testing.T) {
 		t.Fatalf("expected the unresolved 'ghost' link to be reported")
 	}
 }
+
+func TestRun_QueryWorkspace(t *testing.T) {
+	base := linkShop(t)
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "query", "--workspace", "--root", base, "cart"}, bytes.NewReader(nil), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("query --workspace exit=%d stderr=%q", code, errOut.String())
+	}
+	s := out.String()
+	if !strings.Contains(s, "NODES") {
+		t.Fatalf("missing NODES block:\n%s", s)
+	}
+	// alias-prefixed ids appear (both members are searched)
+	if !strings.Contains(s, "frontend::") && !strings.Contains(s, "backend::") {
+		t.Fatalf("expected alias-prefixed federated output:\n%s", s)
+	}
+}

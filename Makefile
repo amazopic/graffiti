@@ -6,10 +6,15 @@ TAGS := grammar_subset grammar_subset_go grammar_subset_gomod \
         grammar_subset_rust grammar_subset_java grammar_subset_php
 PKG  := ./cmd/graffiti
 
-.PHONY: build test vet xcompile size-guard
+# VERSION is derived from git (tag/commit); release builds inject it via ldflags.
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+LDFLAGS         := -X main.version=$(VERSION)
+RELEASE_LDFLAGS := -s -w -X main.version=$(VERSION)
+
+.PHONY: build test vet xcompile size-guard release
 
 build:
-	CGO_ENABLED=0 go build -tags "$(TAGS)" -o graffiti $(PKG)
+	CGO_ENABLED=0 go build -tags "$(TAGS)" -ldflags "$(LDFLAGS)" -o graffiti $(PKG)
 
 test:
 	go test -tags "$(TAGS)" ./...
@@ -19,11 +24,11 @@ vet:
 
 # Cross-compile the static binary for all v1 targets (spec §10).
 xcompile:
-	GOOS=darwin  GOARCH=arm64 CGO_ENABLED=0 go build -tags "$(TAGS)" -o dist/graffiti-darwin-arm64 $(PKG)
-	GOOS=darwin  GOARCH=amd64 CGO_ENABLED=0 go build -tags "$(TAGS)" -o dist/graffiti-darwin-amd64 $(PKG)
-	GOOS=linux   GOARCH=amd64 CGO_ENABLED=0 go build -tags "$(TAGS)" -o dist/graffiti-linux-amd64  $(PKG)
-	GOOS=linux   GOARCH=arm64 CGO_ENABLED=0 go build -tags "$(TAGS)" -o dist/graffiti-linux-arm64  $(PKG)
-	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags "$(TAGS)" -o dist/graffiti-windows-amd64.exe $(PKG)
+	GOOS=darwin  GOARCH=arm64 CGO_ENABLED=0 go build -tags "$(TAGS)" -ldflags "$(RELEASE_LDFLAGS)" -o dist/graffiti-darwin-arm64 $(PKG)
+	GOOS=darwin  GOARCH=amd64 CGO_ENABLED=0 go build -tags "$(TAGS)" -ldflags "$(RELEASE_LDFLAGS)" -o dist/graffiti-darwin-amd64 $(PKG)
+	GOOS=linux   GOARCH=amd64 CGO_ENABLED=0 go build -tags "$(TAGS)" -ldflags "$(RELEASE_LDFLAGS)" -o dist/graffiti-linux-amd64  $(PKG)
+	GOOS=linux   GOARCH=arm64 CGO_ENABLED=0 go build -tags "$(TAGS)" -ldflags "$(RELEASE_LDFLAGS)" -o dist/graffiti-linux-arm64  $(PKG)
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -tags "$(TAGS)" -ldflags "$(RELEASE_LDFLAGS)" -o dist/graffiti-windows-amd64.exe $(PKG)
 	$(MAKE) size-guard
 
 # Binary size guard: fails the build if any dist/ binary exceeds 16MB (~16000000 bytes).
@@ -39,3 +44,12 @@ size-guard:
 		fi; \
 	done
 	@echo "size-guard: all binaries within limit OK"
+
+# release cross-compiles all targets (with size-guard via xcompile) and writes a
+# SHA256SUMS manifest over the dist/ binaries. Used by .github/workflows/release.yml.
+release: xcompile
+	@cd dist && { \
+		if command -v sha256sum >/dev/null 2>&1; then sha256sum graffiti-* > SHA256SUMS; \
+		else shasum -a 256 graffiti-* > SHA256SUMS; fi; }
+	@echo "release: wrote dist/SHA256SUMS"
+	@cat dist/SHA256SUMS

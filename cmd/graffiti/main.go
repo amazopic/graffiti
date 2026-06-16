@@ -39,6 +39,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		}
 		return runBuild(root, stdout, stderr)
 	case "update":
+		if hasFlag(args[2:], "--workspace") {
+			return updateWorkspace(stripFlag(args[2:], "--workspace"), stdout, stderr)
+		}
 		// update is currently a full rebuild; the incremental AST-only rebuild
 		// (spec §11) is a later optimization. Behaves exactly like `build`.
 		root := "."
@@ -70,6 +73,10 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		}
 		return runQuery(root, question, stdout, stderr)
 	case "serve":
+		sargs := args[2:]
+		if hasFlag(sargs, "--workspace") {
+			return serveWorkspace(stripFlag(sargs, "--workspace"), stdin, stdout, stderr)
+		}
 		root := "."
 		if len(args) >= 3 {
 			root = args[2]
@@ -115,6 +122,9 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, "  workspace <add|rm|list> [--root dir]  manage workspace members")
 	fmt.Fprintln(w, "  links check [--root dir]  validate explicit cross-project links resolve")
 	fmt.Fprintln(w, "  federate --explain [--root dir]  print the computed cross-project links")
+	fmt.Fprintln(w, `  query --workspace "<q>" [--root dir]  federated retrieval across the workspace`)
+	fmt.Fprintln(w, "  serve --workspace [--root dir]  MCP server over the federated index")
+	fmt.Fprintln(w, "  update --workspace [--root dir]  rebuild changed members + recompute links")
 }
 
 // runInit installs the Claude Code integration. Flags: --user (install into the
@@ -471,6 +481,77 @@ func runQueryWorkspace(args []string, stdout, stderr io.Writer) int {
 	if stale, err := workspace.StaleMembers(root, reg, ov); err == nil && len(stale) > 0 {
 		fmt.Fprintf(stdout, "\n(overlay stale: %s changed — run: graffiti update --workspace)\n", strings.Join(stale, ", "))
 	}
+	return 0
+}
+
+func serveWorkspace(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
+	root, _, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	ov, err := workspace.LoadOverlay(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	idx, err := workspace.CombinedIndex(root, reg, ov)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	if err := mcp.NewServer(idx).Serve(stdin, stdout); err != nil {
+		fmt.Fprintf(stderr, "graffiti: serve: %v\n", err)
+		return 1
+	}
+	return 0
+}
+
+// updateWorkspace rebuilds members whose source changed since the registry's
+// recorded hash, then recomputes the overlay. --links-only skips member rebuild.
+func updateWorkspace(args []string, stdout, stderr io.Writer) int {
+	linksOnly := hasFlag(args, "--links-only")
+	root, _, code := resolveWorkspaceRoot(stripFlag(args, "--links-only"), stderr)
+	if code != 0 {
+		return code
+	}
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	rebuilt := 0
+	if !linksOnly {
+		for i := range reg.Members {
+			dir := filepath.Join(root, filepath.FromSlash(reg.Members[i].Path))
+			cur, err := workspace.MapHash(dir)
+			if err != nil || cur != reg.Members[i].MapHash {
+				if _, berr := app.Build(dir, nowRFC3339()); berr != nil {
+					fmt.Fprintf(stderr, "graffiti: rebuild %s: %v\n", reg.Members[i].Alias, berr)
+					return 1
+				}
+				if h, herr := workspace.MapHash(dir); herr == nil {
+					reg.Members[i].MapHash = h
+				}
+				rebuilt++
+			}
+		}
+		reg.GeneratedAt = nowRFC3339()
+		if err := workspace.SaveRegistry(root, reg); err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+	}
+	ov, err := computeAndSaveOverlay(root, reg)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "✓ Updated workspace: %d members rebuilt, overlay recomputed (%d links).\n", rebuilt, len(ov.Links))
 	return 0
 }
 

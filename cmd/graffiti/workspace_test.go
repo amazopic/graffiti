@@ -106,3 +106,28 @@ func TestRun_QueryWorkspace(t *testing.T) {
 		t.Fatalf("expected alias-prefixed federated output:\n%s", s)
 	}
 }
+
+func TestRun_ServeWorkspace(t *testing.T) {
+	base := linkShop(t)
+	initLine := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}` + "\n"
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "serve", "--workspace", "--root", base}, strings.NewReader(initLine), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("serve --workspace exit=%d stderr=%q", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), `"protocolVersion":"2025-06-18"`) {
+		t.Fatalf("serve --workspace missing initialize echo:\n%s", out.String())
+	}
+}
+
+func TestRun_UpdateWorkspace(t *testing.T) {
+	base := linkShop(t)
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "update", "--workspace", "--root", base}, bytes.NewReader(nil), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("update --workspace exit=%d stderr=%q", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), "overlay") {
+		t.Fatalf("update --workspace should mention overlay recompute:\n%s", out.String())
+	}
+}

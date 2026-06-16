@@ -3,11 +3,28 @@
 One command turns your repository into a directed knowledge graph your AI coding
 assistant reads instead of blindly grepping.
 
-> **Status:** Plans 1–6. `graffiti .` builds a deterministic, schema-valid
+> **Status:** Plans 1–8. `graffiti .` builds a deterministic, schema-valid
 > `.graffiti/map.json` (+ `MAP.md` + `map.html`) for **Go, Python, JavaScript,
 > TypeScript, Rust, Java, and PHP** repositories, with clustering/analysis, an
-> LLM-free `query`, an MCP `serve`r, and Claude Code `init` integration. Workspace
-> federation is a later plan.
+> LLM-free `query`, an MCP `serve`r, Claude Code `init` integration, multi-repo
+> `--workspace` federation, and one-command install.
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/evgeniy-achin/graffiti/main/scripts/install.sh | sh
+```
+
+Pin a version or directory:
+
+```bash
+GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/evgeniy-achin/graffiti/main/scripts/install.sh)"
+```
+
+The installer picks the right static binary for your OS/arch, verifies its SHA256
+against the release manifest, and installs it. Verify with `graffiti version`.
+Or build from source (below).
 
 ## Build
 

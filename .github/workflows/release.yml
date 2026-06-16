@@ -1,0 +1,31 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so `git describe --tags` resolves the tag
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+      - name: cross-compile + checksums
+        run: make release
+      - name: publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/graffiti-darwin-arm64
+            dist/graffiti-darwin-amd64
+            dist/graffiti-linux-amd64
+            dist/graffiti-linux-arm64
+            dist/graffiti-windows-amd64.exe
+            dist/SHA256SUMS
+          generate_release_notes: true

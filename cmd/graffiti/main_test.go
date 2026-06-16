@@ -8,6 +8,22 @@ import (
 	"testing"
 )
 
+func TestRun_Version(t *testing.T) {
+	for _, arg := range []string{"version", "--version", "-v"} {
+		var out, errOut bytes.Buffer
+		code := run([]string{"graffiti", arg}, bytes.NewReader(nil), &out, &errOut)
+		if code != 0 {
+			t.Fatalf("%s exit=%d stderr=%q", arg, code, errOut.String())
+		}
+		if !strings.Contains(out.String(), "graffiti ") {
+			t.Fatalf("%s: expected 'graffiti <version>', got %q", arg, out.String())
+		}
+		if !strings.Contains(out.String(), version) {
+			t.Fatalf("%s: output %q missing version %q", arg, out.String(), version)
+		}
+	}
+}
+
 func TestRun_NoArgs_PrintsUsage(t *testing.T) {
 	var out, errOut bytes.Buffer
 	code := run([]string{"graffiti"}, bytes.NewReader(nil), &out, &errOut)

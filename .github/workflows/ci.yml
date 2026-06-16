@@ -1,0 +1,22 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+      - name: vet
+        run: make vet
+      - name: test (subset build tags)
+        run: make test
+      - name: test (default tags, full grammar embed)
+        run: go test ./...
+      - name: build + cross-compile + size guard
+        run: make xcompile

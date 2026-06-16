@@ -142,3 +142,81 @@ func TestRun_QueryTooManyArgs_Errors(t *testing.T) {
 		t.Fatalf("expected quoting hint in error, got %q", errOut.String())
 	}
 }
+
+func TestRun_InitProject(t *testing.T) {
+	dir := t.TempDir()
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "init", "--root", dir}, bytes.NewReader(nil), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("init exit code = %d (stderr=%q)", code, errOut.String())
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".claude", "skills", "graffiti", "SKILL.md")); err != nil {
+		t.Fatalf("SKILL.md not written: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); err != nil {
+		t.Fatalf("CLAUDE.md not written: %v", err)
+	}
+	// no --hook → no settings.json
+	if _, err := os.Stat(filepath.Join(dir, ".claude", "settings.json")); !os.IsNotExist(err) {
+		t.Fatal("settings.json should not exist without --hook")
+	}
+	if !strings.Contains(out.String(), "graffiti wired into Claude Code") {
+		t.Fatalf("missing success line:\n%s", out.String())
+	}
+}
+
+func TestRun_InitWithHook(t *testing.T) {
+	dir := t.TempDir()
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "init", "--hook", "--root", dir}, bytes.NewReader(nil), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("init --hook exit code = %d (stderr=%q)", code, errOut.String())
+	}
+	b, err := os.ReadFile(filepath.Join(dir, ".claude", "settings.json"))
+	if err != nil {
+		t.Fatalf("settings.json not written: %v", err)
+	}
+	if !strings.Contains(string(b), "graffiti hook") {
+		t.Fatalf("settings.json missing hook:\n%s", b)
+	}
+}
+
+func TestRun_InitIdempotent(t *testing.T) {
+	dir := t.TempDir()
+	for i := 0; i < 2; i++ {
+		var out, errOut bytes.Buffer
+		if code := run([]string{"graffiti", "init", "--hook", "--root", dir}, bytes.NewReader(nil), &out, &errOut); code != 0 {
+			t.Fatalf("init run %d failed: %s", i, errOut.String())
+		}
+	}
+	b, _ := os.ReadFile(filepath.Join(dir, "CLAUDE.md"))
+	if n := strings.Count(string(b), "graffiti:start"); n != 1 {
+		t.Fatalf("CLAUDE.md should have exactly one block, got %d", n)
+	}
+}
+
+func TestRun_HookNudgeWhenMapPresent(t *testing.T) {
+	dir := buildTempRepo(t) // writes .graffiti/map.json
+	event := `{"hook_event_name":"PreToolUse","tool_name":"Grep","cwd":"` + dir + `"}`
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "hook"}, strings.NewReader(event), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("hook exit code = %d (stderr=%q)", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), "additionalContext") || !strings.Contains(out.String(), "graffiti query") {
+		t.Fatalf("expected a nudge, got %q", out.String())
+	}
+}
+
+func TestRun_HookSilentWhenNoMap(t *testing.T) {
+	dir := t.TempDir()
+	event := `{"hook_event_name":"PreToolUse","tool_name":"Grep","cwd":"` + dir + `"}`
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "hook"}, strings.NewReader(event), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("hook exit code = %d", code)
+	}
+	if out.Len() != 0 {
+		t.Fatalf("hook should be silent without a map, got %q", out.String())
+	}
+}

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/evgeniy-achin/graffiti/internal/app"
+	"github.com/evgeniy-achin/graffiti/internal/integrate"
 	"github.com/evgeniy-achin/graffiti/internal/mcp"
 	"github.com/evgeniy-achin/graffiti/internal/query"
 	"github.com/evgeniy-achin/graffiti/internal/store"
@@ -30,6 +31,14 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	case ".":
 		return runBuild(".", stdout, stderr)
 	case "build":
+		root := "."
+		if len(args) >= 3 {
+			root = args[2]
+		}
+		return runBuild(root, stdout, stderr)
+	case "update":
+		// update is currently a full rebuild; the incremental AST-only rebuild
+		// (spec §11) is a later optimization. Behaves exactly like `build`.
 		root := "."
 		if len(args) >= 3 {
 			root = args[2]
@@ -60,6 +69,13 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 			root = args[2]
 		}
 		return serve(root, stdin, stdout, stderr)
+	case "init":
+		return runInit(args[2:], stdout, stderr)
+	case "hook":
+		// Internal: PreToolUse handler. Always exits 0; never blocks a tool.
+		cwd, _ := os.Getwd()
+		integrate.RunHook(stdin, stdout, cwd)
+		return 0
 	default:
 		// Treat an existing path as `build <path>` for the common `graffiti <path>` form.
 		if info, err := os.Stat(cmd); err == nil && info.IsDir() {
@@ -77,8 +93,65 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, "commands:")
 	fmt.Fprintln(w, "  .                 build the map for the current repo")
 	fmt.Fprintln(w, "  build <path>      build the map for <path> (default .)")
+	fmt.Fprintln(w, "  update [path]     rebuild the map for <path> (default .)")
 	fmt.Fprintln(w, `  query "<q>" [path]  LLM-free scoped subgraph retrieval (soft 2000-token node budget)`)
 	fmt.Fprintln(w, "  serve [path]      MCP server over stdio (JSON-RPC 2.0)")
+	fmt.Fprintln(w, "  init [--user] [--hook]  install Claude Code integration (skill + CLAUDE.md [+ hook])")
+}
+
+// runInit installs the Claude Code integration. Flags: --user (install into the
+// home dir instead of the project), --hook (also install the PreToolUse hook),
+// --root <dir> (project root; defaults to "." — primarily a test seam).
+func runInit(args []string, stdout, stderr io.Writer) int {
+	var user, hook bool
+	root := "."
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--user":
+			user = true
+		case "--hook":
+			hook = true
+		case "--root":
+			if i+1 >= len(args) {
+				fmt.Fprintln(stderr, "graffiti: --root requires a directory")
+				return 2
+			}
+			i++
+			root = args[i]
+		default:
+			fmt.Fprintf(stderr, "graffiti: unknown init flag %q\n", args[i])
+			return 2
+		}
+	}
+
+	var target integrate.Target
+	if user {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: cannot resolve home dir: %v\n", err)
+			return 1
+		}
+		target = integrate.UserTarget(home)
+	} else {
+		target = integrate.ProjectTarget(root)
+	}
+
+	res, err := integrate.Install(target, integrate.Options{InstallHook: hook})
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: init failed: %v\n", err)
+		return 1
+	}
+
+	fmt.Fprintf(stdout, "✓ graffiti wired into Claude Code (%s).\n", res.Target.Scope)
+	fmt.Fprintf(stdout, "  • skill:     %s (%s)\n", res.Target.SkillPath, res.Skill)
+	fmt.Fprintf(stdout, "  • CLAUDE.md: %s (%s)\n", res.Target.ClaudeMDPath, res.ClaudeMD)
+	if res.HookInstalled {
+		fmt.Fprintf(stdout, "  • hook:      %s (%s) — PreToolUse nudge grep → graffiti query\n", res.Target.SettingsPath, res.Hook)
+	} else {
+		fmt.Fprintln(stdout, "  • hook:      skipped (pass --hook to nudge grep → graffiti query)")
+	}
+	fmt.Fprintln(stdout, "  Re-run `graffiti init` any time; it is idempotent.")
+	return 0
 }
 
 func runBuild(root string, stdout, stderr io.Writer) int {

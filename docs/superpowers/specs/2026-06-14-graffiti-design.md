@@ -170,6 +170,8 @@ The renderer is authored as a reusable module with an alias-ready coordinate for
 - Optional **PreToolUse hook** that nudges grep → `graffiti query` when a map exists.
 - The skill is short and declarative — the heavy lifting is the deterministic binary, not a procedure the model must execute step-by-step.
 
+**Implemented (Plan 5, 2026-06-16):** `graffiti init [--user] [--hook]` installs three artifacts via `internal/integrate`: (1) `.claude/skills/graffiti/SKILL.md` (overwritten — namespaced path we own); (2) a `CLAUDE.md` block delimited by `<!-- graffiti:start -->`/`<!-- graffiti:end -->`, merged surgically (replace-between-markers or append) so all other content is preserved; (3) with `--hook`, a `.claude/settings.json` PreToolUse entry (`matcher: "Grep|Glob"`, command `graffiti hook`) merged idempotently into any existing JSON. The hook is the binary itself — a hidden `graffiti hook` subcommand reads the PreToolUse event on stdin and, when `.graffiti/map.json` exists, emits the verified non-blocking `{"hookSpecificOutput":{"hookEventName":"PreToolUse","additionalContext":"…"}}` (exit 0, no `permissionDecision`); it never blocks a tool and degrades to harmless if a future build ignores `additionalContext`. All content is byte-deterministic and golden-locked; every merge is idempotent. `graffiti update` (CLI surface §11) currently maps to a full rebuild; the incremental AST-only rebuild remains a later optimization.
+
 ## 10. Tech stack & distribution
 
 - **Language:** Go 1.26.

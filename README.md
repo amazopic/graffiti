@@ -3,10 +3,10 @@
 One command turns your repository into a directed knowledge graph your AI coding
 assistant reads instead of blindly grepping.
 
-> **Status:** Plan 1 (walking skeleton). `graffiti .` builds a deterministic,
-> schema-valid `.graffiti/map.json` for a Go repository. Clustering, MAP.md,
-> map.html, query, MCP, init, more languages, and workspace federation are later
-> plans.
+> **Status:** Plans 1–5. `graffiti .` builds a deterministic, schema-valid
+> `.graffiti/map.json` (+ `MAP.md` + `map.html`) for a Go repository, with
+> clustering/analysis, an LLM-free `query`, an MCP `serve`r, and Claude Code
+> `init` integration. More languages and workspace federation are later plans.
 
 ## Build
 
@@ -25,13 +25,34 @@ Makefile does this for you).
 ## Usage
 
 ```bash
-graffiti .              # build the map for the current repo
-graffiti build <path>   # build the map for <path>
-graffiti <path>         # shorthand for `build <path>` when <path> is a directory
+graffiti .                 # build the map for the current repo
+graffiti build <path>      # build the map for <path>
+graffiti <path>            # shorthand for `build <path>` when <path> is a directory
+graffiti update [path]     # rebuild the map (full rebuild for now)
+graffiti query "<q>" [path] # LLM-free scoped subgraph retrieval (soft token budget)
+graffiti serve [path]      # MCP server over stdio (JSON-RPC 2.0)
+graffiti init [--user] [--hook]  # install Claude Code integration
 ```
 
-Output: `<path>/.graffiti/map.json` (see `schema/map.schema.json` for the contract)
-and a per-file content-hash cache under `<path>/.graffiti/cache/`.
+Output: `<path>/.graffiti/map.json` (see `schema/map.schema.json` for the contract),
+`MAP.md`, `map.html`, and a per-file content-hash cache under `<path>/.graffiti/cache/`.
+
+## Claude Code integration
+
+```bash
+graffiti init                 # install the skill + CLAUDE.md block (project)
+graffiti init --hook          # also install the PreToolUse nudge (grep → graffiti query)
+graffiti init --user          # install into ~/.claude instead of the repo
+```
+
+`graffiti init` writes:
+- `.claude/skills/graffiti/SKILL.md` — a short skill so Claude Code knows to build/read/query the map.
+- a `CLAUDE.md` block (between `<!-- graffiti:start -->` / `<!-- graffiti:end -->`) telling the
+  assistant to prefer `graffiti query` over grep when a map exists.
+- with `--hook`, a `.claude/settings.json` PreToolUse entry running `graffiti hook`, which adds a
+  one-line nudge before `Grep`/`Glob` when `.graffiti/map.json` is present. The hook never blocks a tool.
+
+It is idempotent — re-run any time; existing `CLAUDE.md`/`settings.json` content is preserved.
 
 ## Guarantees (Plan 1)
 

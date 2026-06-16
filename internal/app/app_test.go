@@ -55,6 +55,32 @@ func normApp(b []byte) string {
 	return string(b)
 }
 
+func TestBuild_PolyglotRepo(t *testing.T) {
+	dir := t.TempDir()
+	files := map[string]string{
+		"svc.py":  "def handler():\n    return helper()\ndef helper():\n    return 1\n",
+		"app.js":  "export function main(){ return util(); }\nfunction util(){ return 1; }\n",
+		"Main.java": "public class Main {\n  public static void main(String[] a){ run(); }\n  static void run(){}\n}\n",
+		"lib.rs":  "pub fn build(){ helper(); }\nfn helper(){}\n",
+	}
+	for name, src := range files {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(src), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	stats, err := Build(dir, "2026-06-16T00:00:00Z")
+	if err != nil {
+		t.Fatalf("build: %v", err)
+	}
+	if stats.Files != 4 {
+		t.Errorf("files = %d, want 4", stats.Files)
+	}
+	// Each language should have contributed nodes (functions/methods).
+	if stats.Nodes < 8 {
+		t.Errorf("expected at least 8 nodes across 4 languages, got %d", stats.Nodes)
+	}
+}
+
 func TestBuild_DeterministicModuloGeneratedAtAndRoot(t *testing.T) {
 	src := "package main\n\nfunc main() { Hello() }\n\nfunc Hello() {}\n"
 

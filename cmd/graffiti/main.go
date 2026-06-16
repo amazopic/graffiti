@@ -17,6 +17,10 @@ import (
 	"github.com/evgeniy-achin/graffiti/internal/workspace"
 )
 
+// version is the build version, injected at release time via
+// -ldflags "-X main.version=<tag>". Defaults to "dev" for local builds.
+var version = "dev"
+
 func main() {
 	os.Exit(run(os.Args, os.Stdin, os.Stdout, os.Stderr))
 }
@@ -97,6 +101,9 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		cwd, _ := os.Getwd()
 		integrate.RunHook(stdin, stdout, cwd)
 		return 0
+	case "version", "--version", "-v":
+		fmt.Fprintln(stdout, "graffiti "+version)
+		return 0
 	default:
 		// Treat an existing path as `build <path>` for the common `graffiti <path>` form.
 		if info, err := os.Stat(cmd); err == nil && info.IsDir() {
@@ -125,6 +132,7 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, `  query --workspace "<q>" [--root dir]  federated retrieval across the workspace`)
 	fmt.Fprintln(w, "  serve --workspace [--root dir]  MCP server over the federated index")
 	fmt.Fprintln(w, "  update --workspace [--root dir]  rebuild changed members + recompute links")
+	fmt.Fprintln(w, "  version           print the graffiti version")
 }
 
 // runInit installs the Claude Code integration. Flags: --user (install into the

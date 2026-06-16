@@ -50,4 +50,5 @@ type Overlay struct {
 	SourceHashes map[string]string `json:"source_hashes"` // alias -> map_hash used
 	Links        []Link            `json:"links"`         // confident; sorted (from,to,relation)
 	Ambiguous    []Link            `json:"ambiguous"`     // surfaced for review, never traversed
+	Unresolved   []Link            `json:"unresolved,omitempty"` // links whose endpoints don't resolve (reported by `links check`)
 }

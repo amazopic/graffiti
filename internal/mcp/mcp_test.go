@@ -135,3 +135,17 @@ func TestMCP_ParseErrorOnGarbage(t *testing.T) {
 		t.Fatalf("expected parse error -32700, got %v", e["code"])
 	}
 }
+
+func TestMCP_CallQueryGraph_MalformedArgs(t *testing.T) {
+	// Pass a JSON array instead of an object — unmarshal into a struct must fail.
+	r := roundtrip(t, testServer(), `{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"query_graph","arguments":[1,2,3]}}`)
+	res := r[0]["result"].(map[string]any)
+	if res["isError"] != true {
+		t.Fatalf("expected isError=true for malformed query_graph arguments, got result=%v", res)
+	}
+	content := res["content"].([]any)
+	txt := content[0].(map[string]any)["text"].(string)
+	if !strings.Contains(txt, "invalid arguments for query_graph") {
+		t.Fatalf("expected error message about invalid arguments, got %q", txt)
+	}
+}

@@ -10,7 +10,7 @@ import (
 
 func TestRun_NoArgs_PrintsUsage(t *testing.T) {
 	var out, errOut bytes.Buffer
-	code := run([]string{"graffiti"}, &out, &errOut)
+	code := run([]string{"graffiti"}, bytes.NewReader(nil), &out, &errOut)
 	if code != 2 {
 		t.Fatalf("expected exit code 2, got %d", code)
 	}
@@ -21,7 +21,7 @@ func TestRun_NoArgs_PrintsUsage(t *testing.T) {
 
 func TestRun_UnknownCommand_Errors(t *testing.T) {
 	var out, errOut bytes.Buffer
-	code := run([]string{"graffiti", "frobnicate"}, &out, &errOut)
+	code := run([]string{"graffiti", "frobnicate"}, bytes.NewReader(nil), &out, &errOut)
 	if code != 2 {
 		t.Fatalf("expected exit code 2, got %d", code)
 	}
@@ -36,7 +36,7 @@ func TestRun_BuildPrintsSuccessLine(t *testing.T) {
 		t.Fatal(err)
 	}
 	var out, errOut bytes.Buffer
-	code := run([]string{"graffiti", "build", dir}, &out, &errOut)
+	code := run([]string{"graffiti", "build", dir}, bytes.NewReader(nil), &out, &errOut)
 	if code != 0 {
 		t.Fatalf("exit code = %d (stderr=%q)", code, errOut.String())
 	}
@@ -60,7 +60,7 @@ func buildTempRepo(t *testing.T) string {
 		t.Fatal(err)
 	}
 	var out, errOut bytes.Buffer
-	if code := run([]string{"graffiti", "build", dir}, &out, &errOut); code != 0 {
+	if code := run([]string{"graffiti", "build", dir}, bytes.NewReader(nil), &out, &errOut); code != 0 {
 		t.Fatalf("build failed (%d): %s", code, errOut.String())
 	}
 	return dir
@@ -69,7 +69,7 @@ func buildTempRepo(t *testing.T) string {
 func TestRun_QueryPrintsSubgraph(t *testing.T) {
 	dir := buildTempRepo(t)
 	var out, errOut bytes.Buffer
-	code := run([]string{"graffiti", "query", "login handler", dir}, &out, &errOut)
+	code := run([]string{"graffiti", "query", "login handler", dir}, bytes.NewReader(nil), &out, &errOut)
 	if code != 0 {
 		t.Fatalf("query exit code = %d (stderr=%q)", code, errOut.String())
 	}
@@ -83,7 +83,7 @@ func TestRun_QueryPrintsSubgraph(t *testing.T) {
 
 func TestRun_QueryMissingMap_Errors(t *testing.T) {
 	var out, errOut bytes.Buffer
-	code := run([]string{"graffiti", "query", "x", t.TempDir()}, &out, &errOut)
+	code := run([]string{"graffiti", "query", "x", t.TempDir()}, bytes.NewReader(nil), &out, &errOut)
 	if code == 0 {
 		t.Fatal("expected non-zero exit when map.json is absent")
 	}
@@ -102,5 +102,31 @@ func TestRun_ServeHandlesInitialize(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), `"protocolVersion":"2025-06-18"`) {
 		t.Fatalf("serve initialize response missing version echo:\n%s", out.String())
+	}
+}
+
+func TestRun_ServeViaRun(t *testing.T) {
+	dir := buildTempRepo(t)
+	initLine := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18"}}` + "\n"
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "serve", dir}, strings.NewReader(initLine), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("serve via run exit code = %d (stderr=%q)", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), `"protocolVersion":"2025-06-18"`) {
+		t.Fatalf("serve via run initialize response missing version echo:\n%s", out.String())
+	}
+}
+
+func TestRun_QueryTooManyArgs_Errors(t *testing.T) {
+	dir := buildTempRepo(t)
+	var out, errOut bytes.Buffer
+	// "login", "handler", and dir are three positional args after "query" — too many.
+	code := run([]string{"graffiti", "query", "login", "handler", dir}, bytes.NewReader(nil), &out, &errOut)
+	if code != 2 {
+		t.Fatalf("expected exit code 2, got %d (stderr=%q)", code, errOut.String())
+	}
+	if !strings.Contains(errOut.String(), "quote") {
+		t.Fatalf("expected quoting hint in error, got %q", errOut.String())
 	}
 }

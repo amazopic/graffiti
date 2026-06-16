@@ -100,7 +100,9 @@ func objSchema(props map[string]any, required ...string) map[string]any {
 	return map[string]any{"type": "object", "properties": props, "required": req}
 }
 
-func strProp(desc string) map[string]any { return map[string]any{"type": "string", "description": desc} }
+func strProp(desc string) map[string]any {
+	return map[string]any{"type": "string", "description": desc}
+}
 
 // tools is the static, deterministically-ordered tool catalog.
 func (s *Server) tools() []toolDef {
@@ -188,7 +190,9 @@ func (s *Server) handleCall(req rpcRequest) rpcResponse {
 			Question string `json:"question"`
 			Budget   int    `json:"budget"`
 		}
-		_ = json.Unmarshal(p.Arguments, &a)
+		if err := json.Unmarshal(p.Arguments, &a); err != nil {
+			return s.toolErr(req.ID, "invalid arguments for query_graph")
+		}
 		return s.toolText(req.ID, query.Query(s.idx, a.Question, a.Budget))
 	case "get_node":
 		var a struct {

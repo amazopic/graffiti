@@ -15,11 +15,11 @@ import (
 )
 
 func main() {
-	os.Exit(run(os.Args, os.Stdout, os.Stderr))
+	os.Exit(run(os.Args, os.Stdin, os.Stdout, os.Stderr))
 }
 
 // run is the testable entry point. It returns the process exit code.
-func run(args []string, stdout, stderr io.Writer) int {
+func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	if len(args) < 2 {
 		usage(stderr)
 		return 2
@@ -41,6 +41,13 @@ func run(args []string, stdout, stderr io.Writer) int {
 			usage(stderr)
 			return 2
 		}
+		// Guard: question + optional path = at most 2 extra positional args.
+		// More than that means the user forgot to quote a multi-word question.
+		if len(args) > 4 {
+			fmt.Fprintln(stderr, `graffiti: too many arguments for query — did you forget to quote the question?`)
+			fmt.Fprintln(stderr, `  example: graffiti query "login handler" [path]`)
+			return 2
+		}
 		question := args[2]
 		root := "."
 		if len(args) >= 4 {
@@ -52,7 +59,7 @@ func run(args []string, stdout, stderr io.Writer) int {
 		if len(args) >= 3 {
 			root = args[2]
 		}
-		return serve(root, os.Stdin, stdout, stderr)
+		return serve(root, stdin, stdout, stderr)
 	default:
 		// Treat an existing path as `build <path>` for the common `graffiti <path>` form.
 		if info, err := os.Stat(cmd); err == nil && info.IsDir() {

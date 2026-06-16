@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://graffiti.dev/workspace.schema.json",
+  "title": "graffiti workspace files",
+  "oneOf": [
+    {
+      "title": "registry (workspace.json)",
+      "type": "object",
+      "required": ["version", "name", "members"],
+      "properties": {
+        "version": { "type": "string" },
+        "name": { "type": "string" },
+        "generated_at": { "type": "string" },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["alias", "path"],
+            "properties": {
+              "alias": { "type": "string", "minLength": 1 },
+              "path": { "type": "string", "minLength": 1 },
+              "map_hash": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "overlay (overlay.json)",
+      "type": "object",
+      "required": ["version", "links"],
+      "properties": {
+        "version": { "type": "string" },
+        "generated_at": { "type": "string" },
+        "source_hashes": { "type": "object", "additionalProperties": { "type": "string" } },
+        "links": { "type": "array", "items": { "$ref": "#/$defs/link" } },
+        "ambiguous": { "type": "array", "items": { "$ref": "#/$defs/link" } },
+        "unresolved": { "type": "array", "items": { "$ref": "#/$defs/link" } }
+      }
+    }
+  ],
+  "$defs": {
+    "link": {
+      "type": "object",
+      "required": ["from", "to", "relation", "confidence"],
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "relation": { "type": "string" },
+        "confidence": { "enum": ["EXTRACTED", "INFERRED", "AMBIGUOUS"] },
+        "via": { "type": "string" }
+      }
+    }
+  }
+}

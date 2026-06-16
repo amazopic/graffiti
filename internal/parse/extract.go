@@ -192,14 +192,29 @@ func stripQuotes(s string) string {
 	return s
 }
 
-// lastSegment returns the final component of a module path, splitting on the
-// separators used across our languages: "/", ".", "::", "\".
+// codeExts are source-file extensions stripped from module labels so that a
+// path-style import like "./auth/session.js" labels as "session", not "js".
+var codeExts = []string{".jsx", ".tsx", ".mjs", ".cjs", ".js", ".ts", ".py", ".rs", ".java", ".php"}
+
+// lastSegment returns a human-friendly module label: the final path/namespace
+// component of an import. Path separators ("/", "\", "::") are handled before a
+// trailing source extension is stripped and before the "." namespace separator,
+// so "./auth/session.js" -> "session" (JS/TS) while "java.util.List" -> "List".
 func lastSegment(imp string) string {
 	imp = strings.TrimSpace(imp)
-	for _, sep := range []string{"::", "\\", "/", "."} {
+	for _, sep := range []string{"::", "\\", "/"} {
 		if i := strings.LastIndex(imp, sep); i >= 0 {
 			imp = imp[i+len(sep):]
 		}
+	}
+	for _, ext := range codeExts {
+		if strings.HasSuffix(imp, ext) {
+			imp = strings.TrimSuffix(imp, ext)
+			break
+		}
+	}
+	if i := strings.LastIndex(imp, "."); i >= 0 {
+		imp = imp[i+1:]
 	}
 	return imp
 }

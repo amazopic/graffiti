@@ -46,9 +46,9 @@ type Link struct {
 // Overlay is the derived .graffiti-workspace/overlay.json (recomputable cache).
 type Overlay struct {
 	Version      string            `json:"version"`
-	GeneratedAt  string            `json:"generated_at"`  // RFC3339
-	SourceHashes map[string]string `json:"source_hashes"` // alias -> map_hash used
-	Links        []Link            `json:"links"`         // confident; sorted (from,to,relation)
-	Ambiguous    []Link            `json:"ambiguous"`     // surfaced for review, never traversed
+	GeneratedAt  string            `json:"generated_at"`         // RFC3339
+	SourceHashes map[string]string `json:"source_hashes"`        // alias -> map_hash used
+	Links        []Link            `json:"links"`                // confident; sorted (from,to,relation)
+	Ambiguous    []Link            `json:"ambiguous"`            // surfaced for review, never traversed
 	Unresolved   []Link            `json:"unresolved,omitempty"` // links whose endpoints don't resolve (reported by `links check`)
 }

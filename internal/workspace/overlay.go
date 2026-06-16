@@ -52,8 +52,8 @@ func ComputeOverlay(root string, reg *Registry, links []ParsedLink) (*Overlay, e
 	}
 	for _, pl := range links {
 		l := Link{
-			From: pl.FromAlias + "::" + pl.FromID,
-			To:   pl.ToAlias + "::" + pl.ToID,
+			From:     pl.FromAlias + "::" + pl.FromID,
+			To:       pl.ToAlias + "::" + pl.ToID,
 			Relation: pl.Relation, Confidence: string(graph.ConfExtracted), Via: "explicit",
 		}
 		if resolves(pl.FromAlias, pl.FromID) && resolves(pl.ToAlias, pl.ToID) {

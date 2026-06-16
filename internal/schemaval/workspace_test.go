@@ -8,9 +8,9 @@ func TestValidateRegistry(t *testing.T) {
 		t.Fatalf("valid registry rejected: %v", err)
 	}
 	for _, bad := range [][]byte{
-		[]byte(`{"name":"ws"}`),                                    // missing version/members
-		[]byte(`{"version":"1","name":"ws","members":"nope"}`),     // members not array
-		[]byte(`{"version":"1","name":"ws","members":[{"x":1}]}`),  // member missing alias
+		[]byte(`{"name":"ws"}`),                                   // missing version/members
+		[]byte(`{"version":"1","name":"ws","members":"nope"}`),    // members not array
+		[]byte(`{"version":"1","name":"ws","members":[{"x":1}]}`), // member missing alias
 	} {
 		if err := ValidateRegistryBytes(bad); err == nil {
 			t.Errorf("expected error for %s", bad)

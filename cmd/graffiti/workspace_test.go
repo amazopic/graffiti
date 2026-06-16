@@ -42,3 +42,50 @@ func TestRun_LinkBuildsAndFederates(t *testing.T) {
 		t.Fatalf("missing success line:\n%s", out.String())
 	}
 }
+
+// linkShop builds two members and federates them, returning the workspace root (base).
+func linkShop(t *testing.T) string {
+	t.Helper()
+	base := t.TempDir()
+	web := writeGoRepo(t, base, "frontend", "web", "package web\n\nfunc FetchCart() {}\n")
+	api := writeGoRepo(t, base, "backend", "api", "package api\n\nfunc GetCart() {}\n")
+	var out, errOut bytes.Buffer
+	if code := run([]string{"graffiti", "link", web, api}, bytes.NewReader(nil), &out, &errOut); code != 0 {
+		t.Fatalf("link failed: %s", errOut.String())
+	}
+	return base
+}
+
+func TestRun_WorkspaceList(t *testing.T) {
+	base := linkShop(t)
+	// run from inside the workspace (cwd discovery) by passing --root.
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "workspace", "list", "--root", base}, bytes.NewReader(nil), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("list exit=%d stderr=%q", code, errOut.String())
+	}
+	if !strings.Contains(out.String(), "frontend") || !strings.Contains(out.String(), "backend") {
+		t.Fatalf("list missing members:\n%s", out.String())
+	}
+}
+
+func TestRun_LinksCheck(t *testing.T) {
+	base := linkShop(t)
+	// write a links file: one resolvable, one ghost.
+	wsDir := filepath.Join(base, ".graffiti-workspace")
+	// Verified node-id slugs: FetchCart -> "main-go:fetchcart", GetCart -> "main-go:getcart".
+	// (alias::id splits on the FIRST "::", so the single colon inside the id is fine.)
+	links := "frontend::main-go:fetchcart -> backend::main-go:getcart calls\nfrontend::main-go:ghost -> backend::main-go:getcart\n"
+	if err := os.WriteFile(filepath.Join(wsDir, "links"), []byte(links), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "links", "check", "--root", base}, bytes.NewReader(nil), &out, &errOut)
+	// non-zero exit because one link is unresolved
+	if code == 0 {
+		t.Fatalf("expected non-zero exit for an unresolved link:\n%s", out.String())
+	}
+	if !strings.Contains(out.String()+errOut.String(), "ghost") {
+		t.Fatalf("expected the unresolved 'ghost' link to be reported")
+	}
+}

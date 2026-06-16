@@ -72,6 +72,12 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		return serve(root, stdin, stdout, stderr)
 	case "link":
 		return runLink(args[2:], stdout, stderr)
+	case "workspace":
+		return runWorkspace(args[2:], stdout, stderr)
+	case "links":
+		return runLinksCheck(args[2:], stdout, stderr)
+	case "federate":
+		return runFederateExplain(args[2:], stdout, stderr)
 	case "init":
 		return runInit(args[2:], stdout, stderr)
 	case "hook":
@@ -101,6 +107,9 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, "  serve [path]      MCP server over stdio (JSON-RPC 2.0)")
 	fmt.Fprintln(w, "  init [--user] [--hook]  install Claude Code integration (skill + CLAUDE.md [+ hook])")
 	fmt.Fprintln(w, "  link <pathA> <pathB> [...] [--name n]  federate projects into a workspace")
+	fmt.Fprintln(w, "  workspace <add|rm|list> [--root dir]  manage workspace members")
+	fmt.Fprintln(w, "  links check [--root dir]  validate explicit cross-project links resolve")
+	fmt.Fprintln(w, "  federate --explain [--root dir]  print the computed cross-project links")
 }
 
 // runInit installs the Claude Code integration. Flags: --user (install into the
@@ -253,6 +262,153 @@ func computeAndSaveOverlay(root string, reg *workspace.Registry) (*workspace.Ove
 		return nil, err
 	}
 	return ov, nil
+}
+
+// resolveWorkspaceRoot returns the workspace root: an explicit --root if present,
+// else discovered by walking up from cwd. The returned args have --root removed.
+func resolveWorkspaceRoot(args []string, stderr io.Writer) (root string, rest []string, code int) {
+	rest = make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--root" {
+			if i+1 >= len(args) {
+				fmt.Fprintln(stderr, "graffiti: --root requires a directory")
+				return "", nil, 2
+			}
+			root = args[i+1]
+			i++
+			continue
+		}
+		rest = append(rest, args[i])
+	}
+	if root == "" {
+		cwd, _ := os.Getwd()
+		root = workspace.FindRoot(cwd)
+		if root == "" {
+			fmt.Fprintln(stderr, "graffiti: no workspace found (run `graffiti link` first, or pass --root)")
+			return "", nil, 1
+		}
+	}
+	return root, rest, 0
+}
+
+func runWorkspace(args []string, stdout, stderr io.Writer) int {
+	root, rest, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	if len(rest) == 0 {
+		fmt.Fprintln(stderr, "graffiti: workspace <add|rm|list>")
+		return 2
+	}
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	switch rest[0] {
+	case "list":
+		for _, m := range reg.Members {
+			fmt.Fprintf(stdout, "%s\t%s\n", m.Alias, m.Path)
+		}
+		return 0
+	case "rm":
+		if len(rest) < 2 {
+			fmt.Fprintln(stderr, "graffiti: workspace rm <alias>")
+			return 2
+		}
+		if !workspace.RemoveMember(reg, rest[1]) {
+			fmt.Fprintf(stderr, "graffiti: no member %q\n", rest[1])
+			return 1
+		}
+	case "add":
+		// graffiti workspace add <path> --as <alias>
+		var path, alias string
+		for i := 1; i < len(rest); i++ {
+			if rest[i] == "--as" && i+1 < len(rest) {
+				alias = rest[i+1]
+				i++
+			} else {
+				path = rest[i]
+			}
+		}
+		if path == "" {
+			fmt.Fprintln(stderr, "graffiti: workspace add <path> [--as alias]")
+			return 2
+		}
+		absPath, _ := filepath.Abs(path)
+		if alias == "" {
+			alias = aliasFor(absPath)
+		}
+		if _, err := os.Stat(filepath.Join(absPath, ".graffiti", "map.json")); err != nil {
+			if _, berr := app.Build(absPath, nowRFC3339()); berr != nil {
+				fmt.Fprintf(stderr, "graffiti: build %s: %v\n", absPath, berr)
+				return 1
+			}
+		}
+		rel, _ := filepath.Rel(root, absPath)
+		h, _ := workspace.MapHash(absPath)
+		workspace.AddMember(reg, workspace.Member{Alias: alias, Path: filepath.ToSlash(rel), MapHash: h})
+	default:
+		fmt.Fprintf(stderr, "graffiti: unknown workspace subcommand %q\n", rest[0])
+		return 2
+	}
+	if err := workspace.SaveRegistry(root, reg); err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	if _, err := computeAndSaveOverlay(root, reg); err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	return 0
+}
+
+func runLinksCheck(args []string, stdout, stderr io.Writer) int {
+	root, rest, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	if len(rest) == 0 || rest[0] != "check" {
+		fmt.Fprintln(stderr, "graffiti: links check")
+		return 2
+	}
+	reg, err := workspace.LoadRegistry(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	ov, err := computeAndSaveOverlay(root, reg)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "%d links OK.\n", len(ov.Links))
+	if len(ov.Unresolved) > 0 {
+		for _, l := range ov.Unresolved {
+			fmt.Fprintf(stdout, "UNRESOLVED: %s -> %s\n", l.From, l.To)
+		}
+		return 1
+	}
+	return 0
+}
+
+func runFederateExplain(args []string, stdout, stderr io.Writer) int {
+	root, _, code := resolveWorkspaceRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	ov, err := workspace.LoadOverlay(root)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	for _, l := range ov.Links {
+		fmt.Fprintf(stdout, "%s -%s-> %s (%s, via %s)\n", l.From, l.Relation, l.To, l.Confidence, l.Via)
+	}
+	for _, l := range ov.Ambiguous {
+		fmt.Fprintf(stdout, "AMBIGUOUS: %s -> %s (via %s)\n", l.From, l.To, l.Via)
+	}
+	return 0
 }
 
 func runBuild(root string, stdout, stderr io.Writer) int {

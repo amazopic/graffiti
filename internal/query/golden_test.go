@@ -11,7 +11,13 @@ import (
 )
 
 const fixtureGenAt = "2026-06-16T00:00:00Z"
-const goldenQuestion = "where is the graph built and rendered"
+
+// goldenQuestion matches real fixture symbols: "formatter"/"format" hit
+// Formatter.Format (method), "hello" hits Hello (function), "greeting" has no
+// exact match but "formatter"/"format" are high-IDF seeds. BFS expansion pulls
+// in greet/greet.go (contains Hello, upper) and greet/greet_helper.go (contains
+// Formatter, Formatter.Format), producing a non-empty NODES + EDGES subgraph.
+const goldenQuestion = "how does formatter format hello greeting"
 
 // copyTree mirrors the helper Plans 1–3 use in app tests.
 func copyTree(t *testing.T, src, dst string) {

@@ -1,2 +1,17 @@
 NODES
+greet-greet-go:greet-greet-go [file] greet/greet.go @ greet/greet.go:1
+greet-greet-go:hello [function] Hello @ greet/greet.go:5
+greet-greet-go:upper [function] upper @ greet/greet.go:9
+greet-greet-helper-go:formatter [class] Formatter @ greet/greet_helper.go:3
+greet-greet-helper-go:formatter-format [method] Formatter.Format @ greet/greet_helper.go:7
+greet-greet-helper-go:greet-greet-helper-go [file] greet/greet_helper.go @ greet/greet_helper.go:1
+module-strings:strings [module] strings @ greet/greet.go:3
 EDGES
+greet-greet-go:greet-greet-go -contains-> greet-greet-go:hello (EXTRACTED)
+greet-greet-go:greet-greet-go -contains-> greet-greet-go:upper (EXTRACTED)
+greet-greet-go:greet-greet-go -imports-> module-strings:strings (EXTRACTED)
+greet-greet-go:hello -calls-> greet-greet-go:upper (INFERRED)
+greet-greet-go:upper -calls-> module-strings:strings (EXTRACTED)
+greet-greet-helper-go:formatter-format -calls-> greet-greet-go:hello (INFERRED)
+greet-greet-helper-go:greet-greet-helper-go -contains-> greet-greet-helper-go:formatter (EXTRACTED)
+greet-greet-helper-go:greet-greet-helper-go -contains-> greet-greet-helper-go:formatter-format (EXTRACTED)

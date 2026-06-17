@@ -7,3 +7,4 @@
 /.graffiti/
 # MCP scratch dir (already present in the working tree)
 /.playwright-mcp/
+.DS_Store

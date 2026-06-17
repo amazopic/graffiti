@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // twoCliques builds two 4-node cliques joined by a single bridge edge (d->e).

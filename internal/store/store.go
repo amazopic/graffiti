@@ -11,7 +11,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // Load reads a map.json file at path and unmarshals it into a *graph.Document.

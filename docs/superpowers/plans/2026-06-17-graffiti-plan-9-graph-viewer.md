@@ -47,7 +47,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func sampleDoc() *graph.Document {
@@ -143,7 +143,7 @@ package render
 import (
 	"regexp"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // graphData is the compact columnar graph island consumed by viewer/app.js.

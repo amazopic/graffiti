@@ -3,8 +3,8 @@ package workspace
 import (
 	"path/filepath"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 // CombinedDocument builds an in-memory *graph.Document over all members with every

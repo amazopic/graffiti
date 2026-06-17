@@ -6,7 +6,7 @@ import (
 	ts "github.com/odvcencio/gotreesitter"
 	"github.com/odvcencio/gotreesitter/grammars"
 
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 // langConstructors maps a scan.Lang to its gotreesitter language constructor.

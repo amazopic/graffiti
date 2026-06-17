@@ -182,7 +182,7 @@ package parse
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 func TestNewParser_AllLanguagesLoad(t *testing.T) {
@@ -227,7 +227,7 @@ import (
 	ts "github.com/odvcencio/gotreesitter"
 	"github.com/odvcencio/gotreesitter/grammars"
 
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 // langConstructors maps a scan.Lang to its gotreesitter language constructor.
@@ -289,7 +289,7 @@ package parse
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 func TestSpecFor_CoversNewLanguages(t *testing.T) {
@@ -340,7 +340,7 @@ Expected: FAIL — `SpecFor`/`LangSpec` undefined.
 ```go
 package parse
 
-import "github.com/evgeniy-achin/graffiti/internal/scan"
+import "github.com/amazopic/graffiti/internal/scan"
 
 // LangSpec describes a language's tree-sitter node vocabulary for the generic
 // extractor (Extract). Every definition kind exposes its name via the grammar
@@ -450,8 +450,8 @@ package parse
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 // extractLang is a small test helper: parse src in language l and extract.
@@ -577,7 +577,7 @@ import (
 
 	ts "github.com/odvcencio/gotreesitter"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // Extract runs Pass 1 over one file using a table-driven LangSpec (spec §5). It
@@ -894,7 +894,7 @@ func parserFor(cache map[scan.Lang]parse.Parser, l scan.Lang) (parse.Parser, err
 }
 ```
 
-Ensure `internal/app/app.go` imports `"github.com/evgeniy-achin/graffiti/internal/scan"` (it already does for `scan.LangGo`).
+Ensure `internal/app/app.go` imports `"github.com/amazopic/graffiti/internal/scan"` (it already does for `scan.LangGo`).
 
 - [ ] **Step 4: Run the test to verify it passes**
 
@@ -1034,8 +1034,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 // countErrorNodes returns how many ERROR nodes the parse produced (a fidelity proxy).

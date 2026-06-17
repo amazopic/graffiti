@@ -13,9 +13,9 @@ import (
 	"io"
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/query"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/query"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 // LatestProtocolVersion is the MCP revision graffiti prefers. On initialize the

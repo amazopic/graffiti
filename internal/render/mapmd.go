@@ -7,8 +7,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // WriteMapMD renders MAP.md and writes it to <root>/.graffiti/MAP.md, next to

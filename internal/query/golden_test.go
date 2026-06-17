@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/app"
-	"github.com/evgeniy-achin/graffiti/internal/query"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/app"
+	"github.com/amazopic/graffiti/internal/query"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 const fixtureGenAt = "2026-06-16T00:00:00Z"

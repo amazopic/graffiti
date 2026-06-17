@@ -3,7 +3,7 @@ package workspace
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/query"
+	"github.com/amazopic/graffiti/internal/query"
 )
 
 func TestCombinedIndex_PrefixesAndLinks(t *testing.T) {

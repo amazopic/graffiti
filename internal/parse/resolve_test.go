@@ -3,7 +3,7 @@ package parse
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func mkNode(file, label string, kind graph.Kind) graph.Node {

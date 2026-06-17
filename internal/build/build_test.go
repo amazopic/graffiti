@@ -3,8 +3,8 @@ package build
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/parse"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/parse"
 )
 
 const genAt = "2026-06-14T00:00:00Z"

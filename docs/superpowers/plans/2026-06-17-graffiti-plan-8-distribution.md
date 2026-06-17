@@ -28,7 +28,7 @@ README.md                   Install section
 docs/superpowers/specs/2026-06-14-graffiti-design.md   §10 distribution-implemented note
 ```
 
-The public release location is `github.com/evgeniy-achin/graffiti` (the module path). The repo currently has no remote; the installer/workflows go live once it is pushed to GitHub.
+The public release location is `github.com/amazopic/graffiti` (the module path). The repo currently has no remote; the installer/workflows go live once it is pushed to GitHub.
 
 ---
 
@@ -196,14 +196,14 @@ A POSIX `sh` script whose core logic lives in sourceable functions (so the test 
 # install.sh — install the graffiti binary from GitHub Releases.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/evgeniy-achin/graffiti/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
 #
 # Environment:
 #   GRAFFITI_VERSION  release tag to install (default: latest)
 #   INSTALL_DIR       install directory (default: /usr/local/bin, fallback ~/.local/bin)
 set -eu
 
-REPO="evgeniy-achin/graffiti"
+REPO="amazopic/graffiti"
 BIN="graffiti"
 
 # detect_target prints the release asset name for the current OS/arch, e.g.
@@ -484,14 +484,14 @@ git commit -m "ci: GitHub Actions for test matrix and tagged releases"
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/evgeniy-achin/graffiti/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
 ```
 
 Pin a version or directory:
 
 ```bash
 GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/evgeniy-achin/graffiti/main/scripts/install.sh)"
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh)"
 ```
 
 The installer picks the right static binary for your OS/arch, verifies its SHA256

@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func extractBetween(t *testing.T, s, open, close string) string {

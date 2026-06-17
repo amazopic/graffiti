@@ -1,0 +1,147 @@
+# graffiti — full AI ingestion corpus
+
+graffiti turns a code repository into a directed knowledge graph an AI coding
+assistant can query instead of grepping. Single static Go binary. Zero API
+calls, $0, fully offline, byte-deterministic. Author: Yevgeniy Achin
+<amazopic@gmail.com>. License: Source-Available (reuse-by-permission). Repo:
+https://github.com/amazopic/graffiti — Site: https://amazopic.github.io/graffiti/
+
+## What it produces
+
+`graffiti .` writes into `<repo>/.graffiti/`:
+
+- `map.json` — the graph itself: nodes (files, functions, methods, types,
+  modules) and edges (calls, definitions, imports), plus detected communities.
+  Schema-checked against a published contract (`schema/map.schema.json`). This
+  is what an assistant reads and what `query` and the MCP server traverse.
+- `MAP.md` — a human-readable digest: top modules, the most-connected nodes,
+  and the three most interesting questions the map can answer.
+- `map.html` — a single self-contained, offline, interactive force-directed
+  graph rendered in the browser. CSP-safe; no CDN, no server, no network. It has
+  a 2D/3D toggle (hover lifts a node and its neighbours), node search,
+  click-to-copy `file:line`, sector zones, client/tests/external toggles, and a
+  resizable project → directory → file tree. Just open the file.
+- `cache/` — a per-file content-hash cache so re-runs only re-parse what changed.
+
+## How it works (no LLM, no network)
+
+It parses each source file with tree-sitter grammars compiled into the binary
+via the pure-Go runtime `github.com/odvcencio/gotreesitter` (no CGO, no WASM),
+gated by `grammar_subset_*` build tags so only the supported grammars ship
+(~10 MB binary). It extracts definitions and references, resolves edges,
+clusters nodes into modules/communities, runs lightweight analysis (e.g.
+god-node detection), and serializes deterministically (everything sorted). No
+model, no embeddings, no API calls. That is why it is free, private, and
+reproducible.
+
+## Supported languages
+
+Go gets full call resolution (functions, methods by receiver, types, imports,
+resolved calls). Python, JavaScript, TypeScript, Rust, Java, and PHP capture
+files, functions, classes/structs/interfaces/enums/traits, methods
+(`Class.method`), imports, and intra-repo calls. Markdown contributes doc nodes.
+Non-Go extraction intentionally under-extracts exotic constructs (decorators,
+generics, nested definitions, dynamic dispatch) rather than emitting guesses.
+
+## Commands
+
+- `graffiti .` or `graffiti build <path>` — build the map (default `.`).
+- `graffiti <path>` — shorthand for `build <path>` when `<path>` is a directory.
+- `graffiti update [path]` — rebuild the map (full rebuild for now; cache-aware).
+- `graffiti query "<question>" [path]` — LLM-free scoped subgraph retrieval with
+  a soft ~2000-token node budget. Quote the question.
+- `graffiti serve [path]` — MCP server over stdio (JSON-RPC 2.0).
+- `graffiti init [--user] [--hook]` — install Claude Code integration: a skill, a
+  `CLAUDE.md` block (between `<!-- graffiti:start -->`/`<!-- graffiti:end -->`)
+  telling the assistant to prefer `graffiti query` over grep when a map exists,
+  and with `--hook` a PreToolUse entry that nudges before `Grep`/`Glob`. `--user`
+  installs into `~/.claude` instead of the repo. Idempotent; the hook never
+  blocks a tool.
+- `graffiti link <pathA> <pathB> ... [--name n]` — federate projects into a
+  workspace (builds members if needed). Writes a committable registry
+  (`.graffiti-workspace/workspace.json`) and a derived, gitignorable overlay
+  (`.graffiti-workspace/overlay.json`). Each repo's own map.json is unchanged.
+- `graffiti workspace <add|rm|list|render>` — manage the workspace; `render`
+  writes `workspace.html` (the same viewer with projects as the tree's top level).
+- `graffiti links check` — validate explicit cross-project links resolve.
+- `graffiti federate --explain` — print the computed cross-project links.
+- `graffiti query --workspace "<q>"` / `serve --workspace` / `update --workspace`
+  — federated retrieval, MCP, and rebuild across the workspace.
+- `graffiti version` — print the version.
+
+## Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+```
+
+The installer picks the right static binary for your OS/arch, verifies its
+SHA256 against the signed release manifest, and installs it. Pin a version or
+directory with `GRAFFITI_VERSION` and `INSTALL_DIR`. Or build from source with
+`make build` (CGO-free, ~10 MB). Verify with `graffiti version`.
+
+## Frequently asked questions
+
+Q: What is graffiti?
+A: A single static command-line binary that turns a code repository into a
+directed knowledge graph — nodes for files, functions, types and modules; edges
+for calls, definitions and imports. It writes map.json, MAP.md and an
+interactive offline map.html so an AI coding assistant reads structure instead
+of grepping blind.
+
+Q: How does it build the graph without an LLM?
+A: tree-sitter parsing (pure-Go, no CGO) + edge resolution + clustering +
+deterministic serialization. No model, no embeddings, no network — just static
+analysis. That is why it is free and deterministic.
+
+Q: Which languages does it support?
+A: Go, Python, JavaScript, TypeScript, Rust, Java, PHP, plus Markdown doc nodes.
+Go gets full call resolution; the others capture the common high-value structure
+and under-extract exotic constructs rather than guess.
+
+Q: Does it really need no API key or network?
+A: Correct — zero API calls, $0, fully offline. Everything runs locally in one
+binary. Nothing about your code leaves your machine.
+
+Q: What does byte-deterministic mean here?
+A: The same repository always produces a byte-identical map.json modulo a single
+generated_at timestamp and the root folder name. Everything is sorted, so you
+can commit the map and review changes to it in a diff like any other file.
+
+Q: How does the Claude Code integration work?
+A: graffiti init installs a skill plus a CLAUDE.md block telling the assistant to
+prefer graffiti query over grep when a map exists. With --hook it adds a
+PreToolUse nudge before Grep/Glob. It is idempotent and never blocks a tool.
+
+Q: Can my assistant query it over MCP?
+A: Yes. graffiti serve exposes the map over an MCP stdio server (JSON-RPC 2.0).
+There is also an LLM-free graffiti query that returns a scoped subgraph within a
+soft token budget.
+
+Q: What is map.html?
+A: A single self-contained interactive force-directed graph: 2D/3D toggle, node
+search, click-to-copy file:line, sector zones, client/tests/external toggles, a
+resizable project→directory→file tree. CSP-safe, offline; just open it.
+
+Q: Will it handle a big repository?
+A: Yes. Parsing is fast static analysis and a per-file content-hash cache means
+re-runs only re-parse what changed.
+
+Q: Is it free? Can I use it commercially?
+A: Building and running graffiti on your own repositories is free under the
+Source-Available License. Any reuse, redistribution, fork, or inclusion in
+another project requires prior written permission from the author. Reasonable
+requests for personal, educational, and non-commercial use are typically granted.
+
+## Guarantees
+
+- 0 API calls, $0, fully offline.
+- Deterministic: same repo → byte-identical map.json modulo generated_at + root.
+- Single static binary, no runtime dependencies, no C toolchain.
+
+## Topics
+
+code-graph, knowledge-graph, ai-coding-assistant, claude-code, mcp,
+model-context-protocol, tree-sitter, static-analysis, code-map, repo-graph,
+code-intelligence, golang, developer-tools, offline-first, deterministic-build,
+dependency-graph, call-graph, codebase-visualization, dotfiles.

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // ResolveCalls performs Pass 2 (spec §5): resolve raw call sites against a global

@@ -23,7 +23,7 @@ build pipeline ──writes──▶ .graffiti/map.json
 - `internal/mcp` owns the hand-rolled stdio JSON-RPC server: an injectable `Serve(r io.Reader, w io.Writer) error` read/dispatch/write loop handling `initialize` + `tools/list` + `tools/call`, ignoring notifications, exposing the four tools. No external dependency; `encoding/json` + `bufio` only.
 - `cmd/graffiti/main.go` gains `query` and `serve` dispatch and updated usage; `internal/app` gains nothing on the build side (read path is independent), though `query`/`serve` link `internal/parse` transitively only via the `cmd` package's existing import graph, so the grammar-subset build tags continue to apply to every `cmd`/`app` command (see Tech Stack).
 
-**Tech Stack:** Go 1.26; module `github.com/evgeniy-achin/graffiti`; **no new third-party dependencies** (`store` uses `encoding/json`, `os`, `path/filepath`, `sort`; `query` uses `math`, `sort`, `strings`, plus `golang.org/x/text/unicode/norm` **already in `go.mod`** via `internal/graph` — reused for NFC normalization, not a new dep; `mcp` uses `bufio`, `encoding/json`, `io`, `sort`). `CGO_ENABLED=0`. The grammar-subset build tags from Plan 1 still apply to any target that links `internal/parse` — i.e. `internal/app` and `cmd/graffiti` (which dispatches `build`, `query`, and `serve`) — so every `go test`/`go build` command that touches `cmd/graffiti` or `internal/app` keeps `-tags "grammar_subset grammar_subset_go grammar_subset_gomod"`. The pure `internal/store`, `internal/query`, and `internal/mcp` packages do **not** link `internal/parse` and need no tags, but always passing them is harmless and keeps commands uniform with the `Makefile`.
+**Tech Stack:** Go 1.26; module `github.com/amazopic/graffiti`; **no new third-party dependencies** (`store` uses `encoding/json`, `os`, `path/filepath`, `sort`; `query` uses `math`, `sort`, `strings`, plus `golang.org/x/text/unicode/norm` **already in `go.mod`** via `internal/graph` — reused for NFC normalization, not a new dep; `mcp` uses `bufio`, `encoding/json`, `io`, `sort`). `CGO_ENABLED=0`. The grammar-subset build tags from Plan 1 still apply to any target that links `internal/parse` — i.e. `internal/app` and `cmd/graffiti` (which dispatches `build`, `query`, and `serve`) — so every `go test`/`go build` command that touches `cmd/graffiti` or `internal/app` keeps `-tags "grammar_subset grammar_subset_go grammar_subset_gomod"`. The pure `internal/store`, `internal/query`, and `internal/mcp` packages do **not** link `internal/parse` and need no tags, but always passing them is harmless and keeps commands uniform with the `Makefile`.
 
 ---
 
@@ -116,7 +116,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // writeMap writes a minimal valid map.json (same key shape render.WriteMapJSON
@@ -251,7 +251,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // Load reads a map.json file at path and unmarshals it into a *graph.Document.
@@ -379,8 +379,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 func idxFor(nodes []graph.Node, edges []graph.Edge) *store.Index {
@@ -498,8 +498,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/store"
 
 	"golang.org/x/text/unicode/norm"
 )
@@ -821,8 +821,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 func testServer() *Server {
@@ -976,9 +976,9 @@ import (
 	"io"
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/query"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/query"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 // LatestProtocolVersion is the MCP revision graffiti prefers. On initialize the
@@ -1399,10 +1399,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/evgeniy-achin/graffiti/internal/app"
-	"github.com/evgeniy-achin/graffiti/internal/mcp"
-	"github.com/evgeniy-achin/graffiti/internal/query"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/app"
+	"github.com/amazopic/graffiti/internal/mcp"
+	"github.com/amazopic/graffiti/internal/query"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 func main() {
@@ -1559,9 +1559,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/app"
-	"github.com/evgeniy-achin/graffiti/internal/query"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/app"
+	"github.com/amazopic/graffiti/internal/query"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 const fixtureGenAt = "2026-06-16T00:00:00Z"
@@ -1694,7 +1694,7 @@ Run:
 cd /Users/mylive/project/graffiti/graffiti
 go mod tidy
 git diff --stat go.mod go.sum
-go list -deps ./internal/mcp ./internal/query ./internal/store | grep -vE '^(internal/|github.com/evgeniy-achin/graffiti)' | grep -E '^(github.com|golang.org)' | sort -u
+go list -deps ./internal/mcp ./internal/query ./internal/store | grep -vE '^(internal/|github.com/amazopic/graffiti)' | grep -E '^(github.com|golang.org)' | sort -u
 ```
 Expected: `go.mod`/`go.sum` unchanged (no diff). The dep list shows only `golang.org/x/text/...` (already present via `internal/graph`'s `NormalizeID`) and stdlib — **no MCP SDK, no jwt/oauth2/http-auth packages**. This is the binary-proof of the §10 hand-rolled-MCP amendment.
 
@@ -1777,7 +1777,7 @@ Then use superpowers:finishing-a-development-branch to merge `plan4-query-mcp` i
 - `store.Load(path string) (*graph.Document, error)`, `store.NewIndex(*graph.Document) *Index`, `Index.Node/IDs/Out/In/Len` — Task 1; consumed by `query` and `mcp`. ✓
 - `query.Query(*store.Index, string, int) string`, `query.DefaultTokenBudget`, exported `query.FormatNode`/`FormatEdge`/`Serialize` — Task 2; reused by `mcp`. ✓
 - `mcp.NewServer(*store.Index) *Server`, `Server.Serve(io.Reader, io.Writer) error`, `mcp.LatestProtocolVersion` — Task 3; wired by the CLI. ✓
-- `cmd/graffiti` `run([]string, io.Writer, io.Writer) int` unchanged signature; new `runQuery`/`serve`/`loadIndex` helpers; `serve(root, io.Reader, io.Writer, io.Writer) int` injectable for tests; `app.Build` and the build pipeline untouched (all prior goldens byte-identical). Module path `github.com/evgeniy-achin/graffiti` in every import; grammar-subset tags applied to every `cmd`/`app` command. ✓
+- `cmd/graffiti` `run([]string, io.Writer, io.Writer) int` unchanged signature; new `runQuery`/`serve`/`loadIndex` helpers; `serve(root, io.Reader, io.Writer, io.Writer) int` injectable for tests; `app.Build` and the build pipeline untouched (all prior goldens byte-identical). Module path `github.com/amazopic/graffiti` in every import; grammar-subset tags applied to every `cmd`/`app` command. ✓
 
 **4. Prototype evidence (load-bearing):** the deterministic LLM-free query (IDF + seed + BFS + soft node budget + compact serialize) and the hand-rolled minimal MCP stdio server were prototyped end-to-end in a scratch module with passing tests (`/tmp/p4proto/{query,mcp}.go` + `proto_test.go`): determinism ×5, budget respected, relevance, deterministic tie-breaks, no-map-iteration-in-output for query; newline-delimited JSON-RPC 2.0 `initialize`/`tools/list`/`tools/call`, notification-no-reply, parse-error for MCP. The task code is that validated prototype with the mirror `*Graph` replaced by `*store.Index`, the tokenizer NFC-aligned to `graph.NormalizeID`, three more tools added, and `initialize` upgraded from a hardcoded constant to an allow-list version echo. The budget-covers-nodes-only decision and the newline-not-Content-Length framing were both validated in the prototype and are restated in code comments.
 

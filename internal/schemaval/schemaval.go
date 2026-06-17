@@ -5,7 +5,7 @@ package schemaval
 import (
 	"fmt"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // ValidateDocument checks required fields, closed enums, unique node IDs, and

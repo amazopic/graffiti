@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0E0E10" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#F5F2EA" media="(prefers-color-scheme: light)" />
+    <meta name="color-scheme" content="light dark" />
+
+    <!-- Primary SEO -->
+    <title>graffiti — turn any repo into a queryable code graph for AI</title>
+    <meta name="description" content="graffiti turns a code repository into a directed knowledge graph your AI coding assistant reads instead of grepping. One static Go binary — zero API keys, $0, fully offline, byte-deterministic. Go, Python, JS, TS, Rust, Java, PHP." />
+    <meta name="author" content="Yevgeniy Achin" />
+    <meta name="keywords" content="code graph, knowledge graph, ai coding assistant, claude code, mcp, tree-sitter, static analysis, code map, repo graph, golang, developer tools, offline, deterministic, code intelligence" />
+    <link rel="canonical" href="https://amazopic.github.io/graffiti/" />
+
+    <!-- hreflang alternates -->
+    <link rel="alternate" hreflang="x-default" href="https://amazopic.github.io/graffiti/" />
+    <link rel="alternate" hreflang="en" href="https://amazopic.github.io/graffiti/?lang=en" />
+    <link rel="alternate" hreflang="ru" href="https://amazopic.github.io/graffiti/?lang=ru" />
+    <link rel="alternate" hreflang="fr" href="https://amazopic.github.io/graffiti/?lang=fr" />
+    <link rel="alternate" hreflang="de" href="https://amazopic.github.io/graffiti/?lang=de" />
+    <link rel="alternate" hreflang="uk" href="https://amazopic.github.io/graffiti/?lang=uk" />
+    <link rel="alternate" hreflang="sl" href="https://amazopic.github.io/graffiti/?lang=sl" />
+    <link rel="alternate" hreflang="it" href="https://amazopic.github.io/graffiti/?lang=it" />
+    <link rel="alternate" hreflang="es" href="https://amazopic.github.io/graffiti/?lang=es" />
+    <link rel="alternate" hreflang="zh" href="https://amazopic.github.io/graffiti/?lang=zh" />
+    <link rel="alternate" hreflang="ja" href="https://amazopic.github.io/graffiti/?lang=ja" />
+    <link rel="alternate" hreflang="ko" href="https://amazopic.github.io/graffiti/?lang=ko" />
+    <link rel="alternate" hreflang="ar" href="https://amazopic.github.io/graffiti/?lang=ar" />
+    <link rel="alternate" hreflang="pt-BR" href="https://amazopic.github.io/graffiti/?lang=pt" />
+    <link rel="alternate" hreflang="tr" href="https://amazopic.github.io/graffiti/?lang=tr" />
+    <link rel="alternate" hreflang="id" href="https://amazopic.github.io/graffiti/?lang=id" />
+    <link rel="alternate" hreflang="vi" href="https://amazopic.github.io/graffiti/?lang=vi" />
+    <link rel="alternate" hreflang="hi" href="https://amazopic.github.io/graffiti/?lang=hi" />
+    <link rel="alternate" hreflang="zh-TW" href="https://amazopic.github.io/graffiti/?lang=zh-tw" />
+    <link rel="alternate" hreflang="pl" href="https://amazopic.github.io/graffiti/?lang=pl" />
+    <link rel="alternate" hreflang="th" href="https://amazopic.github.io/graffiti/?lang=th" />
+    <link rel="alternate" hreflang="he" href="https://amazopic.github.io/graffiti/?lang=he" />
+    <link rel="alternate" hreflang="bn" href="https://amazopic.github.io/graffiti/?lang=bn" />
+    <link rel="alternate" hreflang="ur" href="https://amazopic.github.io/graffiti/?lang=ur" />
+
+    <!-- OpenGraph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="graffiti — turn any repo into a queryable code graph for AI" />
+    <meta property="og:description" content="A directed knowledge graph your AI assistant reads instead of grepping. One static binary — zero API keys, $0, fully offline, deterministic." />
+    <meta property="og:url" content="https://amazopic.github.io/graffiti/" />
+    <meta property="og:site_name" content="graffiti" />
+    <meta property="og:image" content="https://amazopic.github.io/graffiti/og-image.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="graffiti — a repository rendered as a force-directed code graph" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="ru_RU" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="graffiti — a code graph for AI coding assistants" />
+    <meta name="twitter:description" content="Turn any repo into a queryable directed graph. One static binary, zero API keys, $0, offline." />
+    <meta name="twitter:image" content="https://amazopic.github.io/graffiti/og-image.svg" />
+
+    <!-- AI / LLM crawler hints -->
+    <link rel="alternate" type="text/plain" href="/graffiti/llms.txt" title="llms.txt — AI crawler index" />
+    <link rel="alternate" type="text/plain" href="/graffiti/llms-full.txt" title="llms-full.txt — AI ingestion corpus" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=editorial-new@200,300,400,500,700,800&f[]=neue-montreal@400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&display=swap" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/tokens.css?v=1" />
+    <link rel="stylesheet" href="css/base.css?v=1" />
+    <link rel="stylesheet" href="css/sections.css?v=1" />
+
+    <!-- JSON-LD: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "graffiti",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "macOS, Linux, Windows",
+      "description": "graffiti turns a code repository into a directed knowledge graph an AI coding assistant can query instead of grepping. A single static Go binary with zero API keys, $0 cost, fully offline and byte-deterministic. Builds map.json, MAP.md and an interactive offline map.html; ships an LLM-free query, an MCP server, Claude Code integration and multi-repo federation.",
+      "softwareVersion": "0.1.0",
+      "datePublished": "2026-06-17",
+      "author": { "@type": "Person", "name": "Yevgeniy Achin", "email": "amazopic@gmail.com", "url": "https://github.com/amazopic" },
+      "publisher": { "@type": "Person", "name": "Yevgeniy Achin" },
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "license": "Source-Available (Reuse-by-Permission)",
+      "url": "https://amazopic.github.io/graffiti/",
+      "downloadUrl": "https://github.com/amazopic/graffiti",
+      "codeRepository": "https://github.com/amazopic/graffiti",
+      "programmingLanguage": "Go",
+      "inLanguage": ["en", "ru", "fr", "de", "uk", "sl", "it", "es", "zh", "ja", "ko", "ar", "pt", "tr", "id", "vi", "hi", "zh-TW", "pl", "th", "he", "bn", "ur"],
+      "keywords": "code graph, knowledge graph, ai coding assistant, claude code, mcp, tree-sitter, static analysis, repo map, deterministic, offline, golang, developer tools",
+      "featureList": [
+        "Turns a repo into a directed knowledge graph (calls, defs, imports)",
+        "Zero API calls, $0, fully offline",
+        "Byte-deterministic map.json (diffable, committable)",
+        "Parses Go, Python, JavaScript, TypeScript, Rust, Java, PHP",
+        "Single static CGO-free binary (~10 MB)",
+        "LLM-free, token-budgeted query",
+        "MCP server over stdio (JSON-RPC 2.0)",
+        "Claude Code integration (skill + CLAUDE.md + PreToolUse hook)",
+        "Interactive, self-contained, offline force-graph viewer (map.html)",
+        "Multi-repo workspace federation",
+        "23 documented languages"
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "What is graffiti?", "acceptedAnswer": { "@type": "Answer", "text": "A single static command-line binary that turns a code repository into a directed knowledge graph — nodes for files, functions, types and modules; edges for calls, definitions and imports. It writes the graph as map.json, a human digest MAP.md, and an interactive offline map.html, so an AI coding assistant can read structure instead of grepping blind." }},
+        { "@type": "Question", "name": "How does it build the graph without an LLM?", "acceptedAnswer": { "@type": "Answer", "text": "It parses each file with tree-sitter grammars (pure-Go, no CGO), extracts definitions and references, resolves the edges, clusters the result into modules, and serializes it. No model, no embeddings, no network — just static analysis. That's why it's free and deterministic." }},
+        { "@type": "Question", "name": "Which languages does it support?", "acceptedAnswer": { "@type": "Answer", "text": "Go, Python, JavaScript, TypeScript, Rust, Java, and PHP (plus Markdown doc nodes). Go gets full call resolution; the others capture files, functions, classes/structs/interfaces, methods and imports, and intentionally under-extract exotic constructs rather than emit guesses." }},
+        { "@type": "Question", "name": "Does it really need no API key or network?", "acceptedAnswer": { "@type": "Answer", "text": "Correct — zero API calls, $0, fully offline. Everything runs locally in one binary. Nothing about your code ever leaves your machine." }},
+        { "@type": "Question", "name": "What does byte-deterministic mean here?", "acceptedAnswer": { "@type": "Answer", "text": "The same repository always produces a byte-identical map.json — modulo a single generated_at timestamp and the root folder name. Everything is sorted. You can commit the map and review changes to it in a diff like any other file." }},
+        { "@type": "Question", "name": "How does the Claude Code integration work?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti init installs a skill plus a CLAUDE.md block telling the assistant to prefer graffiti query over grep when a map exists. With --hook it also adds a PreToolUse nudge before Grep/Glob. It is idempotent and never blocks a tool." }},
+        { "@type": "Question", "name": "Can my assistant query it over MCP?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. graffiti serve exposes the map over an MCP stdio server (JSON-RPC 2.0), so any MCP-capable client can traverse the graph through tools. There is also an LLM-free graffiti query that returns a scoped subgraph within a soft token budget." }},
+        { "@type": "Question", "name": "Is it free? Can I use it commercially?", "acceptedAnswer": { "@type": "Answer", "text": "Building and running graffiti on your own repositories is free under the Source-Available License. Any reuse, redistribution, fork, or inclusion in another project requires prior written permission from the author. Reasonable requests for personal, educational, and non-commercial use are typically granted." }}
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: WebSite -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "graffiti",
+      "alternateName": ["graffiti code graph", "graffiti for Claude Code"],
+      "url": "https://amazopic.github.io/graffiti/",
+      "inLanguage": ["en", "ru", "fr", "de", "uk", "sl", "it", "es", "zh", "ja", "ko", "ar", "pt", "tr", "id", "vi", "hi", "zh-TW", "pl", "th", "he", "bn", "ur"],
+      "publisher": { "@type": "Person", "name": "Yevgeniy Achin" }
+    }
+    </script>
+
+    <!-- JSON-LD: HowTo -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      "name": "Install graffiti and map your repository",
+      "description": "Install the graffiti binary, build the map for a repository, and wire it into Claude Code.",
+      "totalTime": "PT1M",
+      "tool": [{ "@type": "HowToTool", "name": "curl or Go toolchain" }],
+      "step": [
+        { "@type": "HowToStep", "name": "Get the binary", "text": "curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh" },
+        { "@type": "HowToStep", "name": "Map your repo", "text": "Run graffiti . at the repository root to write .graffiti/map.json, MAP.md and map.html." },
+        { "@type": "HowToStep", "name": "Wire up Claude Code", "text": "Run graffiti init --hook to install the skill, CLAUDE.md block and the grep→query nudge." }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <main>
+
+      <!-- ═══════════════════ 01 · HERO ═══════════════════ -->
+      <section class="s-hero" aria-labelledby="hero-title">
+        <div class="wrap">
+          <header class="hero-meta">
+            <span class="hero-meta__brand" data-i18n="hero.brand">graffiti · code graph</span>
+            <div class="hero-meta__right">
+              <span class="hero-meta__issue" data-i18n="hero.issue">Issue 01 · 23 languages · 7 parsed</span>
+              <a class="hero-meta__github" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener" aria-label="View on GitHub">
+                <span aria-hidden="true">★</span> <span data-i18n="hero.meta.github">GitHub</span>
+              </a>
+              <div class="lang-switcher" data-lang-switcher>
+                <button class="lang-switcher__toggle" type="button" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="lang-switcher__label" data-i18n="lang.label">Language</span>
+                  <span class="lang-switcher__current" data-current-lang>EN</span>
+                  <span class="lang-switcher__chev" aria-hidden="true">▾</span>
+                </button>
+                <ul class="lang-switcher__menu" role="listbox" data-lang-menu hidden></ul>
+              </div>
+            </div>
+          </header>
+
+          <h1 id="hero-title" class="hero-nameplate" aria-label="graffiti — a code-graph engine for AI coding assistants">
+            <span class="word">graffiti</span>
+            <span class="hero-nameplate__sup" data-i18n="hero.nameplate.sup">A code-graph engine for AI coding assistants</span>
+          </h1>
+
+          <div class="hero-grid">
+            <div class="hero-pitch">
+              <span class="hero-pitch__badge" data-i18n="hero.pitch.badge">★ Zero API keys · $0 · fully offline</span>
+              <h2 class="hero-pitch__title" data-i18n-html="hero.pitch.title">Stop grepping.<br/>Start reading the <em>graph</em>.</h2>
+              <p class="hero-pitch__body" data-i18n-html="hero.pitch.body">Your AI assistant explores your codebase blind — one grep at a time. graffiti turns the whole repo into a directed knowledge graph it can query. One static binary. No API key, no cloud, no cost.</p>
+
+              <div class="hero-cta">
+                <a class="btn" href="#install"><span data-i18n="hero.cta.install">Install in 30s</span> <span class="arrow">→</span></a>
+                <a class="btn btn--ghost" href="#map" data-i18n="hero.cta.graph">See the graph</a>
+                <a class="btn btn--github" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener">
+                  <span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="arrow">↗</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="hero-aside">
+              <div class="hero-graph-wrap">
+                <span class="hero-graph-wrap__label" data-i18n="hero.graph.label">Live preview · a repo as a force-directed graph</span>
+                <canvas id="graph" aria-hidden="true"></canvas>
+                <div class="hero-legend" aria-hidden="true">
+                  <span class="hero-legend__item"><i class="dot dot--code"></i><span data-i18n="hero.legend.client">your code</span></span>
+                  <span class="hero-legend__item"><i class="dot dot--tests"></i><span data-i18n="hero.legend.tests">tests</span></span>
+                  <span class="hero-legend__item"><i class="dot dot--ext"></i><span data-i18n="hero.legend.external">external</span></span>
+                </div>
+              </div>
+
+              <div class="hero-terminal">
+                <span class="hero-terminal__label" data-i18n="hero.terminal.label">one command:</span>
+                <pre class="mono"><span class="prompt">$</span> graffiti .
+<span class="ok">✓</span> Done. <span class="dim">0 API calls, $0.</span>  214 files → 1,883 nodes, 4,102 edges, 12 communities.
+  The 3 most interesting questions your map can answer:
+    1) Which module is the load-bearing wall?
+    2) What does the auth flow touch?
+    3) Where are the cross-package call hotspots?</pre>
+              </div>
+
+              <div class="hero-det" role="region">
+                <span class="hero-det__eyebrow"><span aria-hidden="true">◐</span> <span data-i18n="hero.det.eyebrow">Determinism</span></span>
+                <h3 class="hero-det__title" data-i18n="hero.det.title">Same repo in — byte-identical map out.</h3>
+                <p class="hero-det__body" data-i18n-html="hero.det.body">Every run sorts everything and stamps a single timestamp. Diff two builds and only the clock moves. Commit the map; review it like code.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">❖</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">❖</span>
+      </div>
+
+      <!-- ═══════════════════ 02 · VIBE INSTALL ═══════════════════ -->
+      <section class="s-vibe" aria-labelledby="vibe-title" id="vibe">
+        <div class="wrap vibe-grid">
+          <div class="vibe-text">
+            <span class="vibe-eyebrow"><span class="vibe-eyebrow__bolt" aria-hidden="true">⚡</span> <span data-i18n="vibe.eyebrow">Vibe-chill install</span></span>
+            <h2 id="vibe-title" class="vibe-title" data-i18n-html="vibe.title">Why touch a terminal<br/>when you have <em>Claude Code</em>?</h2>
+            <p class="vibe-intro" data-i18n="vibe.intro">Paste this one prompt into your Claude Code session. Say "y" when it asks for permission. Done.</p>
+            <p class="vibe-bonus" data-i18n-html="vibe.bonus">No Go toolchain, no build flags, no config hunt — Claude downloads the binary, maps your repo, and wires up the integration, asking before each command.</p>
+          </div>
+          <div class="vibe-panel">
+            <div class="vibe-panel__head">
+              <span class="vibe-panel__label"><span class="who you">you</span> <span class="vibe-panel__hint" data-i18n="vibe.panel.label">paste in Claude Code:</span></span>
+              <button class="copy-btn copy-btn--vibe" data-copy="#vibe-prompt" data-i18n="ui.copy">Copy</button>
+            </div>
+            <pre class="vibe-prompt mono" id="vibe-prompt" data-i18n="vibe.prompt">Install graffiti by amazopic for me. Download the right static binary for my OS/arch from the latest release at github.com/amazopic/graffiti (or build it from source with `make build` if Go is available), put it on my PATH as `graffiti`, and verify with `graffiti version`. Then run `graffiti .` at my repo root to build the map, run `graffiti init --hook` to wire graffiti into Claude Code, and finally open `.graffiti/map.html` so I can see the graph. Ask before each step.</pre>
+            <p class="vibe-panel__note" data-i18n-html="vibe.note">↳ Just say <code class="mono">y</code> (yes) at every permission prompt — Claude will run each command one by one.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ 03 · EDITOR'S NOTE ═══════════════════ -->
+      <section class="s-note" aria-labelledby="note-title">
+        <div class="wrap note-grid">
+          <div><span class="note__label" id="note-title" data-i18n="note.label">Editor's Note</span></div>
+          <div class="note__body">
+            <p data-i18n-html="note.body.p1"><span class="dropcap">A</span>n AI coding assistant is only as good as what it can see.</p>
+            <p data-i18n-html="note.body.p2">graffiti is the map that should have been there.</p>
+          </div>
+          <aside class="note__margin" data-i18n-html="note.margin"><em>Editorial note —</em> graffiti is source-available: read and run it freely on your own repos, but reuse requires the author's permission.</aside>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">✶</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">✶</span>
+      </div>
+
+      <!-- ═══════════════════ 04 · NUMBERS ═══════════════════ -->
+      <section class="s-numbers" aria-labelledby="numbers-title">
+        <div class="wrap">
+          <h2 id="numbers-title" class="smcp" style="color:var(--sub-inv); margin-bottom:3rem;" data-i18n="numbers.title">By the numbers</h2>
+          <div class="numbers-row">
+            <div class="num num--featured"><div class="num__value">7</div><span class="num__label" data-i18n="numbers.langs">languages parsed</span></div>
+            <div class="num"><div class="num__value">0</div><span class="num__label" data-i18n="numbers.api">API calls, ever</span></div>
+            <div class="num"><div class="num__value">$0</div><span class="num__label" data-i18n="numbers.cost">dollars to run</span></div>
+            <div class="num"><div class="num__value">1</div><span class="num__label" data-i18n="numbers.binary">static binary (~10 MB)</span></div>
+            <div class="num"><div class="num__value">23</div><span class="num__label" data-i18n="numbers.langdocs">documented languages</span></div>
+            <div class="num"><div class="num__value">100<span class="pct">%</span></div><span class="num__label" data-i18n="numbers.det">byte-deterministic, offline</span></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider section-divider--inv">
+        <span class="section-divider__ornament" aria-hidden="true">✺</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">✺</span>
+      </div>
+
+      <!-- ═══════════════════ 05 · THE MAP ═══════════════════ -->
+      <section class="s-map" aria-labelledby="map-title" id="map">
+        <div class="wrap">
+          <span class="catalog__meta" data-i18n="map.meta">Contents · three artifacts</span>
+          <h2 id="map-title" class="catalog__title" data-i18n-html="map.title">One command,<br/><em>three artifacts.</em></h2>
+          <p class="map__intro" data-i18n-html="map.intro"><code class="mono">graffiti .</code> writes everything into <code class="mono">.graffiti/</code>.</p>
+
+          <div class="map-cards" data-io>
+            <article class="map-card">
+              <span class="map-card__file mono">map.json</span>
+              <h3 class="map-card__title" data-i18n="map.json.title">map.json</h3>
+              <p class="map-card__desc" data-i18n-html="map.json.desc">The graph itself — nodes, edges, communities, schema-checked.</p>
+            </article>
+            <article class="map-card">
+              <span class="map-card__file mono">MAP.md</span>
+              <h3 class="map-card__title" data-i18n="map.md.title">MAP.md</h3>
+              <p class="map-card__desc" data-i18n-html="map.md.desc">A human-readable digest of the most important structure.</p>
+            </article>
+            <article class="map-card map-card--feature">
+              <span class="map-card__file mono">map.html</span>
+              <h3 class="map-card__title" data-i18n="map.html.title">map.html</h3>
+              <p class="map-card__desc" data-i18n-html="map.html.desc">A single self-contained, offline, interactive force-directed graph.</p>
+            </article>
+          </div>
+
+          <div class="viewer-feature" data-io>
+            <span class="viewer-feature__label mono" data-i18n="map.viewer.label">map.html · interactive viewer</span>
+            <ul class="viewer-feature__list">
+              <li data-i18n="map.viewer.f1">2D / 3D toggle — hover lifts a node and its neighbours</li>
+              <li data-i18n="map.viewer.f2">search nodes · click to copy file:line</li>
+              <li data-i18n="map.viewer.f3">sector zones · client / tests / external toggles</li>
+              <li data-i18n="map.viewer.f4">resizable project → directory → file tree</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">✦</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">✦</span>
+      </div>
+
+      <!-- ═══════════════════ 06 · COMPARE ═══════════════════ -->
+      <section class="s-compare" aria-labelledby="compare-title" id="compare">
+        <div class="wrap">
+          <span class="compare-sub" data-i18n="compare.sub">A side-by-side</span>
+          <h2 id="compare-title" class="compare-title" data-i18n-html="compare.title">vs. grep,<br/>vs. the cloud</h2>
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th data-i18n="compare.col.feature">Capability</th>
+                <th data-i18n="compare.col.grep">Grep / cloud RAG</th>
+                <th data-i18n="compare.col.ours">graffiti</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td data-i18n="cmp.f.graph">Directed graph: calls, defs, imports</td><td class="no" data-i18n="compare.no">no</td><td class="yes" data-i18n="compare.yes">yes</td></tr>
+              <tr><td data-i18n="cmp.f.offline">Runs fully offline, no account</td><td class="no" data-i18n="compare.no">no</td><td class="yes" data-i18n="compare.yes">yes</td></tr>
+              <tr><td data-i18n="cmp.f.cost">Ongoing cost</td><td class="mut" data-i18n="cmp.v.cost.grep">$ per token</td><td class="yes" data-i18n="cmp.v.cost.ours">$0</td></tr>
+              <tr><td data-i18n="cmp.f.query">LLM-free, token-budgeted retrieval</td><td class="no" data-i18n="compare.no">no</td><td class="yes" data-i18n="compare.yes">yes</td></tr>
+              <tr><td data-i18n="cmp.f.mcp">MCP server built in</td><td class="no" data-i18n="compare.no">no</td><td class="yes" data-i18n="compare.yes">yes</td></tr>
+              <tr><td data-i18n="cmp.f.det">Byte-deterministic output</td><td class="no" data-i18n="compare.no">no</td><td class="yes" data-i18n="compare.yes">yes</td></tr>
+              <tr><td data-i18n="cmp.f.viewer">Interactive offline graph viewer</td><td class="no" data-i18n="compare.no">no</td><td class="yes" data-i18n="compare.yes">yes</td></tr>
+              <tr><td data-i18n="cmp.f.deps">What it needs</td><td class="mut" data-i18n="cmp.v.deps.grep">cloud + API keys</td><td class="yes" data-i18n="cmp.v.deps.ours">one binary</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">◇</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">◇</span>
+      </div>
+
+      <!-- ═══════════════════ 07 · INSTALL ═══════════════════ -->
+      <section class="s-install" aria-labelledby="install-title" id="install">
+        <div class="wrap">
+          <span class="compare-sub" data-i18n="install.sub">Get going</span>
+          <h2 id="install-title" class="install-title" data-i18n="install.title">Install in 30 seconds</h2>
+          <p class="install__intro" data-i18n="install.intro">One static binary does it all: build the map, query it, serve it over MCP, and wire itself into Claude Code.</p>
+
+          <div class="install-grid">
+            <div>
+              <div class="install-step"><div class="install-step__num">01</div><h3 class="install-step__title" data-i18n="install.step1.title">Get the binary</h3><p class="install-step__desc" data-i18n-html="install.step1.desc">One curl — or make build from source.</p></div>
+              <div class="install-step"><div class="install-step__num">02</div><h3 class="install-step__title" data-i18n="install.step2.title">Map your repo</h3><p class="install-step__desc" data-i18n-html="install.step2.desc">Run graffiti . at the repo root.</p></div>
+              <div class="install-step"><div class="install-step__num">03</div><h3 class="install-step__title" data-i18n="install.step3.title">Wire up Claude Code</h3><p class="install-step__desc" data-i18n-html="install.step3.desc">graffiti init --hook — and your assistant reads the graph.</p></div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+              <div class="install__code-wrap install__claude">
+                <span class="install__claude-label"><span class="install__claude-badge">★</span> <span data-i18n="install.claude.label">Or in Claude Code — easiest</span></span>
+                <p class="install__claude-intro" data-i18n="install.claude.intro">Have Claude Code open? Paste this one prompt and you're done — no terminal needed.</p>
+                <div class="install__claude-prompt">
+                  <div class="install__claude-head"><span class="install__claude-step">01</span><button class="copy-btn copy-btn--inline" data-copy="#claude-prompt-1" data-i18n="ui.copy">Copy</button></div>
+                  <div class="install__claude-line"><span class="who you">you</span> <span class="msg" id="claude-prompt-1" data-i18n="install.claude.prompt1">Install graffiti by amazopic for me…</span></div>
+                </div>
+              </div>
+
+              <div class="install__code-wrap">
+                <span class="smcp" style="color:var(--sub); display:block; margin-bottom:0.5rem;" data-i18n="install.codelabel.main">macOS / Linux / WSL</span>
+                <button class="copy-btn" data-copy="#install-cmd-1" data-i18n="ui.copy">Copy</button>
+<pre class="code mono" id="install-cmd-1"><span class="cmt"># 1 — get the binary (verifies SHA256)</span>
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+<span class="cmt"># 2 — map your repo</span>
+graffiti .
+
+<span class="cmt"># 3 — look at the graph</span>
+open .graffiti/map.html</pre>
+                <p class="install__refresh-tip" data-i18n-html="install.note">The installer picks the right static binary for your OS/arch and verifies its SHA256. Prefer source? make build produces the same ~10 MB CGO-free binary.</p>
+              </div>
+
+              <div class="install__code-wrap">
+                <span class="smcp" style="color:var(--sub); display:block; margin-bottom:0.5rem;" data-i18n="install.codelabel.cc">Claude Code integration</span>
+                <button class="copy-btn" data-copy="#install-cmd-2" data-i18n="ui.copy">Copy</button>
+<pre class="code mono" id="install-cmd-2">graffiti init --hook   <span class="cmt"># skill + CLAUDE.md + grep→query nudge</span>
+graffiti serve          <span class="cmt"># MCP server over stdio</span>
+graffiti query "auth flow"   <span class="cmt"># LLM-free scoped subgraph</span></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">☞</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">☞</span>
+      </div>
+
+      <!-- ═══════════════════ 08 · WORKSPACES ═══════════════════ -->
+      <section class="s-workspace" aria-labelledby="ws-title" id="workspace">
+        <div class="wrap ws-grid">
+          <div>
+            <span class="vibe-eyebrow"><span data-i18n="ws.eyebrow">Multi-repo</span></span>
+            <h2 id="ws-title" class="ws-title" data-i18n-html="ws.title">Frontend and backend,<br/><em>one graph.</em></h2>
+          </div>
+          <div class="ws-body">
+            <p data-i18n-html="ws.body">Lay separate repos side by side and query across them — without merging.</p>
+            <p class="ws-note" data-i18n-html="ws.note">Assert cross-project edges, validate they resolve, then query the whole federation.</p>
+<pre class="code mono"><span class="prompt">$</span> graffiti link ../frontend ../backend
+<span class="ok">✓</span> Linked 2 projects. 7 cross-project links. <span class="dim">0 API calls, $0.</span>
+<span class="prompt">$</span> graffiti query --workspace "where is the cart fetched and served"</pre>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">✤</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">✤</span>
+      </div>
+
+      <!-- ═══════════════════ 09 · FAQ ═══════════════════ -->
+      <section class="s-faq" aria-labelledby="faq-title" id="faq">
+        <div class="wrap">
+          <span class="compare-sub" data-i18n-html="faq.sub">Q &amp; A</span>
+          <h2 id="faq-title" class="faq-title" data-i18n-html="faq.title">Frequently<br/>Asked</h2>
+          <div class="faq-list">
+            <details class="faq-item"><summary data-i18n="faq.q.what">What is graffiti?</summary><div class="faq-item__a" data-i18n-html="faq.a.what"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.how">How does it build the graph without an LLM?</summary><div class="faq-item__a" data-i18n-html="faq.a.how"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.langs">Which languages does it support?</summary><div class="faq-item__a" data-i18n-html="faq.a.langs"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.offline">Does it really need no API key or network?</summary><div class="faq-item__a" data-i18n-html="faq.a.offline"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.det">What does "byte-deterministic" mean here?</summary><div class="faq-item__a" data-i18n-html="faq.a.det"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.cc">How does the Claude Code integration work?</summary><div class="faq-item__a" data-i18n-html="faq.a.cc"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.mcp">Can my assistant query it over MCP?</summary><div class="faq-item__a" data-i18n-html="faq.a.mcp"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.viewer">What is map.html?</summary><div class="faq-item__a" data-i18n-html="faq.a.viewer"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.big">Will it handle a big repository?</summary><div class="faq-item__a" data-i18n-html="faq.a.big"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.free">Is it free? Can I use it commercially?</summary><div class="faq-item__a" data-i18n-html="faq.a.free"></div></details>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ 10 · COLOPHON ═══════════════════ -->
+      <footer class="s-colophon colophon" aria-labelledby="colophon-title">
+        <div class="wrap">
+          <h2 id="colophon-title" class="display" style="font-size:clamp(2.5rem,6vw,4.5rem); margin-bottom:2.5rem; color:var(--paper);" data-i18n="colo.title">Graffiti</h2>
+          <div class="colophon-grid">
+            <div>
+              <h3 data-i18n="colo.h.author">Author</h3>
+              <p>Yevgeniy Achin</p>
+              <p style="margin-top:0.5rem;"><a href="mailto:amazopic@gmail.com">amazopic@gmail.com</a></p>
+            </div>
+            <div>
+              <h3 data-i18n="colo.h.license">License</h3>
+              <p data-i18n="colo.license.body">Source-Available — reuse only with prior written permission.</p>
+              <p style="margin-top:0.5rem;"><a href="https://github.com/amazopic/graffiti/blob/main/LICENSE" data-i18n="colo.license.read">Read full license →</a></p>
+            </div>
+            <div>
+              <h3 data-i18n="colo.h.set">Set in</h3>
+              <ul>
+                <li>Editorial New <em style="color:var(--sub-inv-2);">(Pangram Pangram)</em></li>
+                <li>Neue Montreal <em style="color:var(--sub-inv-2);">(Pangram Pangram)</em></li>
+                <li>Geist Mono <em style="color:var(--sub-inv-2);">(Vercel)</em></li>
+              </ul>
+            </div>
+            <div>
+              <h3 data-i18n="colo.h.links">Links</h3>
+              <ul>
+                <li><a href="https://github.com/amazopic/graffiti" data-i18n="colo.links.repo">GitHub repo ↗</a></li>
+                <li><a href="https://github.com/amazopic/graffiti/blob/main/README.md" data-i18n="colo.links.readme">Read README ↗</a></li>
+                <li><a href="https://github.com/amazopic/graffiti/tree/main/internal/render/viewer" data-i18n="colo.links.viewer">Viewer source</a></li>
+                <li><a href="llms.txt">/llms.txt</a> · <a href="llms-full.txt">/llms-full.txt</a></li>
+                <li><a href="https://claude.com/claude-code" data-i18n="colo.links.cc">Claude Code ↗</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="colophon-meta">
+            <span data-i18n="colo.meta.copyright">© 2026 Yevgeniy Achin · Source-Available</span>
+            <span data-i18n="colo.meta.made">Made for AI coding assistants</span>
+            <span data-i18n="colo.meta.issue">Issue 01 · v0.1.0</span>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+
+    <div class="toast" role="status" aria-live="polite"></div>
+
+    <noscript>
+      <p style="padding:2rem;text-align:center;">This page is enhanced with JavaScript. graffiti is fully documented in the <a href="https://github.com/amazopic/graffiti">GitHub repository</a>.</p>
+    </noscript>
+
+    <script type="module" src="js/main.js?v=1"></script>
+  </body>
+</html>

@@ -1319,7 +1319,7 @@ Expected: FAIL — unknown command `init`/`hook`.
 In `cmd/graffiti/main.go` imports, add:
 
 ```go
-	"github.com/evgeniy-achin/graffiti/internal/integrate"
+	"github.com/amazopic/graffiti/internal/integrate"
 ```
 
 - [ ] **Step 4: Add `init` and `hook` cases**

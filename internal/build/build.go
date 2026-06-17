@@ -5,9 +5,9 @@ package build
 import (
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/parse"
-	"github.com/evgeniy-achin/graffiti/internal/schemaval"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/parse"
+	"github.com/amazopic/graffiti/internal/schemaval"
 )
 
 // Assemble folds extractions into one Document: stamp generatedAt, dedup nodes

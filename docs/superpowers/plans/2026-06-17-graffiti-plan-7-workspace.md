@@ -581,8 +581,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/render"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/render"
 )
 
 // writeMember builds a member dir with a map.json containing the given node ids.
@@ -706,8 +706,8 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 // memberIndexes loads each member's map.json into a store.Index keyed by alias.
@@ -858,7 +858,7 @@ package workspace
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/query"
+	"github.com/amazopic/graffiti/internal/query"
 )
 
 func TestCombinedIndex_PrefixesAndLinks(t *testing.T) {
@@ -924,8 +924,8 @@ package workspace
 import (
 	"path/filepath"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/store"
 )
 
 // CombinedIndex builds an in-memory store.Index over all members with every node
@@ -1240,7 +1240,7 @@ Expected: FAIL — unknown command `link`.
 Add imports:
 
 ```go
-	"github.com/evgeniy-achin/graffiti/internal/workspace"
+	"github.com/amazopic/graffiti/internal/workspace"
 ```
 
 Add a case in the `switch cmd` block (before `default:`):

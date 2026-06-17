@@ -2,14 +2,14 @@
 # install.sh — install the graffiti binary from GitHub Releases.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/evgeniy-achin/graffiti/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
 #
 # Environment:
 #   GRAFFITI_VERSION  release tag to install (default: latest)
 #   INSTALL_DIR       install directory (default: /usr/local/bin, fallback ~/.local/bin)
 set -eu
 
-REPO="evgeniy-achin/graffiti"
+REPO="amazopic/graffiti"
 BIN="graffiti"
 
 # detect_target prints the release asset name for the current OS/arch, e.g.

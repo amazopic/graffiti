@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/evgeniy-achin/graffiti/internal/app"
-	"github.com/evgeniy-achin/graffiti/internal/integrate"
-	"github.com/evgeniy-achin/graffiti/internal/mcp"
-	"github.com/evgeniy-achin/graffiti/internal/query"
-	"github.com/evgeniy-achin/graffiti/internal/render"
-	"github.com/evgeniy-achin/graffiti/internal/store"
-	"github.com/evgeniy-achin/graffiti/internal/workspace"
+	"github.com/amazopic/graffiti/internal/app"
+	"github.com/amazopic/graffiti/internal/integrate"
+	"github.com/amazopic/graffiti/internal/mcp"
+	"github.com/amazopic/graffiti/internal/query"
+	"github.com/amazopic/graffiti/internal/render"
+	"github.com/amazopic/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/workspace"
 )
 
 // version is the build version, injected at release time via

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0E0E10"/>
+  <!-- graph motif, right side -->
+  <g stroke="#1f2a22" stroke-width="2">
+    <line x1="840" y1="150" x2="980" y2="120"/>
+    <line x1="840" y1="150" x2="900" y2="300"/>
+    <line x1="980" y1="120" x2="1060" y2="250"/>
+    <line x1="900" y1="300" x2="1060" y2="250"/>
+    <line x1="900" y1="300" x2="860" y2="460"/>
+    <line x1="1060" y1="250" x2="1080" y2="430"/>
+    <line x1="860" y1="460" x2="1080" y2="430"/>
+    <line x1="980" y1="120" x2="1120" y2="180"/>
+  </g>
+  <g>
+    <circle cx="840" cy="150" r="22" fill="#00FF6B"/>
+    <circle cx="980" cy="120" r="14" fill="#3B82F6"/>
+    <circle cx="1060" cy="250" r="26" fill="#00FF6B"/>
+    <circle cx="900" cy="300" r="18" fill="#00FF6B"/>
+    <circle cx="860" cy="460" r="13" fill="#FF2E92"/>
+    <circle cx="1080" cy="430" r="16" fill="#3B82F6"/>
+    <circle cx="1120" cy="180" r="10" fill="#FF2E92"/>
+  </g>
+  <!-- wordmark -->
+  <text x="90" y="250" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="148" fill="#F5F2EA">graffiti</text>
+  <text x="96" y="330" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="30" fill="#B0AAA0" letter-spacing="2">A code graph for AI coding assistants</text>
+  <text x="96" y="446" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="26" fill="#00FF6B">$ graffiti .</text>
+  <text x="96" y="492" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="24" fill="#969084">zero API keys · $0 · fully offline · byte-deterministic</text>
+  <text x="96" y="560" font-family="ui-monospace, 'SF Mono', Menlo, monospace" font-size="22" fill="#5E5E5C">Go · Python · JS · TS · Rust · Java · PHP</text>
+</svg>

@@ -12,8 +12,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // Viewer assets are inlined verbatim into map.html and hashed for the CSP. They

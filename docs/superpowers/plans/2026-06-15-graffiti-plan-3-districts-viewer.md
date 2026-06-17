@@ -14,7 +14,7 @@ scan → parse → build → cluster → analyze → layout → render(map.json 
 - `internal/render` gains `WriteMapHTML(doc, an, scene, root)` + `RenderMapHTML(...) string`, plus the embedded viewer assets in `internal/render/viewer/`. The browser does **no layout and no physics** (spec §8.2): the renderer reads the baked integer scene from the data island and only does camera transform, viewport cull, batched paint, and analytic hit-test.
 - `internal/app.Build` calls `layout.Layout(doc, an)` after `analyze.Analyze`, then `render.WriteMapHTML(doc, an, scene, absRoot)` after the existing two writers. No CLI output change (the success line already prints the 3 questions from Plan 2).
 
-**Tech Stack:** Go 1.26; module `github.com/evgeniy-achin/graffiti`; **no new third-party dependencies** (`layout` uses only `sort`; `render` adds `crypto/sha256`, `encoding/base64`, `encoding/json`, `embed`, `html`, `strings` from the stdlib). `CGO_ENABLED=0`. The viewer renderer is **our own ~25–30KB hand-written vanilla-ES file** (no modules, no `eval`, no `new Function`, no imports, zero third-party JS — spec §8.1) embedded via `//go:embed`. The grammar-subset build tags from Plan 1 still apply to any target that links `internal/parse` (i.e. `internal/app` and `cmd/graffiti`), so every `go test`/`go build` command that touches those packages keeps `-tags "grammar_subset grammar_subset_go grammar_subset_gomod"`; the pure `internal/layout` and `internal/render` packages do not need the tags, but always passing them is harmless and keeps commands uniform.
+**Tech Stack:** Go 1.26; module `github.com/amazopic/graffiti`; **no new third-party dependencies** (`layout` uses only `sort`; `render` adds `crypto/sha256`, `encoding/base64`, `encoding/json`, `embed`, `html`, `strings` from the stdlib). `CGO_ENABLED=0`. The viewer renderer is **our own ~25–30KB hand-written vanilla-ES file** (no modules, no `eval`, no `new Function`, no imports, zero third-party JS — spec §8.1) embedded via `//go:embed`. The grammar-subset build tags from Plan 1 still apply to any target that links `internal/parse` (i.e. `internal/app` and `cmd/graffiti`), so every `go test`/`go build` command that touches those packages keeps `-tags "grammar_subset grammar_subset_go grammar_subset_gomod"`; the pure `internal/layout` and `internal/render` packages do not need the tags, but always passing them is harmless and keeps commands uniform.
 
 ---
 
@@ -100,8 +100,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // sampleDoc builds a 5-community clustered document with intra- and
@@ -285,8 +285,8 @@ package layout
 import (
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // Canvas + spacing constants. The fixed canvas keeps coords byte-stable across
@@ -703,7 +703,7 @@ package render
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/layout"
+	"github.com/amazopic/graffiti/internal/layout"
 )
 
 // tinyScene is a hand-built Scene with two boxes, one pin, one bundle, one arc —
@@ -788,7 +788,7 @@ Create `/Users/mylive/project/graffiti/graffiti/internal/render/columnar.go`:
 ```go
 package render
 
-import "github.com/evgeniy-achin/graffiti/internal/layout"
+import "github.com/amazopic/graffiti/internal/layout"
 
 // ColumnarScene is the compact, JSON-friendly representation inlined as the
 // map.html data island (spec §8.6): every repeated string is interned once into
@@ -1239,9 +1239,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/layout"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/layout"
 )
 
 // sampleClustered builds a small clustered doc + analysis + baked scene.
@@ -1505,9 +1505,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/layout"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/layout"
 )
 
 // Viewer assets are inlined verbatim into map.html and hashed for the CSP. They
@@ -1713,15 +1713,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/build"
-	"github.com/evgeniy-achin/graffiti/internal/cache"
-	"github.com/evgeniy-achin/graffiti/internal/cluster"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/layout"
-	"github.com/evgeniy-achin/graffiti/internal/parse"
-	"github.com/evgeniy-achin/graffiti/internal/render"
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/build"
+	"github.com/amazopic/graffiti/internal/cache"
+	"github.com/amazopic/graffiti/internal/cluster"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/layout"
+	"github.com/amazopic/graffiti/internal/parse"
+	"github.com/amazopic/graffiti/internal/render"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 ```
 
@@ -2052,7 +2052,7 @@ Then use superpowers:finishing-a-development-branch to merge `plan3-districts-vi
 - `layout.Layout(doc *graph.Document, an analyze.Analysis) layout.Scene`; `layout.Scene{W,H,Boxes,Pins,Bundles,Arcs}` with integer-coord `Box/Pin/Bundle/Arc` — Task 1; consumed by `render`. ✓
 - `render.toColumnar(layout.Scene) ColumnarScene` (internal); `render.RenderMapHTML(doc, an, scene, generatedAt) string`; `render.WriteMapHTML(doc, an, scene, root) error` reading `doc.GeneratedAt` — Tasks 2, 4. The existing `render.WriteMapJSON`/`WriteMapMD`/`orderedDocument` are untouched, so the two prior goldens stay byte-identical. ✓
 - `app.Build(root, generatedAt string) (Stats, error)` signature unchanged; `Stats` unchanged (questions already threaded in Plan 2); pipeline `Assemble → Cluster → NameCommunities → Analyze → Layout → WriteMapJSON → WriteMapMD → WriteMapHTML → Flush`. `cmd/graffiti/main.go` is unchanged. ✓
-- Module path `github.com/evgeniy-achin/graffiti` in every import; build tags applied to every command touching `internal/parse` (app, cmd). ✓
+- Module path `github.com/amazopic/graffiti` in every import; build tags applied to every command touching `internal/parse` (app, cmd). ✓
 
 **4. Prototype evidence (load-bearing):** the squarified-treemap layout and the self-contained CSP-safe HTML emitter were prototyped end-to-end in a scratch module with passing tests (`/tmp/p3proto/{layout,htmlemit}{,_test}.go`): no-overlap / in-bounds / integer / byte-stable / area-proportional / bundles-aggregated / pins-on-district for layout; determinism / differs-only-by-generated_at / CSP-hashes-match-inlined-bodies / self-contained / data-island-parses for emit. The task code is that validated prototype with the local mirror types replaced by the real `graph.*`/`analyze.*` types and the inlined CSS/JS sourced from `go:embed`. The `</script` escape (`<` → `<`) the prototype flagged is included in `escapeScriptClose` and is covered by `TestMapHTML_EscapesLabelsAndScriptClose`. The renderer JS is embedded asset content (not Go-unit-testable); every test targets the Go-emitted artifact, never JS runtime behavior.
 

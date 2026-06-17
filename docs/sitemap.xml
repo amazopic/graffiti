@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://amazopic.github.io/graffiti/</loc>
+    <lastmod>2026-06-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amazopic.github.io/graffiti/" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://amazopic.github.io/graffiti/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amazopic.github.io/graffiti/?lang=ru" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amazopic.github.io/graffiti/?lang=fr" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amazopic.github.io/graffiti/?lang=de" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amazopic.github.io/graffiti/?lang=uk" />
+    <xhtml:link rel="alternate" hreflang="sl" href="https://amazopic.github.io/graffiti/?lang=sl" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://amazopic.github.io/graffiti/?lang=it" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amazopic.github.io/graffiti/?lang=es" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://amazopic.github.io/graffiti/?lang=zh" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://amazopic.github.io/graffiti/?lang=ja" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://amazopic.github.io/graffiti/?lang=ko" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://amazopic.github.io/graffiti/?lang=ar" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://amazopic.github.io/graffiti/?lang=pt" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://amazopic.github.io/graffiti/?lang=tr" />
+    <xhtml:link rel="alternate" hreflang="id" href="https://amazopic.github.io/graffiti/?lang=id" />
+    <xhtml:link rel="alternate" hreflang="vi" href="https://amazopic.github.io/graffiti/?lang=vi" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://amazopic.github.io/graffiti/?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://amazopic.github.io/graffiti/?lang=zh-tw" />
+    <xhtml:link rel="alternate" hreflang="pl" href="https://amazopic.github.io/graffiti/?lang=pl" />
+    <xhtml:link rel="alternate" hreflang="th" href="https://amazopic.github.io/graffiti/?lang=th" />
+    <xhtml:link rel="alternate" hreflang="he" href="https://amazopic.github.io/graffiti/?lang=he" />
+    <xhtml:link rel="alternate" hreflang="bn" href="https://amazopic.github.io/graffiti/?lang=bn" />
+    <xhtml:link rel="alternate" hreflang="ur" href="https://amazopic.github.io/graffiti/?lang=ur" />
+  </url>
+  <url>
+    <loc>https://amazopic.github.io/graffiti/llms.txt</loc>
+    <lastmod>2026-06-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://amazopic.github.io/graffiti/llms-full.txt</loc>
+    <lastmod>2026-06-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

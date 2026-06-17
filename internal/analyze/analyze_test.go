@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // hub: one central node touched by many, plus a 2nd community with a cross edge.

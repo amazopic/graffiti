@@ -1,6 +1,6 @@
 package parse
 
-import "github.com/evgeniy-achin/graffiti/internal/scan"
+import "github.com/amazopic/graffiti/internal/scan"
 
 // LangSpec describes a language's tree-sitter node vocabulary for the generic
 // extractor (Extract). Every definition kind exposes its name via the grammar

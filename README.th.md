@@ -1,0 +1,208 @@
+# 🕸️ graffiti — เปลี่ยน repo ใดก็ได้ให้กลายเป็นกราฟโค้ดที่ค้นหาได้สำหรับ AI
+
+> คำสั่งเดียวเปลี่ยน repository ของคุณให้เป็น **กราฟความรู้แบบมีทิศทาง** ที่ผู้ช่วย
+> เขียนโค้ด AI ของคุณอ่านแทนการ grep แบบมองไม่เห็นภาพ ไบนารี Go แบบ static เดี่ยว ๆ —
+> **ไม่ต้องใช้ API key, ราคา $0, ทำงานออฟไลน์เต็มรูปแบบ, ให้ผลลัพธ์เหมือนเดิมระดับไบต์**
+> วิเคราะห์ **Go, Python, JavaScript, TypeScript, Rust, Java และ PHP** มาพร้อมกับ
+> `query` ที่ไม่ต้องใช้ LLM, เซิร์ฟเวอร์ **MCP**, การผสานรวมกับ **Claude Code**, ตัวดู
+> กราฟแบบโต้ตอบที่ทำงานออฟไลน์ และการรวม workspace ข้ามหลาย repo
+
+[![License: Source-Available](https://img.shields.io/badge/license-Source--Available-orange.svg)](LICENSE)
+[![Made for Claude Code](https://img.shields.io/badge/made%20for-Claude%20Code-7c3aed.svg)](https://claude.com/claude-code)
+[![Languages](https://img.shields.io/badge/parses-Go·Python·JS·TS·Rust·Java·PHP-00a000.svg)](#supported-languages)
+[![Single static binary](https://img.shields.io/badge/binary-static·CGO--free·~10MB-blue.svg)](#build)
+[![Cost](https://img.shields.io/badge/%240·offline·deterministic-000.svg)](#guarantees)
+[![Author](https://img.shields.io/badge/author-Yevgeniy%20Achin-blue.svg)](mailto:amazopic@gmail.com)
+
+**ภาษา:** English · [Русский](README.ru.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Українська](README.uk.md) · [Slovenščina](README.sl.md) · [Italiano](README.it.md) · [Español](README.es.md) · [中文](README.zh.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [العربية](README.ar.md) · [Português](README.pt.md) · [Türkçe](README.tr.md) · [Bahasa Indonesia](README.id.md) · [Tiếng Việt](README.vi.md) · [हिन्दी](README.hi.md) · [繁體中文](README.zh-tw.md) · [Polski](README.pl.md) · [ไทย](README.th.md) · [עברית](README.he.md) · [বাংলা](README.bn.md) · [اردو](README.ur.md)
+
+🌐 **เว็บไซต์:** https://amazopic.github.io/graffiti/
+
+```text
+$ graffiti .
+✓ Done. 0 API calls, $0.  214 files → 1,883 nodes, 4,102 edges, 12 communities.
+  The 3 most interesting questions your map can answer:
+    1) Which module is the load-bearing wall?
+    2) What does the auth flow touch?
+    3) Where are the cross-package call hotspots?
+```
+
+---
+
+## ทำไมจึงมีเครื่องมือนี้
+
+ผู้ช่วยเขียนโค้ด AI จะเก่งได้แค่เท่าที่มัน *มองเห็น* เท่านั้น โยนมันเข้าไปใน repo ขนาดใหญ่
+แล้วมันก็จะทำสิ่งที่คุณจะทำเมื่อไม่มีแผนที่ นั่นคือ grep, เปิดไฟล์ดูสองสามไฟล์, แล้วเดา
+มันไม่เคยเห็น **รูปทรง** ของโค้ด — ฟังก์ชันไหนเรียกฟังก์ชันไหน, type ถูกนิยามไว้ที่ใด,
+โมดูลไหนคือกำแพงรับน้ำหนักของทั้งระบบ
+
+**graffiti คือแผนที่ที่ควรจะมีอยู่ตั้งแต่แรก** คำสั่งเดียววิเคราะห์ repo ด้วย
+[tree-sitter](https://tree-sitter.github.io/tree-sitter/), แก้ปัญหาเส้นเชื่อม (edge),
+จัดกลุ่มโมดูล แล้วเขียนกราฟออกมา — เป็น JSON สำหรับเครื่อง, เป็น Markdown สำหรับคุณ,
+และเป็น HTML ออฟไลน์ไฟล์เดียวที่คุณดูได้จริง ๆ ไม่ต้องใช้ key ไม่ต้องใช้คลาวด์ ไม่มีค่าใช้จ่าย
+
+## การติดตั้ง
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+```
+
+ปักหมุดเวอร์ชันหรือไดเรกทอรี:
+
+```bash
+GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh)"
+```
+
+ตัวติดตั้งจะเลือกไบนารี static ที่ถูกต้องสำหรับ OS/สถาปัตยกรรมของคุณ, ตรวจสอบค่า SHA256
+เทียบกับ manifest ของรีลีส แล้วติดตั้งให้ ตรวจสอบด้วย `graffiti version`
+หรือจะ build จากซอร์สก็ได้ (ด้านล่าง)
+
+## Build
+
+```bash
+make build      # builds ./graffiti (CGO-free, ~10MB, 7 language grammars)
+make test       # runs the full test suite with the required build tags
+make xcompile   # cross-compiles static binaries for all targets into dist/
+```
+
+build tag `grammar_subset` จะรวมเฉพาะ grammar ที่ graffiti รองรับเท่านั้น (Go,
+Python, JS, TS, Rust, Java, PHP รวมถึง go.mod) ผ่าน runtime แบบ pure-Go
+`github.com/odvcencio/gotreesitter` (ไม่มี CGO, ไม่มี WASM) ซึ่งทำให้ไบนารีมีขนาด
+~10 MB หากไม่มี tag เหล่านี้ โค้ดก็ยังคอมไพล์ได้แต่จะลิงก์ชุด grammar เต็ม
+(~31 MB) ส่งพวกมันเสมอ — Makefile จัดการเรื่องนี้ให้คุณแล้ว
+
+## ภาษาที่รองรับ
+
+| ภาษา | สิ่งที่สกัดออกมา |
+|----------|-----------|
+| Go | ไฟล์, ฟังก์ชัน, เมธอด (ตาม receiver), type, import, การเรียกที่แก้แล้ว |
+| Python, JavaScript, TypeScript, Rust, Java, PHP | ไฟล์, ฟังก์ชัน, class/struct/interface/enum/trait, เมธอด (`Class.method`), import, การเรียกภายใน repo |
+| Markdown | โหนดเอกสาร |
+
+การสกัดสำหรับภาษาที่ไม่ใช่ Go ตั้งใจให้ซื่อตรง คือจับโครงสร้างที่พบบ่อยและมีคุณค่าสูง
+แล้ว **สกัดน้อยกว่าความจริง** สำหรับโครงสร้างแปลก ๆ (decorator, generic, การนิยามแบบซ้อน,
+dynamic dispatch) แทนที่จะปล่อยให้มันเดา
+
+## การใช้งาน
+
+```bash
+graffiti .                  # build the map for the current repo
+graffiti build <path>       # build the map for <path>
+graffiti <path>             # shorthand for `build <path>` when <path> is a directory
+graffiti update [path]      # rebuild the map (full rebuild for now)
+graffiti query "<q>" [path] # LLM-free scoped subgraph retrieval (soft token budget)
+graffiti serve [path]       # MCP server over stdio (JSON-RPC 2.0)
+graffiti init [--user] [--hook]  # install Claude Code integration
+graffiti version            # print the version
+```
+
+รัน `graffiti` โดยไม่ใส่อาร์กิวเมนต์เพื่อดูรายการคำสั่งทั้งหมด
+
+## คำสั่งเดียว, สามผลผลิต
+
+`graffiti .` เขียนทุกอย่างลงใน `<repo>/.graffiti/`:
+
+- **`map.json`** — ตัวกราฟเอง: โหนด, เส้นเชื่อม, community, ตรวจสอบ schema เทียบกับ
+  `schema/map.schema.json` นี่คือสิ่งที่ AI ของคุณอ่าน และเป็นสิ่งที่ `query`
+  กับเซิร์ฟเวอร์ MCP เดินสำรวจ
+- **`MAP.md`** — บทสรุปที่มนุษย์อ่านได้: โมดูลอันดับต้น ๆ, โหนดที่เชื่อมต่อมากที่สุด,
+  และสามคำถามที่น่าสนใจที่สุดที่แผนที่ของคุณตอบได้
+- **`map.html`** — **กราฟแบบ force-directed** ไฟล์เดียวที่ครบในตัว ทำงานออฟไลน์ และโต้ตอบได้
+  ไม่ต้องใช้ CDN, ไม่ต้องใช้เซิร์ฟเวอร์, ไม่ต้องใช้เครือข่าย — แค่เปิดไฟล์ขึ้นมา
+
+`map.html` มี **ปุ่มสลับ 2D/3D** (เลื่อนเมาส์ไปวางจะยกโหนดนั้นกับโหนดข้างเคียงขึ้นมา),
+**ค้นหาโหนด**, **คลิกเพื่อคัดลอก `file:line`**, **โซนภาค (sector)**, ปุ่มสลับหมวด
+**client / tests / external** และต้นไม้ **project → directory → file** ที่ปรับขนาดได้
+พร้อมช่องทำเครื่องหมายแสดง/ซ่อน มันปลอดภัยต่อ CSP และทำงานออฟไลน์ได้อย่างสมบูรณ์
+
+แคชแฮชเนื้อหารายไฟล์อยู่ภายใต้ `<repo>/.graffiti/cache/` ดังนั้นการรันซ้ำจะวิเคราะห์ใหม่
+เฉพาะส่วนที่เปลี่ยนไปเท่านั้น
+
+## การผสานรวมกับ Claude Code
+
+```bash
+graffiti init                 # install the skill + CLAUDE.md block (project)
+graffiti init --hook          # also install the PreToolUse nudge (grep → graffiti query)
+graffiti init --user          # install into ~/.claude instead of the repo
+```
+
+`graffiti init` จะเขียน:
+
+- `.claude/skills/graffiti/SKILL.md` — สกิลสั้น ๆ เพื่อให้ Claude Code รู้ว่าต้อง build/อ่าน/query แผนที่
+- บล็อก `CLAUDE.md` (ระหว่าง `<!-- graffiti:start -->` / `<!-- graffiti:end -->`) ที่บอกให้
+  ผู้ช่วยเลือกใช้ `graffiti query` แทน grep เมื่อมีแผนที่อยู่
+- เมื่อใช้ `--hook` จะเพิ่มรายการ PreToolUse ใน `.claude/settings.json` ที่รัน `graffiti hook`
+  ซึ่งจะเพิ่มข้อความเตือนหนึ่งบรรทัดก่อน `Grep`/`Glob` เมื่อมี `.graffiti/map.json` อยู่ hook นี้ไม่เคยบล็อกเครื่องมือใด ๆ
+
+มันเป็น idempotent — รันซ้ำได้ทุกเมื่อ เนื้อหา `CLAUDE.md` / `settings.json` ที่มีอยู่จะถูกรักษาไว้
+
+## ค้นหาโดยไม่ต้องใช้ LLM
+
+```bash
+graffiti query "login handler"            # scoped subgraph for the current repo
+graffiti query "where is cart fetched" ../shop
+```
+
+`query` คืนสไลซ์ของกราฟที่เกี่ยวข้องภายในงบประมาณโหนดแบบยืดหยุ่นที่ประมาณ ~2000 โทเค็น —
+ไม่มีโมเดล, ไม่มี embedding ใส่เครื่องหมายคำพูดให้กับคำถามด้วย
+
+## เซิร์ฟเวอร์ MCP
+
+```bash
+graffiti serve                # MCP over stdio (JSON-RPC 2.0)
+```
+
+ชี้ไคลเอนต์ที่รองรับ MCP ตัวใดก็ได้มาที่มัน แล้วผู้ช่วยของคุณก็จะเดินสำรวจกราฟผ่านเครื่องมือ
+แทนการ grep
+
+## Workspaces (การรวมข้ามหลาย repo)
+
+วาง repo แยกกันไว้เคียงข้างกันแล้ว query ข้ามกันได้ — **โดยไม่ต้องรวมเข้าด้วยกัน**:
+
+```bash
+graffiti link ../frontend ../backend          # federate (builds members if needed)
+graffiti query --workspace "where is the cart fetched and served"
+graffiti serve  --workspace                    # MCP over the federation
+graffiti update --workspace                    # rebuild changed members + recompute links
+graffiti workspace render                      # → .graffiti-workspace/workspace.html
+```
+
+`graffiti link` จะเขียน registry ที่ commit ได้ (`.graffiti-workspace/workspace.json`)
+และแคชที่ derive ขึ้นมา ซึ่ง gitignore ได้ (`.graffiti-workspace/overlay.json`) ไฟล์
+`.graffiti/map.json` ของแต่ละ repo ยังไม่เปลี่ยนแปลงและยังทำงานแบบเดี่ยวได้ — workspace
+เป็นเพียงโอเวอร์เลย์ที่คำนวณขึ้นแบบบาง ๆ ไม่ใช่ก้อนที่รวมเข้าด้วยกัน
+
+**ลิงก์ข้ามโปรเจกต์:** ระบุมันอย่างชัดเจนใน `.graffiti-workspace/links`
+หนึ่งบรรทัดต่อหนึ่งลิงก์ — `frontend::main-go:fetchcart -> backend::main-go:getcart calls`
+(อนุญาตให้มีคอมเมนต์ `#`; endpoint คือ `alias::nodeid`) `graffiti links check` ตรวจสอบว่า
+ปลายทางทั้งสองด้านแก้ค่าได้; `graffiti federate --explain` แสดงทุกลิงก์ การ query แบบรวม
+จะนำหน้าแต่ละโหนดด้วย alias ของสมาชิกแล้วเดินสำรวจลิงก์ข้ามกัน `graffiti workspace
+render` เขียน `workspace.html` — ตัวดูกราฟแบบ force-graph เดียวกันโดยมี **โปรเจกต์เป็น
+ระดับบนสุด** ของต้นไม้ และวาดลิงก์ข้ามโปรเจกต์ไว้
+
+เพิ่ม `.graffiti-workspace/overlay.json` ลงใน `.gitignore` (เพราะมัน derive มาและคำนวณใหม่ได้)
+
+## มันทำงานอย่างไร
+
+การวิเคราะห์ด้วย tree-sitter (pure-Go, ไม่มี CGO) → การแก้เส้นเชื่อม → การจัดกลุ่มเป็น
+community → การวิเคราะห์แบบเบา → การ serialize แบบ deterministic ไม่มีโมเดล, ไม่มี
+embedding, ไม่มีเครือข่าย — เป็นเพียงการวิเคราะห์เชิงสถิต (static analysis) นั่นคือเหตุผล
+ที่มันฟรี, เป็นส่วนตัว, และทำซ้ำผลได้
+
+## การรับประกัน
+
+- **เรียก API 0 ครั้ง, ราคา $0, ออฟไลน์เต็มรูปแบบ** ไม่มีอะไรเกี่ยวกับโค้ดของคุณที่หลุดออกจากเครื่องของคุณ
+- **Deterministic:** repo เดียวกัน → `map.json` ที่เหมือนกันทุกไบต์ ยกเว้นเพียง timestamp
+  `generated_at` ตัวเดียวและชื่อ basename ของ `root` เท่านั้น commit มันได้; diff มันได้
+- **ไบนารี static เดี่ยว ๆ**, ไม่มี dependency ตอน runtime, ไม่ต้องใช้ C toolchain
+
+## สัญญาอนุญาต
+
+Source-Available — อ่านและรัน graffiti บน repository ของคุณเองได้อย่างอิสระ แต่การนำ
+ไปใช้ซ้ำ, แจกจ่ายซ้ำ, fork หรือรวมเข้ากับโปรเจกต์อื่นใด ต้องได้รับอนุญาตเป็นลายลักษณ์
+อักษรจากผู้สร้างก่อน ดู [LICENSE](LICENSE)
+
+## ผู้สร้าง
+
+Yevgeniy Achin · [amazopic@gmail.com](mailto:amazopic@gmail.com) · [github.com/amazopic](https://github.com/amazopic)

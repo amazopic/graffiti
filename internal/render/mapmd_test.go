@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func sampleClustered() (*graph.Document, analyze.Analysis) {

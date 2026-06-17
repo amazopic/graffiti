@@ -31,7 +31,7 @@ Use these verbatim; do **not** trust generic spike snippets where they differ:
 
 ```
 graffiti/
-├── go.mod                                  # module github.com/evgeniy-achin/graffiti ; go 1.26 ; pinned deps
+├── go.mod                                  # module github.com/amazopic/graffiti ; go 1.26 ; pinned deps
 ├── go.sum                                  # checksums (generated)
 ├── .gitignore                              # ignore built binaries + /dist
 ├── Makefile                                # encodes the required build tags + xcompile
@@ -115,13 +115,13 @@ graffiti/
 
 Run:
 ```bash
-cd /Users/mylive/project/graffiti/graffiti && go mod init github.com/evgeniy-achin/graffiti
+cd /Users/mylive/project/graffiti/graffiti && go mod init github.com/amazopic/graffiti
 ```
-Expected: prints `go: creating new go.mod: module github.com/evgeniy-achin/graffiti` and creates `go.mod`.
+Expected: prints `go: creating new go.mod: module github.com/amazopic/graffiti` and creates `go.mod`.
 
 Then edit `go.mod` so it reads exactly:
 ```
-module github.com/evgeniy-achin/graffiti
+module github.com/amazopic/graffiti
 
 go 1.26
 ```
@@ -1438,7 +1438,7 @@ package parse
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 const pass1Src = `package greet
@@ -1581,7 +1581,7 @@ import (
 
 	ts "github.com/odvcencio/gotreesitter"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // RawCall is an unresolved call site stashed by Pass 1 for Pass-2 resolution.
@@ -1798,7 +1798,7 @@ package parse
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func mkNode(file, label string, kind graph.Kind) graph.Node {
@@ -1908,7 +1908,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // ResolveCalls performs Pass 2 (spec §5): resolve raw call sites against a global
@@ -2098,7 +2098,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func validDoc() *graph.Document {
@@ -2191,7 +2191,7 @@ package schemaval
 import (
 	"fmt"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // ValidateDocument checks required fields, closed enums, unique node IDs, and
@@ -2286,8 +2286,8 @@ package build
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/parse"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/parse"
 )
 
 const genAt = "2026-06-14T00:00:00Z"
@@ -2387,9 +2387,9 @@ package build
 import (
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/parse"
-	"github.com/evgeniy-achin/graffiti/internal/schemaval"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/parse"
+	"github.com/amazopic/graffiti/internal/schemaval"
 )
 
 // Assemble folds extractions into one Document: stamp generatedAt, dedup nodes
@@ -2722,7 +2722,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func sampleDoc(at string) *graph.Document {
@@ -2822,7 +2822,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // orderedDocument mirrors graph.Document but with struct fields ordered so the
@@ -3014,12 +3014,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/evgeniy-achin/graffiti/internal/build"
-	"github.com/evgeniy-achin/graffiti/internal/cache"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/parse"
-	"github.com/evgeniy-achin/graffiti/internal/render"
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/build"
+	"github.com/amazopic/graffiti/internal/cache"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/parse"
+	"github.com/amazopic/graffiti/internal/render"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 // Stats summarizes a build for the CLI success line.
@@ -3159,7 +3159,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/evgeniy-achin/graffiti/internal/app"
+	"github.com/amazopic/graffiti/internal/app"
 )
 ```
 
@@ -3287,7 +3287,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 const fixtureGenAt = "2026-06-14T00:00:00Z"
@@ -3670,7 +3670,7 @@ Expected: `make test` prints `ok` for every package. `go mod tidy` leaves a clea
 - `render.WriteMapJSON(doc, root)` — Task 12; used Task 13. ✓
 - `cache.New/HashBytes/HashFile/Put/Get/Load/Flush` — Task 11; used Task 13. ✓
 - `app.Build(root, generatedAt) (Stats, error)`, `Stats{Files,Nodes,Edges,Communities,HasDocNode}` — Task 13; used by CLI + golden/app tests. ✓
-- Module path `github.com/evgeniy-achin/graffiti` consistent in every import. ✓
+- Module path `github.com/amazopic/graffiti` consistent in every import. ✓
 - Build tags applied consistently and codified in the Makefile. ✓
 
 All load-bearing `gotreesitter` API calls were verified by compiling and running real code against pinned `v0.20.2`; the Go grammar field names and spike line numbers were confirmed empirically. The plan does not depend on any unverified API.

@@ -5,7 +5,7 @@ import (
 
 	ts "github.com/odvcencio/gotreesitter"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // Extract runs Pass 1 over one file using a table-driven LangSpec (spec §5). It

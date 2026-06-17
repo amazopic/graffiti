@@ -3,7 +3,7 @@ package parse
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 func TestSpecFor_CoversNewLanguages(t *testing.T) {

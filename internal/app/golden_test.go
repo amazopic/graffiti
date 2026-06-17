@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 const fixtureGenAt = "2026-06-14T00:00:00Z"

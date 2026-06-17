@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // GodNodeCap is the documented limit on map-surfaced god nodes (spec §8.5: ~7).

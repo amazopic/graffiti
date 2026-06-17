@@ -4,7 +4,7 @@ import (
 	"testing"
 	"unicode/utf8"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func TestNameCommunities_DominantDirectory(t *testing.T) {

@@ -1,0 +1,55 @@
+# graffiti
+
+> graffiti turns a code repository into a **directed knowledge graph** an AI coding assistant can query instead of grepping. It parses the repo with tree-sitter (pure-Go, no CGO), resolves the edges (calls, definitions, imports), clusters the result into modules, and writes the graph three ways: `map.json` (the machine contract, schema-checked), `MAP.md` (a human digest), and `map.html` (a single self-contained, offline, interactive force-directed graph). It is a **single static binary** with **zero API calls, $0, fully offline, and byte-deterministic** output. Supports Go, Python, JavaScript, TypeScript, Rust, Java, and PHP. Ships an LLM-free `query`, an MCP `serve`r (JSON-RPC 2.0 over stdio), Claude Code integration (`init`), and multi-repo workspace federation (`link`).
+
+Author: Yevgeniy Achin <amazopic@gmail.com>
+Version: 0.1.0
+License: Source-Available — reuse only with prior written permission of the author.
+Languages parsed: Go, Python, JavaScript, TypeScript, Rust, Java, PHP (+ Markdown doc nodes).
+Documentation languages: 23 (English plus Russian, French, German, Ukrainian, Slovenian, Italian, Spanish, Chinese, Japanese, Korean, Arabic, Portuguese, Turkish, Indonesian, Vietnamese, Hindi, Traditional Chinese, Polish, Thai, Hebrew, Bengali, Urdu).
+Repo: https://github.com/amazopic/graffiti
+Site: https://amazopic.github.io/graffiti/
+
+## Why this exists
+
+An AI coding assistant dropped into a large repo greps blind: it never sees the shape of the code — which function calls which, where a type is defined, which module is load-bearing. graffiti builds that map locally, with no model and no network, so the assistant reads structure instead of guessing.
+
+## Documentation
+
+- [README](https://github.com/amazopic/graffiti/blob/main/README.md): Overview, install, supported languages, all commands, Claude Code integration, workspaces, guarantees.
+- [LICENSE](https://github.com/amazopic/graffiti/blob/main/LICENSE): Source-Available License (reuse-by-permission).
+- Translated READMEs (22): README.ru.md, README.fr.md, README.de.md, README.uk.md, README.sl.md, README.it.md, README.es.md, README.zh.md, README.ja.md, README.ko.md, README.ar.md, README.pt.md, README.tr.md, README.id.md, README.vi.md, README.hi.md, README.zh-tw.md, README.pl.md, README.th.md, README.he.md, README.bn.md, README.ur.md.
+
+## Commands
+
+- `graffiti .` / `graffiti build <path>`: build the map → `<path>/.graffiti/map.json` + `MAP.md` + `map.html`.
+- `graffiti update [path]`: rebuild the map (per-file content-hash cache; full rebuild for now).
+- `graffiti query "<question>" [path]`: LLM-free scoped subgraph retrieval within a soft token budget.
+- `graffiti serve [path]`: MCP server over stdio (JSON-RPC 2.0).
+- `graffiti init [--user] [--hook]`: install Claude Code integration (skill + CLAUDE.md block + optional PreToolUse grep→query nudge). Idempotent; never blocks a tool.
+- `graffiti link <pathA> <pathB> ... [--name n]`: federate projects into a workspace.
+- `graffiti workspace <add|rm|list|render>`: manage the workspace / render `workspace.html`.
+- `graffiti links check` / `graffiti federate --explain`: validate / list cross-project links.
+- `graffiti query --workspace "<q>"` / `graffiti serve --workspace` / `graffiti update --workspace`: federated retrieval, MCP, and rebuild across the workspace.
+- `graffiti version`: print the version.
+
+## Quick install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+graffiti .                 # build the map
+open .graffiti/map.html    # see the graph
+graffiti init --hook       # wire into Claude Code
+```
+
+Or build from source: `make build` (CGO-free, ~10 MB, 7 language grammars via the `grammar_subset` build tags).
+
+## Guarantees
+
+- 0 API calls, $0, fully offline.
+- Deterministic: same repo → byte-identical `map.json` modulo a single `generated_at` timestamp and the `root` basename.
+- Single static binary, no runtime dependencies, no C toolchain.
+
+## Topics
+
+code-graph, knowledge-graph, ai-coding-assistant, claude-code, mcp, model-context-protocol, tree-sitter, static-analysis, code-map, repo-graph, code-intelligence, golang, developer-tools, offline-first, deterministic-build, dependency-graph, call-graph, codebase-visualization.

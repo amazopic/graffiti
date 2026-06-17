@@ -1,0 +1,206 @@
+/* ─────────────────────────────────────────────────────────────────────
+   RESET + BASE — graffiti
+   ───────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100dvh;
+  overflow-x: clip;
+  position: relative;
+}
+
+img, svg, video, canvas { display: block; max-width: 100%; height: auto; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { background: none; border: none; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+
+::selection {
+  background: var(--phosphor);
+  color: var(--ink);
+}
+
+/* Focus rings — accessibility, but understated */
+:focus-visible {
+  outline: 2px solid var(--phosphor-p);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ─── Grain texture overlay (subtle film grain over the whole page) ─── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: var(--noise-opacity);
+  pointer-events: none;
+  z-index: 999;
+  mix-blend-mode: multiply;
+}
+
+/* ─── Container ─── */
+.wrap {
+  width: 100%;
+  max-width: var(--max-w);
+  margin-inline: auto;
+  padding-inline: var(--gutter-x);
+}
+
+/* ─── Editorial type primitives ─── */
+.display {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tight);
+  font-style: italic;
+}
+.display-roman {
+  font-family: var(--font-display);
+  font-weight: 300;
+  line-height: var(--lh-tight);
+  letter-spacing: var(--tr-tight);
+}
+.mono {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-feature-settings: "ss01", "calt";
+}
+.smcp {
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tr-wider);
+  text-transform: uppercase;
+}
+.caption {
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  color: var(--sub);
+  line-height: var(--lh-loose);
+}
+
+/* ─── Hairline rule ─── */
+.rule {
+  border: 0;
+  height: 1px;
+  background: var(--rule);
+  width: 100%;
+  margin: 0;
+}
+
+/* ─── Page-load reveal ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: reveal var(--dur-slow) var(--easing-out) forwards;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+@keyframes reveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Scroll-reveal (added by IntersectionObserver in main.js) */
+[data-io] { opacity: 0; transform: translateY(14px); transition: opacity var(--dur-slow) var(--easing-out), transform var(--dur-slow) var(--easing-out); }
+[data-io].in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { [data-io] { opacity: 1; transform: none; } }
+
+/* ─── Stagger helpers ─── */
+.stagger > * { --reveal-delay: calc(var(--i, 0) * 60ms); }
+
+/* ─── Section spacing ─── */
+section {
+  padding-block: var(--gutter-y);
+  position: relative;
+}
+
+/* Section divider with embedded GitHub CTA. */
+.section-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: clamp(0.85rem, 2.5vw, 1.75rem);
+  padding-block: clamp(2rem, 4vw, 3rem);
+  background: var(--paper);
+  flex-wrap: wrap;
+}
+.section-divider__ornament {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 200;
+  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  color: var(--sub-2);
+  line-height: 1;
+  user-select: none;
+}
+.section-divider__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--tr-wider);
+  text-transform: uppercase;
+  color: var(--sub);
+  border-bottom: 1px solid var(--rule);
+  padding-block: 0.45em;
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--easing-out),
+              border-color var(--dur-fast) var(--easing-out),
+              transform var(--dur-fast) var(--easing-out);
+}
+.section-divider__link:hover {
+  color: var(--phosphor-p);
+  border-bottom-color: var(--phosphor-p);
+  transform: translateY(-1px);
+}
+.section-divider__link .ext {
+  color: var(--phosphor-p);
+  margin-left: 0.1em;
+}
+
+/* Inverted variant — for dark sections where bg = ink */
+.section-divider--inv {
+  background: var(--ink);
+}
+.section-divider--inv .section-divider__ornament { color: var(--sub-2); }
+.section-divider--inv .section-divider__link {
+  color: var(--paper);
+  border-bottom-color: rgba(245,242,234,0.25);
+}
+.section-divider--inv .section-divider__link:hover {
+  color: var(--phosphor);
+  border-bottom-color: var(--phosphor);
+}
+.section-divider--inv .section-divider__link .ext { color: var(--phosphor); }
+
+/* ─── RTL support ─── */
+[dir="rtl"] .hero-meta__right { flex-direction: row-reverse; }
+[dir="rtl"] .lang-switcher__menu { left: 0; right: auto; }
+
+/* ─── Print-friendly fallback (graceful) ─── */
+@media print {
+  body::before { display: none; }
+  section { padding-block: 1rem; page-break-inside: avoid; }
+  canvas { display: none; }
+}

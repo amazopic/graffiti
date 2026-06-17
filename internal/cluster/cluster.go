@@ -12,7 +12,7 @@ package cluster
 import (
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // Cluster assigns doc.Nodes[i].Community in place to a contiguous 0..K-1 label and

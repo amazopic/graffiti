@@ -17,7 +17,7 @@ scan → parse → build → cluster → analyze → render(map.json + MAP.md)
 
 Determinism is paramount (spec §14): no Go-map iteration ever feeds an emitted order. Every emitted list (communities, members, god nodes, surprising edges, cycles, questions, MAP.md sections) is produced by sorted iteration with explicit total-order tie-breaks. No `math/rand`. The single `generated_at` source from Plan 1 is preserved (stamped once in `build.Assemble`, read off `doc.GeneratedAt`).
 
-**Tech Stack:** Go 1.26; module `github.com/evgeniy-achin/graffiti`; **no new third-party dependencies** (cluster/analyze/render-md use only the stdlib: `sort`, `strings`, `path`, `fmt`). `CGO_ENABLED=0`. The grammar-subset build tags from Plan 1 still apply to any target that links `internal/parse` (i.e. `internal/app` and `cmd/graffiti`), so all `go test`/`go build` commands that touch those packages keep `-tags "grammar_subset grammar_subset_go grammar_subset_gomod"`; the pure `internal/cluster` and `internal/analyze` packages do not need the tags but always passing them is harmless and keeps commands uniform.
+**Tech Stack:** Go 1.26; module `github.com/amazopic/graffiti`; **no new third-party dependencies** (cluster/analyze/render-md use only the stdlib: `sort`, `strings`, `path`, `fmt`). `CGO_ENABLED=0`. The grammar-subset build tags from Plan 1 still apply to any target that links `internal/parse` (i.e. `internal/app` and `cmd/graffiti`), so all `go test`/`go build` commands that touch those packages keep `-tags "grammar_subset grammar_subset_go grammar_subset_gomod"`; the pure `internal/cluster` and `internal/analyze` packages do not need the tags but always passing them is harmless and keeps commands uniform.
 
 ---
 
@@ -96,7 +96,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // twoCliques builds two 4-node cliques joined by a single bridge edge (d->e).
@@ -309,7 +309,7 @@ package cluster
 import (
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // Cluster assigns doc.Nodes[i].Community in place to a contiguous 0..K-1 label and
@@ -494,7 +494,7 @@ package cluster
 import (
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func TestNameCommunities_DominantDirectory(t *testing.T) {
@@ -576,7 +576,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // NameCommunities builds the doc.Communities slice from the clustered nodes
@@ -728,7 +728,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // hub: one central node touched by many, plus a 2nd community with a cross edge.
@@ -867,7 +867,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // GodNodeCap is the documented limit on map-surfaced god nodes (spec §8.5: ~7).
@@ -1130,8 +1130,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 func sampleClustered() (*graph.Document, analyze.Analysis) {
@@ -1232,8 +1232,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // WriteMapMD renders MAP.md and writes it to <root>/.graffiti/MAP.md, next to
@@ -1344,8 +1344,8 @@ Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
 
 In `/Users/mylive/project/graffiti/graffiti/internal/app/app.go`, add the two new imports to the existing import block:
 ```go
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/cluster"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/cluster"
 ```
 so the block reads:
 ```go
@@ -1353,14 +1353,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/build"
-	"github.com/evgeniy-achin/graffiti/internal/cache"
-	"github.com/evgeniy-achin/graffiti/internal/cluster"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/parse"
-	"github.com/evgeniy-achin/graffiti/internal/render"
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/build"
+	"github.com/amazopic/graffiti/internal/cache"
+	"github.com/amazopic/graffiti/internal/cluster"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/parse"
+	"github.com/amazopic/graffiti/internal/render"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 ```
 
@@ -1771,7 +1771,7 @@ Then use superpowers:finishing-a-development-branch to merge `plan2-clustering-a
 - `render.RenderMapMD(doc, an) string`, `render.WriteMapMD(doc, an, root) error` — Task 4; the existing `render.WriteMapJSON(doc, absRoot)` and `orderedDocument` (alphabetical keys) are untouched, so node/edge/community key ordering stays deterministic. ✓
 - `app.Build(root, generatedAt string) (Stats, error)` unchanged signature; `Stats` gains `Questions []string`; pipeline order `Assemble → Cluster → NameCommunities → Analyze → WriteMapJSON → WriteMapMD → Flush`. ✓
 - `cmd/graffiti/main.go` keeps the single `time.Now()` and the exact Plan-1 success-line prefix, appending the 3-questions block. ✓
-- Module path `github.com/evgeniy-achin/graffiti` used in every import; build tags applied to every command touching `internal/parse` (app, cmd). ✓
+- Module path `github.com/amazopic/graffiti` used in every import; build tags applied to every command touching `internal/parse` (app, cmd). ✓
 
 **4. Prototype evidence (load-bearing):** the Louvain, naming, analyze, and MAP.md renderer were compiled and run on Go 1.26.2 against a copy of the real `graph` types; the two-cliques separation, contiguity, `Q_clustered (0.4231) >= Q_singleton (-0.1272)`, god-node cap (8→7), naming heuristic, empty/isolated handling, and 5× byte-identical determinism were all observed. The task code is that validated prototype with `graph.*`-qualified types. No load-bearing claim is unverified.
 

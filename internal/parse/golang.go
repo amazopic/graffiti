@@ -5,7 +5,7 @@ import (
 
 	ts "github.com/odvcencio/gotreesitter"
 
-	"github.com/evgeniy-achin/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/graph"
 )
 
 // RawCall is an unresolved call site stashed by Pass 1 for Pass-2 resolution.

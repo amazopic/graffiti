@@ -6,14 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/evgeniy-achin/graffiti/internal/analyze"
-	"github.com/evgeniy-achin/graffiti/internal/build"
-	"github.com/evgeniy-achin/graffiti/internal/cache"
-	"github.com/evgeniy-achin/graffiti/internal/cluster"
-	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/parse"
-	"github.com/evgeniy-achin/graffiti/internal/render"
-	"github.com/evgeniy-achin/graffiti/internal/scan"
+	"github.com/amazopic/graffiti/internal/analyze"
+	"github.com/amazopic/graffiti/internal/build"
+	"github.com/amazopic/graffiti/internal/cache"
+	"github.com/amazopic/graffiti/internal/cluster"
+	"github.com/amazopic/graffiti/internal/graph"
+	"github.com/amazopic/graffiti/internal/parse"
+	"github.com/amazopic/graffiti/internal/render"
+	"github.com/amazopic/graffiti/internal/scan"
 )
 
 // Stats summarizes a build for the CLI success line.

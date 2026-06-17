@@ -1,4 +1,4 @@
-module github.com/evgeniy-achin/graffiti
+module github.com/amazopic/graffiti
 
 go 1.26
 

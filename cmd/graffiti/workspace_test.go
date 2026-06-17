@@ -90,6 +90,31 @@ func TestRun_LinksCheck(t *testing.T) {
 	}
 }
 
+func TestRun_WorkspaceRender(t *testing.T) {
+	base := linkShop(t)
+	var out, errOut bytes.Buffer
+	code := run([]string{"graffiti", "workspace", "render", "--root", base}, bytes.NewReader(nil), &out, &errOut)
+	if code != 0 {
+		t.Fatalf("workspace render exit=%d stderr=%q", code, errOut.String())
+	}
+	b, err := os.ReadFile(filepath.Join(base, ".graffiti-workspace", "workspace.html"))
+	if err != nil {
+		t.Fatalf("workspace.html missing: %v", err)
+	}
+	h := string(b)
+	if !strings.Contains(h, `<canvas id="c"`) {
+		t.Fatal("workspace.html missing the force-graph canvas")
+	}
+	if !strings.Contains(h, "frontend/") || !strings.Contains(h, "backend/") {
+		t.Fatalf("workspace.html island missing alias-prefixed project paths")
+	}
+	for _, banned := range []string{"http://", "https://", "<link", "@import"} {
+		if strings.Contains(h, banned) {
+			t.Fatalf("workspace.html not self-contained: found %q", banned)
+		}
+	}
+}
+
 func TestRun_QueryWorkspace(t *testing.T) {
 	base := linkShop(t)
 	var out, errOut bytes.Buffer

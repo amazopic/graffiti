@@ -11,7 +11,6 @@ import (
 	"github.com/evgeniy-achin/graffiti/internal/cache"
 	"github.com/evgeniy-achin/graffiti/internal/cluster"
 	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/layout"
 	"github.com/evgeniy-achin/graffiti/internal/parse"
 	"github.com/evgeniy-achin/graffiti/internal/render"
 	"github.com/evgeniy-achin/graffiti/internal/scan"
@@ -103,16 +102,14 @@ func Build(root, generatedAt string) (Stats, error) {
 	doc.Communities = cluster.NameCommunities(doc, deg)
 	an := analyze.Analyze(doc, deg)
 
-	// Plan 3: bake the deterministic Tier-1 district scene (integer coords).
-	scene := layout.Layout(doc, an)
-
 	if err := render.WriteMapJSON(doc, absRoot); err != nil {
 		return stats, err
 	}
 	if err := render.WriteMapMD(doc, an, absRoot); err != nil {
 		return stats, err
 	}
-	if err := render.WriteMapHTML(doc, an, scene, absRoot); err != nil {
+	// Plan 9: map.html is an in-browser force-directed graph; layout is client-side.
+	if err := render.WriteMapHTML(doc, an, absRoot); err != nil {
 		return stats, err
 	}
 	if err := c.Flush(); err != nil {

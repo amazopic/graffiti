@@ -67,6 +67,13 @@ graffiti init [--user] [--hook]  # install Claude Code integration
 Output: `<path>/.graffiti/map.json` (see `schema/map.schema.json` for the contract),
 `MAP.md`, `map.html`, and a per-file content-hash cache under `<path>/.graffiti/cache/`.
 
+`map.html` is a single self-contained, offline interactive **force-directed graph**:
+nodes colored by package (sector) and sized by connectedness, a **2D/3D** toggle
+(hover lifts a node and its neighbours), **client / tests / external-libs** category
+toggles, sector zones, a resizable **project → directory → file** tree with
+show/hide checkboxes, fit-to-window, and zoom/pan/drag/hover. No CDN, no network —
+just open the file (CSP-safe).
+
 ## Claude Code integration
 
 ```bash
@@ -93,6 +100,7 @@ graffiti link ../frontend ../backend          # federate (builds members if need
 graffiti query --workspace "where is the cart fetched and served"
 graffiti serve  --workspace                    # MCP over the federation
 graffiti update --workspace                    # rebuild changed members + recompute links
+graffiti workspace render                      # → .graffiti-workspace/workspace.html
 ```
 
 `graffiti link` writes a committable registry (`.graffiti-workspace/workspace.json`)
@@ -105,8 +113,9 @@ one per line — `frontend::main-go:fetchcart -> backend::main-go:getcart calls`
 (`#` comments allowed; endpoints are `alias::nodeid`). `graffiti links check` validates
 both endpoints resolve to real nodes; `graffiti federate --explain` lists every link.
 Federated query prefixes each node with its member alias and traverses cross-links.
-Automatic link discovery (shared symbols, HTTP routes, SDK base-URLs) and a
-`workspace.html` lanes view are planned follow-ons.
+`graffiti workspace render` writes a `workspace.html` — the same force-graph viewer
+with the **projects as the top level** of the tree and cross-project links drawn.
+Automatic link discovery (shared symbols, HTTP routes, SDK base-URLs) is a planned follow-on.
 
 Add `.graffiti-workspace/overlay.json` to `.gitignore` (it is derived and recomputable).
 

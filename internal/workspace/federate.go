@@ -7,12 +7,14 @@ import (
 	"github.com/evgeniy-achin/graffiti/internal/store"
 )
 
-// CombinedIndex builds an in-memory store.Index over all members with every node
-// id and edge endpoint prefixed by "alias::", plus the overlay's confident
-// cross-edges. The prefix lives ONLY here and in overlay.json — never written
-// back into any project's map.json (§16.1). Reusing store.NewIndex + query.Query
-// over this index gives federated retrieval with no changes to the query engine.
-func CombinedIndex(root string, reg *Registry, ov *Overlay) (*store.Index, error) {
+// CombinedDocument builds an in-memory *graph.Document over all members with every
+// node id, edge endpoint, AND file path prefixed by the member alias ("alias::id",
+// "alias/file"), plus the overlay's confident cross-edges. The alias prefix lives
+// ONLY here and in overlay.json — never written back into any project's map.json
+// (§16.1). The file-path prefix makes the project the top level of the viewer's
+// directory tree. Document order follows the (alias-sorted) member order, so the
+// result is deterministic.
+func CombinedDocument(root string, reg *Registry, ov *Overlay) (*graph.Document, error) {
 	combined := graph.NewDocument(reg.Name)
 	if ov != nil {
 		combined.GeneratedAt = ov.GeneratedAt
@@ -26,6 +28,7 @@ func CombinedIndex(root string, reg *Registry, ov *Overlay) (*store.Index, error
 		p := m.Alias + "::"
 		for _, n := range doc.Nodes {
 			n.ID = p + n.ID
+			n.File = m.Alias + "/" + n.File
 			combined.Nodes = append(combined.Nodes, n)
 		}
 		for _, e := range doc.Edges {
@@ -42,5 +45,15 @@ func CombinedIndex(root string, reg *Registry, ov *Overlay) (*store.Index, error
 			})
 		}
 	}
-	return store.NewIndex(combined), nil
+	return combined, nil
+}
+
+// CombinedIndex builds the federated read-side index over CombinedDocument so
+// query.Query traverses all members + cross-edges with no changes to the engine.
+func CombinedIndex(root string, reg *Registry, ov *Overlay) (*store.Index, error) {
+	doc, err := CombinedDocument(root, reg, ov)
+	if err != nil {
+		return nil, err
+	}
+	return store.NewIndex(doc), nil
 }

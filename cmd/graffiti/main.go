@@ -13,6 +13,7 @@ import (
 	"github.com/evgeniy-achin/graffiti/internal/integrate"
 	"github.com/evgeniy-achin/graffiti/internal/mcp"
 	"github.com/evgeniy-achin/graffiti/internal/query"
+	"github.com/evgeniy-achin/graffiti/internal/render"
 	"github.com/evgeniy-achin/graffiti/internal/store"
 	"github.com/evgeniy-achin/graffiti/internal/workspace"
 )
@@ -126,7 +127,7 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, "  serve [path]      MCP server over stdio (JSON-RPC 2.0)")
 	fmt.Fprintln(w, "  init [--user] [--hook]  install Claude Code integration (skill + CLAUDE.md [+ hook])")
 	fmt.Fprintln(w, "  link <pathA> <pathB> [...] [--name n]  federate projects into a workspace")
-	fmt.Fprintln(w, "  workspace <add|rm|list> [--root dir]  manage workspace members")
+	fmt.Fprintln(w, "  workspace <add|rm|list|render> [--root dir]  manage workspace / render workspace.html")
 	fmt.Fprintln(w, "  links check [--root dir]  validate explicit cross-project links resolve")
 	fmt.Fprintln(w, "  federate --explain [--root dir]  print the computed cross-project links")
 	fmt.Fprintln(w, `  query --workspace "<q>" [--root dir]  federated retrieval across the workspace`)
@@ -320,7 +321,7 @@ func runWorkspace(args []string, stdout, stderr io.Writer) int {
 		return code
 	}
 	if len(rest) == 0 {
-		fmt.Fprintln(stderr, "graffiti: workspace <add|rm|list>")
+		fmt.Fprintln(stderr, "graffiti: workspace <add|rm|list|render>")
 		return 2
 	}
 	reg, err := workspace.LoadRegistry(root)
@@ -334,6 +335,8 @@ func runWorkspace(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprintf(stdout, "%s\t%s\n", m.Alias, m.Path)
 		}
 		return 0
+	case "render":
+		return renderWorkspaceHTML(root, reg, stdout, stderr)
 	case "rm":
 		if len(rest) < 2 {
 			fmt.Fprintln(stderr, "graffiti: workspace rm <alias>")
@@ -412,6 +415,25 @@ func runLinksCheck(args []string, stdout, stderr io.Writer) int {
 		}
 		return 1
 	}
+	return 0
+}
+
+// renderWorkspaceHTML writes the federated force-graph to
+// <root>/.graffiti-workspace/workspace.html (projects as the tree's top level,
+// cross-project links drawn). A missing overlay just renders members unlinked.
+func renderWorkspaceHTML(root string, reg *workspace.Registry, stdout, stderr io.Writer) int {
+	ov, _ := workspace.LoadOverlay(root) // nil overlay → members without cross-edges
+	doc, err := workspace.CombinedDocument(root, reg, ov)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	out := filepath.Join(root, workspace.WorkspaceDir, "workspace.html")
+	if err := render.WriteWorkspaceHTML(doc, nowRFC3339(), out); err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	fmt.Fprintf(stdout, "✓ wrote %s (%d nodes, %d edges, %d projects).\n", out, len(doc.Nodes), len(doc.Edges), len(reg.Members))
 	return 0
 }
 

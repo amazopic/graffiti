@@ -59,6 +59,17 @@ func WriteMapHTML(doc *graph.Document, an analyze.Analysis, root string) error {
 	return os.WriteFile(filepath.Join(dir, "map.html"), []byte(out), 0o644)
 }
 
+// WriteWorkspaceHTML renders a federated CombinedDocument (alias-prefixed nodes +
+// file paths + cross-edges) to outPath, reusing the single-project force-graph
+// renderer. The file-path prefixes make each project the top level of the tree.
+func WriteWorkspaceHTML(doc *graph.Document, generatedAt, outPath string) error {
+	if err := os.MkdirAll(filepath.Dir(outPath), 0o755); err != nil {
+		return err
+	}
+	out := RenderMapHTML(doc, analyze.Analysis{}, generatedAt)
+	return os.WriteFile(outPath, []byte(out), 0o644)
+}
+
 // RenderMapHTML builds the single self-contained, offline, CSP-safe map.html: an
 // interactive force-directed graph (layout computed in the browser). It is a pure
 // function of (doc, generatedAt) for everything hashed: generatedAt appears ONLY

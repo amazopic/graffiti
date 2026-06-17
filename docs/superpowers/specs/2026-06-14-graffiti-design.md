@@ -165,6 +165,10 @@ Same graph → **byte-identical `map.html` modulo the single `generated_at` time
 ### 8.9 Workspace extension (§16.7)
 The renderer is authored as a reusable module with an alias-ready coordinate format. The workspace **lanes** view (a tinted, labeled column per project, each lane this same community-box map, with cross-project links as bundled counted gutter connectors and a workspace-overview zoom tier) drops in as a **pure additive layer** — no second renderer and no data-format change.
 
+### 8.10 Implemented (Plan 9, 2026-06-17) — force-directed graph supersedes the treemap
+
+The baked **Districts treemap** is **superseded** by an interactive **force-directed node-link graph** (the user preferred a graph over the boxes). The viewer (`internal/render/viewer/app.{js,css}`, embedded) is vanilla Canvas2D: an in-browser force simulation lays nodes out (colored by package/sector, sized by degree), with a **2D/3D toggle** (pseudo-3D sphere shading + hover elevation of a node and its neighbours — the optional "showcase 3D" §4 allowed, no WebGL), **client/tests/external-libs** category toggles, sector zones, a resizable **project→directory→file** tree (show/hide checkboxes), fit-to-window, and zoom/pan/drag/hover. The graffiti render machinery is preserved verbatim: single self-contained offline file, sha256 meta-CSP over the exact inlined bodies, `generated_at` only outside hashed bodies, `</script` escape, hidden a11y mirror (now grouped by directory). **Determinism is now at the data+assets level** (the columnar island `{label,kind,file,line,deg,cat,edges}` is a pure function of the sorted Document; CSP hashes follow), while node **positions are runtime-only** (force layout in the browser) — so the golden locks the file bytes, not pixel coordinates. `internal/layout` (the treemap) is deleted; the viewer remains plain editable embedded source (edit → `make build` → refresh golden). §8.2/§8.4/§8.8's "layout baked in Go / integer coords / semantic-zoom tiers" are the superseded design.
+
 ## 9. Claude Code integration (`graffiti init`)
 
 - Installs a **short** skill at `.claude/skills/graffiti/SKILL.md` (project) or `~/.claude/skills/...` (user): "Run `graffiti build .`; read `MAP.md`; present god nodes + surprising connections + offer to trace the single most interesting question. For codebase questions, run `graffiti query`."
@@ -335,6 +339,8 @@ Each project carries a small **immutable project id** in its `.graffiti/` (gener
 ### 16.7 Visualization (fast-follow)
 
 v1 ships the text/MCP federated path. A separate, self-contained `workspace.html` (`graffiti workspace render` → `.graffiti-workspace/`) follows: deterministic **lanes** (one tinted, labeled column per project, each lane the project's §8 community-box map), cross-project links drawn as **bundled, counted connectors in the gutters**, a new **workspace-overview** zoom tier above community→file→symbol, AMBIGUOUS links dashed in a "suspected links" panel. Per-project `map.html` files stay untouched; all assets embedded via `embed.FS`, offline, CSP-safe, deterministic.
+
+**Implemented (Plan 9, 2026-06-17):** `graffiti workspace render` writes `.graffiti-workspace/workspace.html` — the **same force-directed viewer** (§8.10) over a federated `CombinedDocument` (member nodes/files alias-prefixed + the overlay's cross-edges). The **projects are the top level** of the structure tree (file paths prefixed with the alias), and confident cross-project links are drawn as edges; per-project `map.html` files are untouched. The dedicated "lanes" layout above remains an optional future styling; the force-graph already delivers the federated view.
 
 ### 16.8 Implemented (Plan 7, v1 — 2026-06-17)
 

@@ -1,77 +1,84 @@
 package render
 
 import (
+	"encoding/json"
 	"testing"
 
-	"github.com/evgeniy-achin/graffiti/internal/layout"
+	"github.com/evgeniy-achin/graffiti/internal/graph"
 )
 
-// tinyScene is a hand-built Scene with two boxes, one pin, one bundle, one arc —
-// enough to exercise every column + the interned string table.
-func tinyScene() layout.Scene {
-	return layout.Scene{
-		W: 1600, H: 1000,
-		Boxes: []layout.Box{
-			{CommID: 0, Label: "Auth", Count: 3, X: 10, Y: 20, W: 100, H: 80, Border: 2},
-			{CommID: 1, Label: "Http", Count: 1, X: 120, Y: 20, W: 40, H: 80, Border: 1},
-		},
-		Pins: []layout.Pin{
-			{NodeID: "auth-login", Label: "Login", CommID: 0, X: 24, Y: 36},
-		},
-		Bundles: []layout.Bundle{
-			{FromComm: 0, ToComm: 1, Count: 2, Pts: [][2]int{{60, 60}, {140, 60}, {140, 60}}},
-		},
-		Arcs: []layout.Arc{
-			{FromComm: 1, ToComm: 0, Confidence: "AMBIGUOUS", Pts: [][2]int{{140, 60}, {60, 60}, {60, 60}}},
-		},
+func islandDoc() *graph.Document {
+	d := graph.NewDocument("demo")
+	d.GeneratedAt = "2026-06-17T00:00:00Z"
+	d.Nodes = []graph.Node{
+		{ID: "a.go:a.go", Label: "a.go", Kind: graph.KindFile, File: "a.go", Line: 1, Community: 0},
+		{ID: "a.go:foo", Label: "Foo", Kind: graph.KindFunction, File: "a.go", Line: 3, Community: 0},
+		{ID: "a_test.go:t", Label: "TestFoo", Kind: graph.KindFunction, File: "a_test.go", Line: 5, Community: 0},
+		{ID: "module:fmt", Label: "fmt", Kind: graph.KindModule, File: "a.go", Line: 1, Community: 0},
+	}
+	d.Edges = []graph.Edge{
+		{From: "a.go:a.go", To: "a.go:foo", Relation: graph.RelContains, Confidence: graph.ConfExtracted},
+		{From: "a.go:foo", To: "module:fmt", Relation: graph.RelImports, Confidence: graph.ConfExtracted},
+	}
+	return d
+}
+
+func TestGraphIsland_ShapeAndCategories(t *testing.T) {
+	is := graphIsland(islandDoc())
+	if len(is.Label) != 4 || len(is.Kind) != 4 || len(is.File) != 4 || len(is.Deg) != 4 || len(is.Cat) != 4 {
+		t.Fatalf("columnar arrays must all be len 4")
+	}
+	idxOf := map[string]int{}
+	for i, l := range is.Label {
+		idxOf[l] = i
+	}
+	if is.Cat[idxOf["fmt"]] != 2 {
+		t.Errorf("module fmt must be external (2)")
+	}
+	if is.Cat[idxOf["TestFoo"]] != 1 {
+		t.Errorf("TestFoo must be test (1)")
+	}
+	if is.Cat[idxOf["Foo"]] != 0 {
+		t.Errorf("Foo must be client (0)")
+	}
+	if is.Deg[idxOf["Foo"]] != 2 {
+		t.Errorf("Foo degree = %d, want 2", is.Deg[idxOf["Foo"]])
+	}
+	if len(is.Edges) != 2 {
+		t.Fatalf("want 2 edges, got %d", len(is.Edges))
+	}
+	for _, e := range is.Edges {
+		if e[0] < 0 || e[0] >= 4 || e[1] < 0 || e[1] >= 4 {
+			t.Fatalf("edge index out of range: %v", e)
+		}
 	}
 }
 
-func TestToColumnar_ParallelArraysAndStringTable(t *testing.T) {
-	sc := tinyScene()
-	cs := toColumnar(sc)
-
-	if cs.W != sc.W || cs.H2 != sc.H {
-		t.Fatalf("canvas dims = %dx%d, want %dx%d", cs.W, cs.H2, sc.W, sc.H)
-	}
-	if len(cs.Strings) == 0 || cs.Strings[0] != "" {
-		t.Fatalf("string table must exist with index 0 == \"\", got %v", cs.Strings)
-	}
-	nb := len(sc.Boxes)
-	for name, col := range map[string][]int{
-		"BoxComm": cs.BoxComm, "BoxLabel": cs.BoxLabel, "BoxCount": cs.BoxCount,
-		"BoxX": cs.BoxX, "BoxY": cs.BoxY, "BoxW": cs.BoxW, "BoxH": cs.BoxH, "BoxBorder": cs.BoxBorder,
-	} {
-		if len(col) != nb {
-			t.Fatalf("box column %s len %d, want %d", name, len(col), nb)
-		}
-	}
-	// label indices resolve back to the real labels.
-	for i, b := range sc.Boxes {
-		if cs.Strings[cs.BoxLabel[i]] != b.Label {
-			t.Fatalf("box %d label via table = %q, want %q", i, cs.Strings[cs.BoxLabel[i]], b.Label)
-		}
-	}
-	// offset arrays are prefix sums of length n+1; last*2 == flattened pts len.
-	if len(cs.BundleOff) != len(sc.Bundles)+1 {
-		t.Fatalf("bundleOff len %d, want %d", len(cs.BundleOff), len(sc.Bundles)+1)
-	}
-	if got := cs.BundleOff[len(cs.BundleOff)-1] * 2; got != len(cs.BundlePts) {
-		t.Fatalf("bundlePts len %d, want %d", len(cs.BundlePts), got)
-	}
-	if got := cs.ArcOff[len(cs.ArcOff)-1] * 2; got != len(cs.ArcPts) {
-		t.Fatalf("arcPts len %d, want %d", len(cs.ArcPts), got)
+func TestGraphIsland_Deterministic(t *testing.T) {
+	a, _ := json.Marshal(graphIsland(islandDoc()))
+	b, _ := json.Marshal(graphIsland(islandDoc()))
+	if string(a) != string(b) {
+		t.Fatal("island marshal not deterministic")
 	}
 }
 
-func TestToColumnar_Deterministic(t *testing.T) {
-	a, b := toColumnar(tinyScene()), toColumnar(tinyScene())
-	if a.W != b.W || len(a.Strings) != len(b.Strings) || len(a.BoxX) != len(b.BoxX) {
-		t.Fatalf("columnar encoding not deterministic")
+func TestCategoryHeuristics(t *testing.T) {
+	cases := []struct {
+		kind        graph.Kind
+		file, label string
+		want        int
+	}{
+		{graph.KindModule, "a.go", "fmt", 2},
+		{graph.KindFunction, "a_test.go", "TestX", 1},
+		{graph.KindFunction, "pkg/foo_test.go", "helper", 1},
+		{graph.KindFunction, "src/app.test.ts", "x", 1},
+		{graph.KindFunction, "tests/conftest.py", "fix", 1},
+		{graph.KindFunction, "main.go", "main", 0},
+		{graph.KindClass, "model.ts", "User", 0},
 	}
-	for i := range a.Strings {
-		if a.Strings[i] != b.Strings[i] {
-			t.Fatalf("string table index %d differs: %q vs %q", i, a.Strings[i], b.Strings[i])
+	for _, c := range cases {
+		if got := categoryOf(graph.Node{Kind: c.kind, File: c.file, Label: c.label}); got != c.want {
+			t.Errorf("categoryOf(%q,%q,%v)=%d want %d", c.file, c.label, c.kind, got, c.want)
 		}
 	}
 }

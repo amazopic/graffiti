@@ -12,29 +12,20 @@ import (
 
 	"github.com/evgeniy-achin/graffiti/internal/analyze"
 	"github.com/evgeniy-achin/graffiti/internal/graph"
-	"github.com/evgeniy-achin/graffiti/internal/layout"
 )
 
-// sampleClusteredScene builds a small clustered doc + analysis + baked scene.
-// (sampleClustered without the scene already exists in mapmd_test.go.)
-func sampleClusteredScene(t *testing.T) (*graph.Document, analyze.Analysis, layout.Scene) {
+func extractBetween(t *testing.T, s, open, close string) string {
 	t.Helper()
-	doc, an := sampleClustered()
-	return doc, an, layout.Layout(doc, an)
-}
-
-func extractBetween(t *testing.T, html, open, close string) string {
-	t.Helper()
-	i := strings.Index(html, open)
+	i := strings.Index(s, open)
 	if i < 0 {
 		t.Fatalf("open marker %q not found", open)
 	}
 	i += len(open)
-	j := strings.Index(html[i:], close)
+	j := strings.Index(s[i:], close)
 	if j < 0 {
 		t.Fatalf("close marker %q not found", close)
 	}
-	return html[i : i+j]
+	return s[i : i+j]
 }
 func recompSha256B64(s string) string {
 	sum := sha256.Sum256([]byte(s))
@@ -53,21 +44,19 @@ func lineContaining(t *testing.T, lines []string, sub string) string {
 
 // --- 1. Determinism: same generated_at => byte-identical. ---
 func TestMapHTML_DeterministicSameTime(t *testing.T) {
-	doc, an, sc := sampleClusteredScene(t)
-	a := RenderMapHTML(doc, an, sc, "2026-06-15T00:00:00Z")
-	b := RenderMapHTML(doc, an, sc, "2026-06-15T00:00:00Z")
+	doc, an := sampleClustered()
+	a := RenderMapHTML(doc, an, "2026-06-17T00:00:00Z")
+	b := RenderMapHTML(doc, an, "2026-06-17T00:00:00Z")
 	if a != b {
 		t.Fatalf("not byte-identical for identical inputs (len %d vs %d)", len(a), len(b))
 	}
 }
 
-// --- 1b. Determinism: different generated_at => identical EXCEPT the two
-// generated_at-bearing lines; CSP hashes unchanged. ---
+// --- 1b. Different generated_at => identical EXCEPT the 2 generated_at lines. ---
 func TestMapHTML_DiffersOnlyByGeneratedAt(t *testing.T) {
-	doc, an, sc := sampleClusteredScene(t)
-	t1, t2 := "2026-06-15T00:00:00Z", "1999-12-31T23:59:59Z"
-	a := RenderMapHTML(doc, an, sc, t1)
-	b := RenderMapHTML(doc, an, sc, t2)
+	doc, an := sampleClustered()
+	a := RenderMapHTML(doc, an, "2026-06-17T00:00:00Z")
+	b := RenderMapHTML(doc, an, "1999-12-31T23:59:59Z")
 	if a == b {
 		t.Fatal("expected difference when generated_at changes")
 	}
@@ -94,14 +83,14 @@ func TestMapHTML_DiffersOnlyByGeneratedAt(t *testing.T) {
 	}
 }
 
-// --- 2. CSP correctness: independently recompute the inlined bodies' hashes. ---
+// --- 2. CSP correctness: recompute the inlined bodies' hashes independently. ---
 func TestMapHTML_CSPHashesMatchInlinedBodies(t *testing.T) {
-	doc, an, sc := sampleClusteredScene(t)
-	html := RenderMapHTML(doc, an, sc, "2026-06-15T00:00:00Z")
+	doc, an := sampleClustered()
+	html := RenderMapHTML(doc, an, "2026-06-17T00:00:00Z")
 	cspLine := lineContaining(t, strings.Split(html, "\n"), "Content-Security-Policy")
 
 	styleBody := extractBetween(t, html, "<style>", "</style>")
-	scriptBody := extractBetween(t, html, "<script>", "</script>")
+	scriptBody := extractBetween(t, html, "<script>", "</script>") // renderer (island tag has attrs)
 	dataBody := extractBetween(t, html, `<script type="application/json" id="graffiti-data">`, "</script>")
 
 	for _, want := range []string{
@@ -122,8 +111,8 @@ func TestMapHTML_CSPHashesMatchInlinedBodies(t *testing.T) {
 
 // --- 3. Self-containment: no external refs anywhere. ---
 func TestMapHTML_SelfContained(t *testing.T) {
-	doc, an, sc := sampleClusteredScene(t)
-	html := RenderMapHTML(doc, an, sc, "2026-06-15T00:00:00Z")
+	doc, an := sampleClustered()
+	html := RenderMapHTML(doc, an, "2026-06-17T00:00:00Z")
 	for _, b := range []string{"http://", "https://", "src=", "<link", "@import"} {
 		if strings.Contains(html, b) {
 			t.Fatalf("self-containment violated: found %q", b)
@@ -134,46 +123,35 @@ func TestMapHTML_SelfContained(t *testing.T) {
 	}
 }
 
-// --- 4. Data island parses to the columnar shape. ---
+// --- 4. Data island parses to the columnar graph shape. ---
 func TestMapHTML_DataIslandParses(t *testing.T) {
-	doc, an, sc := sampleClusteredScene(t)
-	html := RenderMapHTML(doc, an, sc, "2026-06-15T00:00:00Z")
+	doc, an := sampleClustered()
+	html := RenderMapHTML(doc, an, "2026-06-17T00:00:00Z")
 	island := extractBetween(t, html, `<script type="application/json" id="graffiti-data">`, "</script>")
-	var cs ColumnarScene
-	if err := json.Unmarshal([]byte(island), &cs); err != nil {
+	var gd graphData
+	if err := json.Unmarshal([]byte(island), &gd); err != nil {
 		t.Fatalf("data island did not parse as JSON: %v", err)
 	}
-	if cs.W != sc.W || cs.H2 != sc.H {
-		t.Fatalf("canvas dims mismatch: %dx%d want %dx%d", cs.W, cs.H2, sc.W, sc.H)
-	}
-	if len(cs.BoxComm) != len(sc.Boxes) {
-		t.Fatalf("boxes in island = %d, want %d", len(cs.BoxComm), len(sc.Boxes))
-	}
-	if len(cs.Strings) == 0 || cs.Strings[0] != "" {
-		t.Fatalf("string table must start with \"\"")
+	n := len(gd.Label)
+	if n == 0 || len(gd.Kind) != n || len(gd.File) != n || len(gd.Deg) != n || len(gd.Cat) != n || len(gd.Line) != n {
+		t.Fatalf("columnar arrays inconsistent (label=%d)", n)
 	}
 }
 
-// --- 5. Structural presence: <canvas>, a11y mirror lists every district, 3 Qs. ---
+// --- 5. Structural presence: canvas, a11y, tree, the toggles, fit. ---
 func TestMapHTML_StructuralPresence(t *testing.T) {
-	doc, an, sc := sampleClusteredScene(t)
-	html := RenderMapHTML(doc, an, sc, "2026-06-15T00:00:00Z")
-	for _, must := range []string{`<canvas id="canvas"`, `id="a11y"`, `id="graffiti-data"`, "Start here", "Landmarks", "Confidence"} {
+	doc, an := sampleClustered()
+	html := RenderMapHTML(doc, an, "2026-06-17T00:00:00Z")
+	for _, must := range []string{`<canvas id="c"`, `id="a11y"`, `id="graffiti-data"`, `id="tree"`, "3D depth", "fit to window", "show sector zones"} {
 		if !strings.Contains(html, must) {
 			t.Fatalf("missing structural element %q", must)
 		}
 	}
-	// a11y mirror lists every district label.
+	// a11y mirror lists every node label.
 	mirror := extractBetween(t, html, `<nav id="a11y"`, "</nav>")
-	for _, c := range doc.Communities {
-		if !strings.Contains(mirror, c.Label) {
-			t.Fatalf("a11y mirror missing district %q", c.Label)
-		}
-	}
-	// exactly the 3 questions appear (as <li> items in the Start here block).
-	for _, q := range an.Questions {
-		if !strings.Contains(html, htmlEscape(q)) {
-			t.Fatalf("question missing from map.html: %q", q)
+	for _, nd := range doc.Nodes {
+		if !strings.Contains(mirror, htmlEscape(nd.Label)) {
+			t.Fatalf("a11y mirror missing node %q", nd.Label)
 		}
 	}
 }
@@ -181,18 +159,14 @@ func TestMapHTML_StructuralPresence(t *testing.T) {
 // --- 6. XSS escaping of labels AND the </script island escape. ---
 func TestMapHTML_EscapesLabelsAndScriptClose(t *testing.T) {
 	doc := graph.NewDocument("demo")
-	doc.GeneratedAt = "2026-06-15T00:00:00Z"
-	// A malicious label containing both an HTML tag and a script-close sequence.
+	doc.GeneratedAt = "2026-06-17T00:00:00Z"
 	evil := `</script><img src=x onerror=alert(1)>`
 	doc.Nodes = []graph.Node{
 		{ID: "n0", Label: evil, Kind: graph.KindFunction, File: "a.go", Line: 1, Community: 0},
 	}
-	doc.Communities = []graph.Community{{ID: 0, Label: evil, Members: []string{"n0"}}}
 	an := analyze.Analyze(doc, analyze.Degrees(doc))
-	sc := layout.Layout(doc, an)
-	html := RenderMapHTML(doc, an, sc, "2026-06-15T00:00:00Z")
+	html := RenderMapHTML(doc, an, "2026-06-17T00:00:00Z")
 
-	// The raw closing-script sequence must not appear inside the JSON island.
 	island := extractBetween(t, html, `<script type="application/json" id="graffiti-data">`, "</script>")
 	if strings.Contains(island, "</script") {
 		t.Fatalf("data island contains an unescaped </script sequence:\n%s", island)
@@ -200,22 +174,20 @@ func TestMapHTML_EscapesLabelsAndScriptClose(t *testing.T) {
 	if !strings.Contains(island, "\\u003c") {
 		t.Fatalf("expected '<' to be escaped to \\u003c in the island")
 	}
-	// The island still parses (escape is JSON-legal) and round-trips the label.
-	var cs ColumnarScene
-	if err := json.Unmarshal([]byte(island), &cs); err != nil {
+	var gd graphData
+	if err := json.Unmarshal([]byte(island), &gd); err != nil {
 		t.Fatalf("escaped island did not parse: %v", err)
 	}
 	found := false
-	for _, s := range cs.Strings {
-		if s == evil {
+	for _, l := range gd.Label {
+		if l == evil {
 			found = true
 		}
 	}
 	if !found {
 		t.Fatalf("evil label did not round-trip through the island")
 	}
-	// In the visible HTML body (rail/a11y mirror) the label must be HTML-escaped:
-	// no raw "<img" and no raw onerror attribute should survive.
+	// In the visible body (a11y mirror) the label must be HTML-escaped.
 	body := html[strings.Index(html, "<body"):]
 	if strings.Contains(body, "<img src=x onerror") {
 		t.Fatalf("label was not HTML-escaped in the body (XSS):\n%s", body)
@@ -224,16 +196,16 @@ func TestMapHTML_EscapesLabelsAndScriptClose(t *testing.T) {
 
 // --- 7. Writer writes next to map.json/MAP.md. ---
 func TestWriteMapHTML_WritesNextToJSON(t *testing.T) {
-	doc, an, sc := sampleClusteredScene(t)
+	doc, an := sampleClustered()
 	dir := t.TempDir()
-	if err := WriteMapHTML(doc, an, sc, dir); err != nil {
+	if err := WriteMapHTML(doc, an, dir); err != nil {
 		t.Fatalf("WriteMapHTML: %v", err)
 	}
 	b, err := os.ReadFile(filepath.Join(dir, ".graffiti", "map.html"))
 	if err != nil {
 		t.Fatalf("read map.html: %v", err)
 	}
-	if !strings.Contains(string(b), `<canvas id="canvas"`) {
+	if !strings.Contains(string(b), `<canvas id="c"`) {
 		t.Fatalf("written map.html missing <canvas>")
 	}
 }

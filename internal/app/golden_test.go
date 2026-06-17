@@ -329,14 +329,14 @@ func buildFixtureMapHTML(t *testing.T) []byte {
 // builds into different temp dirs (different roots) still compare equal.
 var reHTMLComment = regexp.MustCompile(`<!-- generated_at: [^>]*-->`)
 var reHTMLDataAttr = regexp.MustCompile(`data-generated-at="[^"]*"`)
-var reHTMLTitle = regexp.MustCompile(`<title>Graffiti Districts — [^<]*</title>`)
-var reHTMLTopBar = regexp.MustCompile(`Districts — [^<]*</span>`)
+var reHTMLTitle = regexp.MustCompile(`<title>graffiti — [^<]*</title>`)
+var reHTMLH1 = regexp.MustCompile(`<h1>[^<]*</h1>`)
 
 func stripHTML(b []byte) []byte {
 	b = reHTMLComment.ReplaceAll(b, []byte(`<!-- generated_at: X -->`))
 	b = reHTMLDataAttr.ReplaceAll(b, []byte(`data-generated-at="X"`))
-	b = reHTMLTitle.ReplaceAll(b, []byte(`<title>Graffiti Districts — X</title>`))
-	b = reHTMLTopBar.ReplaceAll(b, []byte(`Districts — X</span>`))
+	b = reHTMLTitle.ReplaceAll(b, []byte(`<title>graffiti — X</title>`))
+	b = reHTMLH1.ReplaceAll(b, []byte(`<h1>X</h1>`))
 	return b
 }
 
@@ -399,21 +399,21 @@ func TestMapHTML_SelfContainedAndCSP(t *testing.T) {
 
 func TestMapHTML_StructuralAndA11yMirror(t *testing.T) {
 	html := string(buildFixtureMapHTML(t))
-	for _, must := range []string{`<canvas id="canvas"`, `<nav id="a11y"`, `id="graffiti-data"`, "Start here", "Landmarks", "Confidence"} {
+	for _, must := range []string{`<canvas id="c"`, `<nav id="a11y"`, `id="graffiti-data"`, `id="tree"`, "3D depth", "fit to window"} {
 		if !strings.Contains(html, must) {
 			t.Fatalf("map.html missing %q", must)
 		}
 	}
-	// Every clustered community label from the fixture appears in the a11y mirror.
+	// Every node label from the fixture appears in the a11y mirror.
 	var doc graph.Document
 	if err := json.Unmarshal(buildFixtureIntoTemp(t), &doc); err != nil {
 		t.Fatalf("unmarshal map.json: %v", err)
 	}
 	mi := strings.Index(html, `<nav id="a11y"`)
 	mirror := html[mi : mi+strings.Index(html[mi:], "</nav>")]
-	for _, c := range doc.Communities {
-		if !strings.Contains(mirror, c.Label) {
-			t.Fatalf("a11y mirror missing district %q", c.Label)
+	for _, n := range doc.Nodes {
+		if !strings.Contains(mirror, n.Label) {
+			t.Fatalf("a11y mirror missing node %q", n.Label)
 		}
 	}
 }

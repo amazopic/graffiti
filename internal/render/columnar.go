@@ -1,116 +1,65 @@
 package render
 
-import "github.com/evgeniy-achin/graffiti/internal/layout"
+import (
+	"regexp"
 
-// ColumnarScene is the compact, JSON-friendly representation inlined as the
-// map.html data island (spec §8.6): every repeated string is interned once into
-// Strings (index 0 == ""); everything else is parallel integer arrays. The
-// browser rebuilds objects by index lookup. JSON keys come from struct field
-// order; arrays are already deterministically ordered by layout.Layout, so the
-// encoded bytes are deterministic.
-type ColumnarScene struct {
-	W       int      `json:"w"`
-	H2      int      `json:"h"`
-	Strings []string `json:"strings"` // interned string table; index 0 == ""
+	"github.com/evgeniy-achin/graffiti/internal/graph"
+)
 
-	BoxComm   []int `json:"boxComm"`
-	BoxLabel  []int `json:"boxLabel"`
-	BoxCount  []int `json:"boxCount"`
-	BoxX      []int `json:"boxX"`
-	BoxY      []int `json:"boxY"`
-	BoxW      []int `json:"boxW"`
-	BoxH      []int `json:"boxH"`
-	BoxBorder []int `json:"boxBorder"`
-
-	PinNode  []int `json:"pinNode"`
-	PinLabel []int `json:"pinLabel"`
-	PinComm  []int `json:"pinComm"`
-	PinX     []int `json:"pinX"`
-	PinY     []int `json:"pinY"`
-
-	// Points for item i live in Pts[Off[i]*2 : Off[i+1]*2] as [x0,y0,x1,y1,...].
-	BundleFrom  []int `json:"bundleFrom"`
-	BundleTo    []int `json:"bundleTo"`
-	BundleCount []int `json:"bundleCount"`
-	BundleOff   []int `json:"bundleOff"`
-	BundlePts   []int `json:"bundlePts"`
-
-	ArcFrom []int `json:"arcFrom"`
-	ArcTo   []int `json:"arcTo"`
-	ArcConf []int `json:"arcConf"`
-	ArcOff  []int `json:"arcOff"`
-	ArcPts  []int `json:"arcPts"`
+// graphData is the compact columnar graph island consumed by viewer/app.js.
+// Parallel arrays index the same node; edges are [fromIdx,toIdx] pairs into them.
+// Sector color and node layout are derived in the browser (from file paths and a
+// force simulation), so they are intentionally absent here — keeping the island a
+// pure, deterministic function of the Document.
+type graphData struct {
+	Label []string `json:"label"`
+	Kind  []string `json:"kind"`
+	File  []string `json:"file"`
+	Line  []int    `json:"line"`
+	Deg   []int    `json:"deg"`
+	Cat   []int    `json:"cat"` // 0=client 1=test 2=external
+	Edges [][2]int `json:"edges"`
 }
 
-// interner builds a deterministic interned string table. The empty string is
-// always index 0. Strings are assigned ids in first-seen order, deterministic
-// because the Scene emit order is.
-type interner struct {
-	idx map[string]int
-	tab []string
-}
+// testFile matches common test-file conventions across graffiti's languages
+// (Go _test.go, JS/TS .test./.spec., Python test_/tests/, *Test.{java,kt,php,rs,py}).
+var testFile = regexp.MustCompile(`(^|/)(tests?)(/|_)|_test\.|\.test\.|\.spec\.|(^|/)test_|Tests?\.(java|kt|php|rs|py)$`)
 
-func newInterner() *interner {
-	in := &interner{idx: map[string]int{}}
-	in.intern("") // reserve index 0
-	return in
-}
-
-func (in *interner) intern(s string) int {
-	if id, ok := in.idx[s]; ok {
-		return id
+// categoryOf classifies a node: 2=external (imported module), 1=test, 0=client.
+func categoryOf(n graph.Node) int {
+	if n.Kind == graph.KindModule {
+		return 2
 	}
-	id := len(in.tab)
-	in.idx[s] = id
-	in.tab = append(in.tab, s)
-	return id
+	if testFile.MatchString(n.File) || (len(n.Label) >= 4 && n.Label[:4] == "Test") {
+		return 1
+	}
+	return 0
 }
 
-// toColumnar flattens a layout.Scene into the compact columnar form.
-func toColumnar(sc layout.Scene) ColumnarScene {
-	in := newInterner()
-	cs := ColumnarScene{W: sc.W, H2: sc.H}
-
-	for _, b := range sc.Boxes {
-		cs.BoxComm = append(cs.BoxComm, b.CommID)
-		cs.BoxLabel = append(cs.BoxLabel, in.intern(b.Label))
-		cs.BoxCount = append(cs.BoxCount, b.Count)
-		cs.BoxX = append(cs.BoxX, b.X)
-		cs.BoxY = append(cs.BoxY, b.Y)
-		cs.BoxW = append(cs.BoxW, b.W)
-		cs.BoxH = append(cs.BoxH, b.H)
-		cs.BoxBorder = append(cs.BoxBorder, b.Border)
+// graphIsland builds the columnar island from a (sorted) Document. doc.Nodes is
+// already id-sorted by build.Assemble, so node order — and thus edge indices —
+// are deterministic.
+func graphIsland(doc *graph.Document) graphData {
+	idx := make(map[string]int, len(doc.Nodes))
+	d := graphData{Edges: [][2]int{}}
+	for i, n := range doc.Nodes {
+		idx[n.ID] = i
+		d.Label = append(d.Label, n.Label)
+		d.Kind = append(d.Kind, string(n.Kind))
+		d.File = append(d.File, n.File)
+		d.Line = append(d.Line, n.Line)
+		d.Cat = append(d.Cat, categoryOf(n))
 	}
-	for _, p := range sc.Pins {
-		cs.PinNode = append(cs.PinNode, in.intern(p.NodeID))
-		cs.PinLabel = append(cs.PinLabel, in.intern(p.Label))
-		cs.PinComm = append(cs.PinComm, p.CommID)
-		cs.PinX = append(cs.PinX, p.X)
-		cs.PinY = append(cs.PinY, p.Y)
-	}
-
-	cs.BundleOff = append(cs.BundleOff, 0)
-	for _, bn := range sc.Bundles {
-		cs.BundleFrom = append(cs.BundleFrom, bn.FromComm)
-		cs.BundleTo = append(cs.BundleTo, bn.ToComm)
-		cs.BundleCount = append(cs.BundleCount, bn.Count)
-		for _, pt := range bn.Pts {
-			cs.BundlePts = append(cs.BundlePts, pt[0], pt[1])
+	d.Deg = make([]int, len(doc.Nodes))
+	for _, e := range doc.Edges {
+		a, ok1 := idx[e.From]
+		b, ok2 := idx[e.To]
+		if !ok1 || !ok2 || a == b {
+			continue
 		}
-		cs.BundleOff = append(cs.BundleOff, len(cs.BundlePts)/2)
+		d.Deg[a]++
+		d.Deg[b]++
+		d.Edges = append(d.Edges, [2]int{a, b})
 	}
-
-	cs.ArcOff = append(cs.ArcOff, 0)
-	for _, ar := range sc.Arcs {
-		cs.ArcFrom = append(cs.ArcFrom, ar.FromComm)
-		cs.ArcTo = append(cs.ArcTo, ar.ToComm)
-		cs.ArcConf = append(cs.ArcConf, in.intern(ar.Confidence))
-		for _, pt := range ar.Pts {
-			cs.ArcPts = append(cs.ArcPts, pt[0], pt[1])
-		}
-		cs.ArcOff = append(cs.ArcOff, len(cs.ArcPts)/2)
-	}
-
-	cs.Strings = in.tab
-	return cs
+	return d
 }

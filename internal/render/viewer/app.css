@@ -17,3 +17,6 @@ html,body{margin:0;height:100%;background:#0b0f17;color:#c9d1d9;font:13px/1.4 ui
   .hint{position:fixed;bottom:12px;left:14px;color:#5b6571;font-size:12px}
   .fitbtn{position:fixed;bottom:12px;right:14px;background:rgba(13,17,23,.86);border:1px solid #30363d;color:#c9d1d9;border-radius:8px;padding:7px 12px;font:13px ui-sans-serif,system-ui;cursor:pointer}.fitbtn:hover{border-color:#58a6ff;color:#fff}
 #a11y{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+#search{width:100%;box-sizing:border-box;margin:4px 0 2px;padding:6px 9px;background:#0d1117;border:1px solid #30363d;border-radius:7px;color:#e6edf3;font:13px ui-sans-serif,system-ui;outline:none}
+#search:focus{border-color:#58a6ff}
+#toast{position:fixed;bottom:54px;left:50%;transform:translateX(-50%);background:#161b22;border:1px solid #30363d;color:#e6edf3;border-radius:8px;padding:7px 13px;font:12px ui-monospace,monospace;opacity:0;transition:opacity .15s;pointer-events:none;z-index:6}

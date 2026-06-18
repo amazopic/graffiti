@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "Ceneje · hitreje · učinkoviteje",
+  "hero.ben.tokens.lead": "Do 50 % manj žetonov",
+  "hero.ben.tokens.desc": "Modelu podaj osredotočen podgraf namesto celih datotek — manjši, cenejši klici.",
+  "hero.ben.fast.lead": "Manj poizvedb sem in tja",
+  "hero.ben.fast.desc": "Ena poizvedba v graf namesto ducata ukazov grep — odgovori pridejo hitreje.",
+  "hero.ben.smart.lead": "Natančnejši odgovori",
+  "hero.ben.smart.desc": "Pomočnik bere resnično strukturo — calls, defs, imports — ne pa ugiba.",
   "meta.title": "graffiti — vsak repozitorij spremenite v poizvedljiv graf kode za UI",
   "meta.description": "graffiti spremeni repozitorij kode v usmerjeni graf znanja, ki ga vaš UI pomočnik za kodiranje bere namesto grepanja. Ena statična binarna datoteka Go — brez API-ključev, $0, povsem brez povezave, bajtno deterministična. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "Jezik",

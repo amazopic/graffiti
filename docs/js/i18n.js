@@ -3,7 +3,7 @@
 // All other locales are lazy-loaded per-code chunks from ./locales/<code>.js
 // ─────────────────────────────────────────────────────────────────────
 
-export const ASSET_V = '2';
+export const ASSET_V = '3';
 
 export const supportedLocales = [
   { code: 'en',   label: 'English',     native: 'English'    },
@@ -57,6 +57,14 @@ const en = {
   "hero.det.eyebrow": "Determinism",
   "hero.det.title": "Same repo in — byte-identical map out.",
   "hero.det.body": "Every run sorts everything and stamps a single timestamp. <strong>Diff two builds and only the clock moves.</strong> Commit the map; review it like code.",
+
+  "hero.ben.eyebrow": "Cheaper · faster · more effective",
+  "hero.ben.tokens.lead": "Up to 50% fewer tokens",
+  "hero.ben.tokens.desc": "Hand the model a scoped subgraph instead of whole files — smaller, cheaper calls.",
+  "hero.ben.fast.lead": "Fewer round-trips",
+  "hero.ben.fast.desc": "One graph query instead of a dozen greps — answers land faster.",
+  "hero.ben.smart.lead": "More accurate answers",
+  "hero.ben.smart.desc": "The assistant reads real structure — calls, defs, imports — not guesses.",
 
   "vibe.eyebrow": "Vibe-chill install",
   "vibe.title": "Why touch a terminal<br/>when you have <em>Claude Code</em>?",

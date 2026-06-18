@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "Rẻ hơn · nhanh hơn · hiệu quả hơn",
+  "hero.ben.tokens.lead": "Giảm tới 50% token",
+  "hero.ben.tokens.desc": "Đưa cho mô hình một subgraph đã khoanh vùng thay vì cả file — lệnh gọi nhỏ hơn, rẻ hơn.",
+  "hero.ben.fast.lead": "Ít vòng lặp qua lại hơn",
+  "hero.ben.fast.desc": "Một truy vấn đồ thị thay cho cả tá lần grep — câu trả lời đến nhanh hơn.",
+  "hero.ben.smart.lead": "Câu trả lời chính xác hơn",
+  "hero.ben.smart.desc": "Trợ lý đọc đúng cấu trúc thực — calls, defs, imports — chứ không phải đoán mò.",
   "meta.title": "graffiti — biến mọi repo thành đồ thị mã nguồn có thể truy vấn cho AI",
   "meta.description": "graffiti biến một kho mã nguồn thành đồ thị tri thức có hướng mà trợ lý lập trình AI sẽ đọc thay vì grep. Một binary Go tĩnh — không cần API key, $0, hoàn toàn ngoại tuyến, tất định đến từng byte. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "Ngôn ngữ",

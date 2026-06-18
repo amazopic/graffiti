@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "更省 · 更快 · 更有效",
+  "hero.ben.tokens.lead": "最多省下 50% token",
+  "hero.ben.tokens.desc": "把精準範圍的子圖交給模型，而非整份檔案 — 呼叫更小、成本更低。",
+  "hero.ben.fast.lead": "更少來回往返",
+  "hero.ben.fast.desc": "一次圖查詢，取代十幾次 grep — 答案更快到手。",
+  "hero.ben.smart.lead": "答案更精準",
+  "hero.ben.smart.desc": "助手讀的是真實結構 — calls、defs、imports — 而非靠猜。",
   "meta.title": "graffiti — 將任何儲存庫轉換成 AI 可查詢的程式碼圖譜",
   "meta.description": "graffiti 將程式碼儲存庫轉換成一張有向知識圖譜，讓你的 AI 程式設計助手用它來閱讀，而不是 grep。一個靜態的 Go 執行檔 — 零 API 金鑰、$0、完全離線、位元組層級可決定。支援 Go、Python、JS、TS、Rust、Java、PHP。",
   "lang.label": "語言",

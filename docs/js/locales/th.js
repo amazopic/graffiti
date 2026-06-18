@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "ถูกกว่า · เร็วกว่า · ได้ผลกว่า",
+  "hero.ben.tokens.lead": "ประหยัด token ได้ถึง 50%",
+  "hero.ben.tokens.desc": "ส่งให้โมเดลเป็น subgraph เฉพาะส่วนที่เกี่ยวข้อง แทนที่จะยัดทั้งไฟล์ — เรียกใช้น้อยลง ประหยัดกว่า",
+  "hero.ben.fast.lead": "รับส่งไป-มาน้อยลง",
+  "hero.ben.fast.desc": "ถามกราฟครั้งเดียว แทนที่จะ grep เป็นสิบรอบ — ได้คำตอบไวกว่า",
+  "hero.ben.smart.lead": "คำตอบแม่นยำกว่า",
+  "hero.ben.smart.desc": "ผู้ช่วยอ่านโครงสร้างจริง — calls, defs, imports — ไม่ใช่เดาเอา",
   "meta.title": "graffiti — เปลี่ยน repo ใดก็ได้ให้กลายเป็นกราฟโค้ดที่ค้นหาได้สำหรับ AI",
   "meta.description": "graffiti เปลี่ยน repository ของโค้ดให้เป็นกราฟความรู้แบบมีทิศทางที่ผู้ช่วยเขียนโค้ด AI ของคุณอ่านแทนการ grep ไบนารี Go แบบ static เดี่ยว ๆ — ไม่ต้องใช้ API key, ราคา $0, ออฟไลน์เต็มรูปแบบ, ให้ผลลัพธ์เหมือนเดิมระดับไบต์ Go, Python, JS, TS, Rust, Java, PHP",
   "lang.label": "ภาษา",

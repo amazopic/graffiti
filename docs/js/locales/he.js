@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "זול יותר · מהיר יותר · אפקטיבי יותר",
+  "hero.ben.tokens.lead": "עד 50% פחות טוקנים",
+  "hero.ben.tokens.desc": "מעבירים למודל תת-גרף ממוקד במקום קבצים שלמים — קריאות קטנות וזולות יותר.",
+  "hero.ben.fast.lead": "פחות הלוך-ושוב",
+  "hero.ben.fast.desc": "שאילתת גרף אחת במקום תריסר greps — התשובות מגיעות מהר יותר.",
+  "hero.ben.smart.lead": "תשובות מדויקות יותר",
+  "hero.ben.smart.desc": "העוזר קורא מבנה אמיתי — calls, defs, imports — ולא מנחש.",
   "meta.title": "graffiti — הפכו כל מאגר לגרף קוד הניתן לתשאול עבור בינה מלאכותית",
   "meta.description": "graffiti הופכת מאגר קוד לגרף ידע מכוון שעוזר הקוד מבוסס הבינה המלאכותית שלכם קורא במקום לבצע grep. קובץ בינארי סטטי יחיד ב-Go — אפס מפתחות API, ‏$0, עובד לחלוטין במצב לא מקוון, דטרמיניסטי ברמת הבית. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "שפה",

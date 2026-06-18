@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "Lebih murah · lebih cepat · lebih efektif",
+  "hero.ben.tokens.lead": "Hemat token hingga 50%",
+  "hero.ben.tokens.desc": "Beri model subgraph yang terfokus, bukan seluruh file — panggilan jadi lebih kecil dan murah.",
+  "hero.ben.fast.lead": "Lebih sedikit bolak-balik",
+  "hero.ben.fast.desc": "Satu kueri graf, bukan belasan grep — jawaban datang lebih cepat.",
+  "hero.ben.smart.lead": "Jawaban lebih akurat",
+  "hero.ben.smart.desc": "Asisten membaca struktur asli — calls, defs, imports — bukan menebak-nebak.",
   "meta.title": "graffiti — ubah repositori apa pun menjadi graf kode yang bisa di-query untuk AI",
   "meta.description": "graffiti mengubah repositori kode menjadi graf pengetahuan terarah yang dibaca asisten coding AI Anda alih-alih melakukan grep. Satu binary Go statis — tanpa kunci API, $0, sepenuhnya offline, deterministik byte demi byte. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "Bahasa",

@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "سستا · تیز · زیادہ مؤثر",
+  "hero.ben.tokens.lead": "50% تک کم ٹوکنز",
+  "hero.ben.tokens.desc": "ماڈل کو پوری فائلوں کے بجائے ایک محدود سب گراف دیں — چھوٹی، سستی کالز۔",
+  "hero.ben.fast.lead": "کم چکر",
+  "hero.ben.fast.desc": "درجن بھر grep کے بجائے ایک ہی گراف کوئری — جواب تیزی سے ملتے ہیں۔",
+  "hero.ben.smart.lead": "زیادہ درست جوابات",
+  "hero.ben.smart.desc": "اسسٹنٹ اصل ساخت پڑھتا ہے — calls، defs، imports — اندازے نہیں لگاتا۔",
   "meta.title": "graffiti — کسی بھی repo کو AI کے لیے قابلِ کوئری کوڈ گراف میں بدلیں",
   "meta.description": "graffiti ایک کوڈ repository کو ایک directed knowledge graph میں بدل دیتا ہے جسے آپ کا AI کوڈنگ اسسٹنٹ grep کرنے کے بجائے پڑھتا ہے۔ ایک سٹیٹک Go binary — صفر API keys، $0، مکمل طور پر آف لائن، byte-deterministic۔ Go، Python، JS، TS، Rust، Java، PHP۔",
   "lang.label": "زبان",

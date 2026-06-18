@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "Daha ucuz · daha hızlı · daha etkili",
+  "hero.ben.tokens.lead": "%50'ye varan token tasarrufu",
+  "hero.ben.tokens.desc": "Modele tüm dosyalar yerine odaklı bir alt grafik verin — daha küçük, daha ucuz çağrılar.",
+  "hero.ben.fast.lead": "Daha az gidiş geliş",
+  "hero.ben.fast.desc": "Düzinelerce grep yerine tek bir grafik sorgusu — yanıtlar daha hızlı gelir.",
+  "hero.ben.smart.lead": "Daha isabetli yanıtlar",
+  "hero.ben.smart.desc": "Asistan tahmin yürütmez, gerçek yapıyı okur — calls, defs, imports.",
   "meta.title": "graffiti — herhangi bir depoyu yapay zeka için sorgulanabilir bir kod grafiğine dönüştürün",
   "meta.description": "graffiti, bir kod deposunu yapay zeka kodlama asistanınızın grep yapmak yerine okuyacağı yönlü bir bilgi grafiğine dönüştürür. Tek bir statik Go ikili dosyası — sıfır API anahtarı, 0 dolar, tamamen çevrimdışı, bayt düzeyinde belirlenimci. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "Dil",

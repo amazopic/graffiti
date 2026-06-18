@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "更省 · 更快 · 更高效",
+  "hero.ben.tokens.lead": "Token 用量最多减少 50%",
+  "hero.ben.tokens.desc": "只把精准切分的子图喂给模型，而非整个文件——调用更小、成本更低。",
+  "hero.ben.fast.lead": "更少的来回交互",
+  "hero.ben.fast.desc": "一次图查询，胜过十几次 grep——答案来得更快。",
+  "hero.ben.smart.lead": "答案更精准",
+  "hero.ben.smart.desc": "助手读取真实代码结构——calls、defs、imports——而非凭空猜测。",
   "meta.title": "graffiti — 将任意代码仓库变成可供 AI 查询的代码图谱",
   "meta.description": "graffiti 将代码仓库变成一张有向知识图谱，让你的 AI 编程助手去读取它，而不再 grep。一个静态链接的 Go 单一二进制文件 —— 零 API 密钥、$0 成本、完全离线、字节级确定性。支持 Go、Python、JS、TS、Rust、Java、PHP。",
   "lang.label": "语言",

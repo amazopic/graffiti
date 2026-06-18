@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "Günstiger · schneller · effektiver",
+  "hero.ben.tokens.lead": "Bis zu 50% weniger Tokens",
+  "hero.ben.tokens.desc": "Gib dem Modell einen gezielten Teilgraphen statt ganzer Dateien — kleinere, günstigere Anfragen.",
+  "hero.ben.fast.lead": "Weniger Hin und Her",
+  "hero.ben.fast.desc": "Eine Graph-Abfrage statt eines Dutzends greps — Antworten sind schneller da.",
+  "hero.ben.smart.lead": "Treffsicherere Antworten",
+  "hero.ben.smart.desc": "Der Assistent liest echte Struktur — calls, defs, imports — statt zu raten.",
   "meta.title": "graffiti — verwandle jedes Repository in einen abfragbaren Code-Graphen für KI",
   "meta.description": "graffiti verwandelt ein Code-Repository in einen gerichteten Wissensgraphen, den dein KI-Coding-Assistent liest, statt zu greppen. Ein statisches Go-Binary — keine API-Schlüssel, $0, vollständig offline, byte-deterministisch. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "Sprache",

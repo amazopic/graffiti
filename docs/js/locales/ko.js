@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "더 저렴하게 · 더 빠르게 · 더 효과적으로",
+  "hero.ben.tokens.lead": "토큰 최대 50% 절감",
+  "hero.ben.tokens.desc": "파일 전체 대신 범위를 좁힌 서브그래프를 모델에 전달 — 더 작고 저렴한 호출.",
+  "hero.ben.fast.lead": "왕복 호출 최소화",
+  "hero.ben.fast.desc": "수십 번의 grep 대신 그래프 쿼리 한 번 — 답이 더 빨리 도착합니다.",
+  "hero.ben.smart.lead": "더 정확한 답변",
+  "hero.ben.smart.desc": "추측이 아니라 실제 구조 — calls, defs, imports — 를 읽는 AI 어시스턴트.",
   "meta.title": "graffiti — 어떤 저장소든 AI가 질의할 수 있는 코드 그래프로",
   "meta.description": "graffiti는 코드 저장소를 AI 코딩 어시스턴트가 grep하는 대신 읽어 들이는 방향성 지식 그래프로 바꿉니다. 단일 정적 Go 바이너리 — API 키 0개, 비용 $0, 완전 오프라인, 바이트 단위로 결정적. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "언어",

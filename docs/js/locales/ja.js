@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "より安く・より速く・より効果的に",
+  "hero.ben.tokens.lead": "トークン消費を最大50%削減",
+  "hero.ben.tokens.desc": "ファイル丸ごとではなく、必要な範囲のサブグラフだけをモデルに渡す — 軽くて低コストな呼び出しに。",
+  "hero.ben.fast.lead": "やり取りの往復を削減",
+  "hero.ben.fast.desc": "grepを何度も繰り返す代わりに、グラフへの一度のクエリで — 答えがすぐに返る。",
+  "hero.ben.smart.lead": "より正確な回答",
+  "hero.ben.smart.desc": "AIは推測ではなく、実際の構造 — calls、defs、imports — を読み取る。",
   "meta.title": "graffiti — あらゆるリポジトリをAIのためのクエリ可能なコードグラフに",
   "meta.description": "graffiti は、コードリポジトリを、AIコーディングアシスタントが grep する代わりに読み込む有向の知識グラフへと変換します。単一の静的なGoバイナリ — APIキー不要、$0、完全オフライン、バイト単位で決定論的。Go、Python、JS、TS、Rust、Java、PHP に対応。",
   "lang.label": "言語",

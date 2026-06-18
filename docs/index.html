@@ -76,9 +76,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/tokens.css?v=2" />
-    <link rel="stylesheet" href="css/base.css?v=2" />
-    <link rel="stylesheet" href="css/sections.css?v=2" />
+    <link rel="stylesheet" href="css/tokens.css?v=3" />
+    <link rel="stylesheet" href="css/base.css?v=3" />
+    <link rel="stylesheet" href="css/sections.css?v=3" />
 
     <!-- JSON-LD: SoftwareApplication -->
     <script type="application/ld+json">
@@ -199,6 +199,15 @@
               <span class="hero-pitch__badge" data-i18n="hero.pitch.badge">★ Zero API keys · $0 · fully offline</span>
               <h2 class="hero-pitch__title" data-i18n-html="hero.pitch.title">Stop grepping.<br/>Start reading the <em>graph</em>.</h2>
               <p class="hero-pitch__body" data-i18n-html="hero.pitch.body">Your AI assistant explores your codebase blind — one grep at a time. graffiti turns the whole repo into a directed knowledge graph it can query. One static binary. No API key, no cloud, no cost.</p>
+
+              <div class="hero-benefits">
+                <span class="hero-benefits__eyebrow" data-i18n="hero.ben.eyebrow">Cheaper · faster · more effective</span>
+                <ul class="hero-benefits__list">
+                  <li class="hero-benefit"><span class="hero-benefit__lead" data-i18n="hero.ben.tokens.lead">Up to 50% fewer tokens</span><span class="hero-benefit__desc" data-i18n="hero.ben.tokens.desc">Hand the model a scoped subgraph instead of whole files — smaller, cheaper calls.</span></li>
+                  <li class="hero-benefit"><span class="hero-benefit__lead" data-i18n="hero.ben.fast.lead">Fewer round-trips</span><span class="hero-benefit__desc" data-i18n="hero.ben.fast.desc">One graph query instead of a dozen greps — answers land faster.</span></li>
+                  <li class="hero-benefit"><span class="hero-benefit__lead" data-i18n="hero.ben.smart.lead">More accurate answers</span><span class="hero-benefit__desc" data-i18n="hero.ben.smart.desc">The assistant reads real structure — calls, defs, imports — not guesses.</span></li>
+                </ul>
+              </div>
 
               <div class="hero-cta">
                 <a class="btn" href="#install"><span data-i18n="hero.cta.install">Install in 30s</span> <span class="arrow">→</span></a>
@@ -530,6 +539,6 @@ graffiti query "auth flow"   <span class="cmt"># LLM-free scoped subgraph</span>
       <p style="padding:2rem;text-align:center;">This page is enhanced with JavaScript. graffiti is fully documented in the <a href="https://github.com/amazopic/graffiti">GitHub repository</a>.</p>
     </noscript>
 
-    <script type="module" src="js/main.js?v=2"></script>
+    <script type="module" src="js/main.js?v=3"></script>
   </body>
 </html>

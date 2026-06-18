@@ -9,7 +9,7 @@
 
 import {
   supportedLocales, ensureLocale, t, detectLocale, persistLocale, defaultLocale,
-} from './i18n.js?v=2';
+} from './i18n.js?v=3';
 
 // ─── i18n application ────────────────────────────────────────────────
 let current = defaultLocale;

@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "सस्ता · तेज़ · ज़्यादा कारगर",
+  "hero.ben.tokens.lead": "50% तक कम tokens",
+  "hero.ben.tokens.desc": "पूरी फ़ाइलों के बजाय मॉडल को सीमित दायरे वाला सबग्राफ़ दें — छोटे, सस्ते calls.",
+  "hero.ben.fast.lead": "कम बार आना-जाना",
+  "hero.ben.fast.desc": "दर्जन भर greps के बजाय एक ही ग्राफ़ क्वेरी — जवाब जल्दी मिलते हैं.",
+  "hero.ben.smart.lead": "ज़्यादा सटीक जवाब",
+  "hero.ben.smart.desc": "असिस्टेंट अंदाज़ा नहीं लगाता — असली स्ट्रक्चर पढ़ता है: calls, defs, imports.",
   "meta.title": "graffiti — किसी भी repo को AI के लिए queryable code graph में बदलें",
   "meta.description": "graffiti एक code repository को एक directed knowledge graph में बदल देता है, जिसे आपका AI coding assistant grep करने के बजाय पढ़ता है। एक static Go binary — शून्य API keys, $0, पूरी तरह offline, byte-deterministic. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "भाषा",

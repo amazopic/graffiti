@@ -1,4 +1,11 @@
 export default {
+  "hero.ben.eyebrow": "Più economico · più veloce · più efficace",
+  "hero.ben.tokens.lead": "Fino al 50% di token in meno",
+  "hero.ben.tokens.desc": "Passi al modello un sottografo mirato invece di interi file — chiamate più snelle ed economiche.",
+  "hero.ben.fast.lead": "Meno botta e risposta",
+  "hero.ben.fast.desc": "Una query sul grafo invece di una dozzina di grep — le risposte arrivano prima.",
+  "hero.ben.smart.lead": "Risposte più precise",
+  "hero.ben.smart.desc": "L'assistente legge la struttura reale — calls, defs, imports — senza tirare a indovinare.",
   "meta.title": "graffiti — trasforma qualsiasi repository in un grafo di codice interrogabile per l'IA",
   "meta.description": "graffiti trasforma un repository di codice in un grafo di conoscenza diretto che il tuo assistente di programmazione IA legge invece di fare grep. Un unico binario Go statico — zero chiavi API, $0, completamente offline, deterministico a livello di byte. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "Lingua",

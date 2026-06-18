@@ -3,7 +3,7 @@
 // All other locales are lazy-loaded per-code chunks from ./locales/<code>.js
 // ─────────────────────────────────────────────────────────────────────
 
-export const ASSET_V = '3';
+export const ASSET_V = '4';
 
 export const supportedLocales = [
   { code: 'en',   label: 'English',     native: 'English'    },
@@ -65,6 +65,18 @@ const en = {
   "hero.ben.fast.desc": "One graph query instead of a dozen greps — answers land faster.",
   "hero.ben.smart.lead": "More accurate answers",
   "hero.ben.smart.desc": "The assistant reads real structure — calls, defs, imports — not guesses.",
+
+  "tok.eyebrow": "Token cost",
+  "tok.title": "One question.<br/><em>A fraction of the tokens.</em>",
+  "tok.intro": "Ask “where is the cart fetched and served?” — here's what your assistant has to read to answer it: grepping blind versus one scoped graph query.",
+  "tok.grep.label": "grep + read files",
+  "tok.grep.val": "≈ 4,200 tokens",
+  "tok.grep.note": "greps, opens ~7 candidate files, reads them whole",
+  "tok.gr.label": "graffiti query",
+  "tok.gr.val": "≈ 1,900 tokens",
+  "tok.gr.note": "one scoped subgraph — defs, callers, callees",
+  "tok.delta": "≈ 55% fewer tokens",
+  "tok.note": "Illustrative — actual savings vary by repo and task. graffiti query caps each answer at a soft ~2,000-token budget, so context stays lean and cheap.",
 
   "vibe.eyebrow": "Vibe-chill install",
   "vibe.title": "Why touch a terminal<br/>when you have <em>Claude Code</em>?",

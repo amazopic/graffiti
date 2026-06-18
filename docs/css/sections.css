@@ -90,7 +90,7 @@
 .hero-pitch__body { font-size: var(--fs-lg); color: var(--ink-muted); max-width: 42ch; line-height: var(--lh-loose); }
 .hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 2rem; }
 
-.hero-benefits { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--hairline); }
+.hero-benefits { margin: 1.5rem 0; padding-top: 1.4rem; border-top: 1px solid var(--hairline); }
 .hero-benefits__eyebrow { display: block; font-family: var(--font-mono); font-size: var(--fs-cap); letter-spacing: var(--tr-eyebrow); text-transform: uppercase; color: var(--primary-hover); margin-bottom: 0.9rem; }
 .hero-benefits__list { list-style: none; display: flex; flex-direction: column; gap: 0.7rem; }
 .hero-benefit { display: flex; gap: 0.5em; align-items: baseline; flex-wrap: wrap; }
@@ -171,6 +171,23 @@ code { font-family: var(--font-mono); }
 .num--featured .num__value { color: var(--primary-hover); }
 .num .pct { font-size: 0.45em; color: var(--primary-hover); margin-left: 0.1em; }
 .num__label { display: block; font-family: var(--font-mono); font-size: var(--fs-cap); color: var(--ink-subtle); letter-spacing: var(--tr-eyebrow); margin-top: 0.6rem; line-height: var(--lh-snug); }
+
+/* ═══ 04b · TOKEN COST ═══ */
+.s-tokens .map__intro { max-width: 50rem; }
+.tok-chart { max-width: 46rem; margin: 2.5rem 0 1.25rem; }
+.tok-row { margin-bottom: 1.4rem; }
+.tok-row__head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+.tok-row__label { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--ink); }
+.tok-row__val { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--ink-muted); }
+.tok-bar { height: 14px; background: var(--surface-2); border: 1px solid var(--hairline); border-radius: var(--r-pill); overflow: hidden; }
+.tok-bar__fill { display: block; height: 100%; width: 0; border-radius: var(--r-pill); transition: width var(--dur-slow) var(--easing-out); }
+.tok-chart.in .tok-bar__fill { width: var(--w); }
+.tok-bar__fill--grep { background: linear-gradient(90deg, #7a3a2e, #c2553f); }
+.tok-bar__fill--gr { background: linear-gradient(90deg, var(--primary), var(--primary-hover)); }
+.tok-row__note { display: block; margin-top: 0.5rem; font-size: var(--fs-cap); color: var(--ink-subtle); }
+.tok-delta { margin-top: 1.5rem; }
+.tok-delta__num { font-family: var(--font-sans); font-weight: 600; font-size: var(--fs-xl); letter-spacing: var(--tr-display); color: var(--primary-hover); }
+.tok-foot { font-size: var(--fs-sm); color: var(--ink-subtle); max-width: 46rem; line-height: var(--lh-loose); }
 
 /* ═══ 05 · MAP ═══ */
 .map__intro { font-size: var(--fs-lg); color: var(--ink-muted); max-width: 46rem; margin-bottom: 2.5rem; line-height: var(--lh-loose); }

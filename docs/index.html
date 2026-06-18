@@ -76,9 +76,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/tokens.css?v=3" />
-    <link rel="stylesheet" href="css/base.css?v=3" />
-    <link rel="stylesheet" href="css/sections.css?v=3" />
+    <link rel="stylesheet" href="css/tokens.css?v=4" />
+    <link rel="stylesheet" href="css/base.css?v=4" />
+    <link rel="stylesheet" href="css/sections.css?v=4" />
 
     <!-- JSON-LD: SoftwareApplication -->
     <script type="application/ld+json">
@@ -198,7 +198,6 @@
             <div class="hero-pitch">
               <span class="hero-pitch__badge" data-i18n="hero.pitch.badge">★ Zero API keys · $0 · fully offline</span>
               <h2 class="hero-pitch__title" data-i18n-html="hero.pitch.title">Stop grepping.<br/>Start reading the <em>graph</em>.</h2>
-              <p class="hero-pitch__body" data-i18n-html="hero.pitch.body">Your AI assistant explores your codebase blind — one grep at a time. graffiti turns the whole repo into a directed knowledge graph it can query. One static binary. No API key, no cloud, no cost.</p>
 
               <div class="hero-benefits">
                 <span class="hero-benefits__eyebrow" data-i18n="hero.ben.eyebrow">Cheaper · faster · more effective</span>
@@ -208,6 +207,8 @@
                   <li class="hero-benefit"><span class="hero-benefit__lead" data-i18n="hero.ben.smart.lead">More accurate answers</span><span class="hero-benefit__desc" data-i18n="hero.ben.smart.desc">The assistant reads real structure — calls, defs, imports — not guesses.</span></li>
                 </ul>
               </div>
+
+              <p class="hero-pitch__body" data-i18n-html="hero.pitch.body">Your AI assistant explores your codebase blind — one grep at a time. graffiti turns the whole repo into a directed knowledge graph it can query. One static binary. No API key, no cloud, no cost.</p>
 
               <div class="hero-cta">
                 <a class="btn" href="#install"><span data-i18n="hero.cta.install">Install in 30s</span> <span class="arrow">→</span></a>
@@ -312,6 +313,35 @@
         <span class="section-divider__ornament" aria-hidden="true">✺</span>
         <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
         <span class="section-divider__ornament" aria-hidden="true">✺</span>
+      </div>
+
+      <!-- ═══════════════════ 04b · TOKEN COST ═══════════════════ -->
+      <section class="s-tokens" aria-labelledby="tokens-title" id="tokens">
+        <div class="wrap">
+          <span class="eyebrow" data-i18n="tok.eyebrow">Token cost</span>
+          <h2 id="tokens-title" class="catalog__title" data-i18n-html="tok.title">One question.<br/><em>A fraction of the tokens.</em></h2>
+          <p class="map__intro" data-i18n="tok.intro">Ask “where is the cart fetched and served?” — here's what your assistant has to read to answer it: grepping blind versus one scoped graph query.</p>
+          <div class="tok-chart" data-io>
+            <div class="tok-row">
+              <div class="tok-row__head"><span class="tok-row__label" data-i18n="tok.grep.label">grep + read files</span><span class="tok-row__val" data-i18n="tok.grep.val">≈ 4,200 tokens</span></div>
+              <div class="tok-bar"><span class="tok-bar__fill tok-bar__fill--grep" style="--w:100%"></span></div>
+              <span class="tok-row__note" data-i18n="tok.grep.note">greps, opens ~7 candidate files, reads them whole</span>
+            </div>
+            <div class="tok-row">
+              <div class="tok-row__head"><span class="tok-row__label" data-i18n="tok.gr.label">graffiti query</span><span class="tok-row__val" data-i18n="tok.gr.val">≈ 1,900 tokens</span></div>
+              <div class="tok-bar"><span class="tok-bar__fill tok-bar__fill--gr" style="--w:45%"></span></div>
+              <span class="tok-row__note" data-i18n="tok.gr.note">one scoped subgraph — defs, callers, callees</span>
+            </div>
+            <div class="tok-delta"><span class="tok-delta__num" data-i18n="tok.delta">≈ 55% fewer tokens</span></div>
+          </div>
+          <p class="tok-foot" data-i18n="tok.note">Illustrative — actual savings vary by repo and task. graffiti query caps each answer at a soft ~2,000-token budget, so context stays lean and cheap.</p>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">◬</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">◬</span>
       </div>
 
       <!-- ═══════════════════ 05 · THE MAP ═══════════════════ -->
@@ -539,6 +569,6 @@ graffiti query "auth flow"   <span class="cmt"># LLM-free scoped subgraph</span>
       <p style="padding:2rem;text-align:center;">This page is enhanced with JavaScript. graffiti is fully documented in the <a href="https://github.com/amazopic/graffiti">GitHub repository</a>.</p>
     </noscript>
 
-    <script type="module" src="js/main.js?v=3"></script>
+    <script type="module" src="js/main.js?v=4"></script>
   </body>
 </html>

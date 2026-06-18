@@ -1,89 +1,102 @@
 /* ─────────────────────────────────────────────────────────────────────
    DESIGN TOKENS — graffiti
-   Editorial Type-Specimen × Force-Directed Graph
+   Dark product canvas (Linear-inspired): near-black surfaces, a single
+   lavender-blue accent, hairline borders, Inter / Geist Mono.
    ───────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* ─── Colors ─── */
-  --ink:        #0E0E10;     /* near-black, primary text */
-  --paper:      #F5F2EA;     /* cream newsprint, primary bg */
-  --paper-2:    #EFEBE0;     /* slightly darker paper for sections */
-  --paper-3:    #E5E0D0;     /* divider lines, subtle bg */
-  --phosphor:   #00FF6B;     /* terminal green, single hot accent */
-  --phosphor-d: #00C054;     /* dim phosphor — use ONLY on dark bg */
-  --phosphor-p: #056330;     /* paper-safe phosphor (AA on F5F2EA AND E5E0D0) */
-  --spray:      #FF2E92;     /* graffiti magenta — secondary accent, sparingly */
-  --spray-d:    #FF5BA8;     /* lighter spray for dark bg */
-  --azure:      #3B82F6;     /* graph external-node blue */
-  --hot:        #FF3B00;     /* alert/highlight, used sparingly */
-  --sub:        #4A4A48;     /* editorial gray, marginalia, captions */
-  --sub-2:      #5E5E5C;     /* lighter caption gray (WCAG AA on paper, 6.0:1) */
-  --sub-inv:    #B0AAA0;     /* muted gray for use on DARK bg (WCAG AA on ink, 7.4:1) */
-  --sub-inv-2:  #969084;     /* slightly muter, AA on ink, 5.8:1 */
-  --paper-dim:  #969590;     /* dim text on dark terminal bg, AA 4.5:1 */
-  --rule:       rgba(14,14,16,0.12);  /* hairline rules */
+  /* ─── Surfaces (near-black canvas + 4-step ladder) ─── */
+  --canvas:           #010102;   /* deepest page background */
+  --surface-1:        #0f1011;   /* cards, panels */
+  --surface-2:        #141516;   /* featured / hovered cards */
+  --surface-3:        #18191a;   /* sub-nav, dropdowns */
+  --surface-4:        #191a1b;   /* deepest lifted */
+  --hairline:         #23252a;   /* 1px borders */
+  --hairline-strong:  #34343a;
+  --hairline-tertiary:#3e3e44;
 
-  /* Inverted (dark sections) */
-  --ink-inv:    #F5F2EA;
-  --paper-inv:  #0E0E10;
-  --paper-inv-2:#1A1A1C;
+  /* ─── Text ─── */
+  --ink:          #f7f8f8;       /* headlines + emphasized body */
+  --ink-muted:    #d0d6e0;       /* secondary */
+  --ink-subtle:   #8a8f98;       /* tertiary, captions */
+  --ink-tertiary: #62666d;       /* quaternary, footnotes */
+
+  /* ─── Accent (single chromatic hue: lavender-blue) ─── */
+  --primary:       #5e6ad2;
+  --primary-hover: #828fff;
+  --primary-focus: #5e69d1;
+  --on-primary:    #ffffff;
+  --primary-glow:  rgba(94,106,210,0.45);
+
+  /* ─── Graph / semantic (product-surface colors) ─── */
+  --success: #27a644;   /* terminal $/✓, "your code" nodes accent */
+  --blue:    #4ea7ff;   /* external nodes */
+  --violet:  #8a63d2;   /* tests nodes */
 
   /* ─── Typography ─── */
-  --font-display: "Editorial New", "PP Editorial New", "EB Garamond", "Iowan Old Style", Georgia, serif;
-  --font-body:    "Neue Montreal", "PP Neue Montreal", -apple-system, "Helvetica Neue", system-ui, sans-serif;
-  --font-mono:    "Geist Mono", ui-monospace, "SF Mono", "Menlo", monospace;
+  --font-sans: "Inter", -apple-system, "SF Pro Display", system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-  /* Type scale (modular, harmonic) */
-  --fs-xs:   0.6875rem;     /* 11px — small caps, captions */
-  --fs-sm:   0.8125rem;     /* 13px — meta */
-  --fs-base: 1rem;          /* 16px — body */
-  --fs-md:   1.125rem;      /* 18px — body lg */
-  --fs-lg:   1.5rem;        /* 24px — H4 */
-  --fs-xl:   2rem;          /* 32px — H3 */
-  --fs-2xl:  3.5rem;        /* 56px — H2 */
-  --fs-3xl:  6rem;          /* 96px — H1 */
-  --fs-4xl:  9rem;          /* 144px — display */
-  --fs-mega: clamp(8rem, 22vw, 22rem);   /* 128–352px — nameplate, big numbers */
+  /* Type scale (Linear-style: aggressive negative tracking on display) */
+  --fs-display: clamp(2.75rem, 7vw, 5rem);   /* 44 → 80px hero */
+  --fs-2xl:     clamp(2rem, 4.5vw, 3.5rem);  /* 32 → 56px section openers */
+  --fs-xl:      clamp(1.6rem, 3vw, 2.5rem);  /* 26 → 40px */
+  --fs-headline:1.75rem;   /* 28px */
+  --fs-card:    1.375rem;  /* 22px */
+  --fs-lg:      1.125rem;  /* 18px body-lg */
+  --fs-md:      1rem;      /* 16px body */
+  --fs-sm:      0.875rem;  /* 14px */
+  --fs-xs:      0.8125rem; /* 13px eyebrow/button */
+  --fs-cap:     0.75rem;   /* 12px caption */
 
-  /* Line heights */
-  --lh-tight:   0.92;
-  --lh-snug:    1.05;
-  --lh-normal:  1.45;
-  --lh-loose:   1.7;
+  --tr-display: -0.035em;
+  --tr-tight:   -0.02em;
+  --tr-snug:    -0.01em;
+  --tr-eyebrow:  0.04em;
+  --tr-wider:    0.12em;
 
-  /* Letter spacing */
-  --tr-tight:    -0.04em;
-  --tr-snug:     -0.02em;
-  --tr-normal:    0;
-  --tr-wide:      0.05em;
-  --tr-wider:     0.12em;
-  --tr-mega:      0.3em;
+  --lh-tight:  1.05;
+  --lh-snug:   1.2;
+  --lh-normal: 1.5;
+  --lh-loose:  1.6;
 
   /* ─── Layout ─── */
-  --max-w:       96rem;     /* 1536px */
-  --gutter-x:    clamp(1rem, 4vw, 4rem);
-  --gutter-y:    clamp(3rem, 10vw, 10rem);
-  --column-w:    minmax(0, 1fr);
+  --max-w:    75rem;   /* ~1200px Linear content width */
+  --gutter-x: clamp(1.25rem, 5vw, 3rem);
+  --gutter-y: clamp(3.5rem, 9vw, 6rem);
+
+  /* ─── Radius ─── */
+  --r-xs:  4px;
+  --r-sm:  6px;
+  --r-md:  8px;
+  --r-lg:  12px;
+  --r-xl:  16px;
+  --r-xxl: 24px;
+  --r-pill: 9999px;
+
+  /* ─── Spacing (4px base) ─── */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-6: 24px; --sp-8: 32px; --sp-12: 48px; --sp-24: 96px;
 
   /* ─── Motion ─── */
   --easing-out:    cubic-bezier(0.22, 1, 0.36, 1);
-  --easing-in:     cubic-bezier(0.55, 0, 0.78, 0);
-  --easing-inout:  cubic-bezier(0.65, 0, 0.35, 1);
   --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:  160ms;
+  --dur-base:  280ms;
+  --dur-slow:  560ms;
 
-  --dur-fast:    180ms;
-  --dur-base:    320ms;
-  --dur-slow:    600ms;
-  --dur-vslow:   1200ms;
+  /* ─── Shadows (used sparingly — Linear leans on the surface ladder) ─── */
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.03) inset, 0 8px 30px rgba(0,0,0,0.5);
+  --shadow-pop:  0 20px 60px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4);
 
-  /* ─── Effects ─── */
-  --noise-opacity: 0.04;
-  --shadow-card:   0 1px 2px rgba(14,14,16,0.04), 0 8px 24px rgba(14,14,16,0.06);
-  --shadow-deep:   0 20px 60px rgba(14,14,16,0.16), 0 4px 12px rgba(14,14,16,0.08);
+  /* ─── Legacy aliases (kept so a few inline styles in index.html resolve) ─── */
+  --paper:      var(--ink);
+  --sub:        var(--ink-subtle);
+  --sub-inv:    var(--ink-subtle);
+  --sub-inv-2:  var(--ink-tertiary);
+  --rule:       var(--hairline);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root {
-    --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; --dur-vslow: 0ms;
-  }
+  :root { --dur-fast: 0ms; --dur-base: 0ms; --dur-slow: 0ms; }
 }

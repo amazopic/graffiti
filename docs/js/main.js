@@ -9,7 +9,7 @@
 
 import {
   supportedLocales, ensureLocale, t, detectLocale, persistLocale, defaultLocale,
-} from './i18n.js?v=1';
+} from './i18n.js?v=2';
 
 // ─── i18n application ────────────────────────────────────────────────
 let current = defaultLocale;
@@ -178,9 +178,9 @@ function buildDemoGraph(rand) {
 }
 
 const CAT_COLORS = [
-  { core: '#0E0E10', glow: '#00C054' }, // your code → ink core, phosphor rim
-  { core: '#B3206A', glow: '#FF2E92' }, // tests → magenta
-  { core: '#1E4FA3', glow: '#3B82F6' }, // external → blue
+  { core: '#2a2f6b', glow: '#5e6ad2' }, // your code → lavender (brand accent)
+  { core: '#14431f', glow: '#27a644' }, // tests → success green
+  { core: '#15406e', glow: '#4ea7ff' }, // external → blue
 ];
 
 function spriteFor(cache, cat, r, dpr) {
@@ -286,7 +286,7 @@ function initGraph() {
     for (const [ai, bi] of edges) {
       const a = nodes[ai], b = nodes[bi];
       const lit = hover >= 0 && (ai === hover || bi === hover);
-      ctx.strokeStyle = lit ? 'rgba(0,255,107,0.55)' : 'rgba(14,14,16,0.16)';
+      ctx.strokeStyle = lit ? 'rgba(130,143,255,0.7)' : 'rgba(255,255,255,0.10)';
       ctx.beginPath();
       ctx.moveTo(toX(a.x), toY(a.y));
       ctx.lineTo(toX(b.x), toY(b.y));

@@ -3,7 +3,7 @@
 // All other locales are lazy-loaded per-code chunks from ./locales/<code>.js
 // ─────────────────────────────────────────────────────────────────────
 
-export const ASSET_V = '1';
+export const ASSET_V = '2';
 
 export const supportedLocales = [
   { code: 'en',   label: 'English',     native: 'English'    },

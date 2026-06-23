@@ -58,6 +58,17 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 بصمة SHA256 الخاصة به مقابل بيان الإصدار، ثم يثبّته. تحقّق بـ `graffiti version`.
 أو ابنِ من المصدر (أدناه).
 
+## ⚡ التثبيت عبر Claude Code (بأسلوب vibe-code)
+
+<!-- vibe-install -->
+لا حاجة إلى الطرفية — دع **Claude Code** يتولّى كل شيء. الصِق هذا الأمر الواحد
+في جلسة Claude Code وأجب بـ `y` عند كل خطوة. سيجلب الملف التنفيذي المناسب،
+ويبني الخريطة لمستودعك، ويربط التكامل، ثم يفتح الرسم البياني:
+
+```text
+ثبّت لي graffiti من amazopic. نزّل الملف التنفيذي الثابت المناسب لنظام التشغيل/المعمارية لديّ من أحدث إصدار على github.com/amazopic/graffiti (أو ابنِه من المصدر بـ `make build` إن كان Go متاحًا)، وضعه في PATH باسم `graffiti`، وتحقّق منه بـ `graffiti version`. ثم شغّل `graffiti .` في جذر مستودعي لبناء الخريطة، وشغّل `graffiti init --hook` لربط graffiti بـ Claude Code، وأخيرًا افتح `.graffiti/map.html` كي أرى الرسم البياني. اسأل قبل كل خطوة.
+```
+
 ## البناء
 
 ```bash

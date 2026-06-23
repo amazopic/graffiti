@@ -61,6 +61,18 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 マニフェストに対してSHA256を検証したうえでインストールします。`graffiti version`
 で確認してください。あるいはソースからビルドすることもできます(下記参照)。
 
+## ⚡ Claude Code でインストール(vibe-code)
+
+<!-- vibe-install -->
+ターミナルは不要 — すべてを **Claude Code** に任せましょう。次のプロンプトを
+Claude Code のセッションに貼り付けて、各ステップで `y` と答えるだけです。適切なバ
+イナリを取得し、あなたのリポジトリの地図をビルドし、連携をセットアップして、グラ
+フを開いてくれます:
+
+```text
+amazopic の graffiti をインストールしてください。github.com/amazopic/graffiti の最新リリースから、私の OS/アーキテクチャに合った静的バイナリをダウンロードし(Go が使えるなら `make build` でソースからビルドしてもかまいません)、`graffiti` として私の PATH に置き、`graffiti version` で確認してください。次に、私のリポジトリのルートで `graffiti .` を実行して地図をビルドし、`graffiti init --hook` を実行して graffiti を Claude Code に組み込み、最後に `.graffiti/map.html` を開いてグラフを見せてください。各ステップの前に確認してください。
+```
+
 ## ビルド
 
 ```bash

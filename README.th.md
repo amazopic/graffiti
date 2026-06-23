@@ -58,6 +58,17 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 เทียบกับ manifest ของรีลีส แล้วติดตั้งให้ ตรวจสอบด้วย `graffiti version`
 หรือจะ build จากซอร์สก็ได้ (ด้านล่าง)
 
+## ⚡ ติดตั้งด้วย Claude Code (vibe-code)
+
+<!-- vibe-install -->
+ไม่ต้องใช้เทอร์มินัล — ปล่อยให้ **Claude Code** ทำให้ทั้งหมด แค่วางพรอมต์เดียวนี้
+ลงในเซสชัน Claude Code แล้วตอบ `y` ในแต่ละขั้นตอน มันจะดึงไบนารีที่ถูกต้องมาให้,
+สร้างแผนที่สำหรับ repo ของคุณ, ตั้งค่าการผสานรวมให้เรียบร้อย แล้วเปิดกราฟขึ้นมา:
+
+```text
+ช่วยติดตั้ง graffiti ของ amazopic ให้ที โดยดาวน์โหลดไบนารี static ที่ถูกต้องสำหรับ OS/สถาปัตยกรรมของฉันจากรีลีสล่าสุดที่ github.com/amazopic/graffiti (หรือ build จากซอร์สด้วย `make build` ถ้ามี Go อยู่แล้ว), วางมันไว้บน PATH ของฉันในชื่อ `graffiti` แล้วตรวจสอบด้วย `graffiti version` จากนั้นรัน `graffiti .` ที่รากของ repo ฉันเพื่อสร้างแผนที่, รัน `graffiti init --hook` เพื่อตั้งค่า graffiti ให้เข้ากับ Claude Code และสุดท้ายเปิด `.graffiti/map.html` เพื่อให้ฉันเห็นกราฟ ถามฉันก่อนทุกขั้นตอนด้วย
+```
+
 ## Build
 
 ```bash

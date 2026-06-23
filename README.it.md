@@ -61,6 +61,18 @@ L'installer sceglie il binario statico giusto per il tuo OS/architettura, ne
 verifica lo SHA256 rispetto al manifest della release e lo installa. Verifica con
 `graffiti version`. Oppure compila dai sorgenti (vedi sotto).
 
+## ⚡ Installa con Claude Code (vibe-code)
+
+<!-- vibe-install -->
+Nessun terminale necessario — lascia che sia **Claude Code** a fare tutto. Incolla
+questo singolo prompt in una sessione di Claude Code e rispondi `y` a ogni passaggio.
+Scarica il binario giusto, costruisce la mappa per il tuo repository, configura
+l'integrazione e apre il grafo:
+
+```text
+Installa graffiti di amazopic al posto mio. Scarica il binario statico giusto per il mio OS/architettura dall'ultima release su github.com/amazopic/graffiti (oppure compilalo dai sorgenti con `make build` se Go è disponibile), mettilo nel mio PATH come `graffiti` e verifica con `graffiti version`. Poi esegui `graffiti .` nella radice del mio repository per costruire la mappa, esegui `graffiti init --hook` per integrare graffiti in Claude Code e infine apri `.graffiti/map.html` così posso vedere il grafo. Chiedimi conferma prima di ogni passaggio.
+```
+
 ## Build
 
 ```bash

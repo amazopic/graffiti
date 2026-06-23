@@ -59,6 +59,17 @@ Trình cài đặt chọn đúng binary tĩnh cho OS/kiến trúc của bạn, x
 dựa trên manifest bản phát hành, rồi cài đặt. Kiểm chứng bằng `graffiti version`.
 Hoặc build từ mã nguồn (bên dưới).
 
+## ⚡ Cài đặt bằng Claude Code (vibe-code)
+
+<!-- vibe-install -->
+Không cần terminal — hãy để **Claude Code** làm tất cả. Dán đúng một prompt này vào
+một phiên Claude Code và trả lời `y` ở mỗi bước. Nó sẽ tải đúng binary, build bản đồ
+cho repo của bạn, kết nối phần tích hợp, rồi mở đồ thị:
+
+```text
+Cài graffiti của amazopic giúp tôi. Tải đúng static binary cho OS/kiến trúc của tôi từ bản phát hành mới nhất tại github.com/amazopic/graffiti (hoặc build từ mã nguồn bằng `make build` nếu có Go), đặt nó vào PATH với tên `graffiti`, và xác minh bằng `graffiti version`. Sau đó chạy `graffiti .` ở thư mục gốc repo của tôi để build bản đồ, chạy `graffiti init --hook` để kết nối graffiti vào Claude Code, và cuối cùng mở `.graffiti/map.html` để tôi xem được đồ thị. Hãy hỏi tôi trước mỗi bước.
+```
+
 ## Build
 
 ```bash

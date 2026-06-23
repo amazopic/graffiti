@@ -60,6 +60,17 @@ Installer memilih binary statis yang tepat untuk OS/arsitektur Anda, memverifika
 terhadap manifes rilis, dan menginstalnya. Verifikasi dengan `graffiti version`.
 Atau build dari sumber (di bawah).
 
+## ⚡ Install dengan Claude Code (vibe-code)
+
+<!-- vibe-install -->
+Tidak perlu terminal — biarkan **Claude Code** yang mengerjakan semuanya. Tempelkan satu prompt
+ini ke dalam sesi Claude Code dan jawab `y` di setiap langkah. Ia mengunduh binary yang tepat,
+membangun peta untuk repo Anda, menyambungkan integrasinya, dan membuka grafnya:
+
+```text
+Install graffiti buatan amazopic untuk saya. Unduh binary statis yang tepat untuk OS/arsitektur saya dari rilis terbaru di github.com/amazopic/graffiti (atau build dari sumber dengan `make build` jika Go tersedia), letakkan di PATH saya sebagai `graffiti`, dan verifikasi dengan `graffiti version`. Lalu jalankan `graffiti .` di root repo saya untuk membangun peta, jalankan `graffiti init --hook` untuk menyambungkan graffiti ke Claude Code, dan terakhir buka `.graffiti/map.html` agar saya bisa melihat grafnya. Tanyakan sebelum setiap langkah.
+```
+
 ## Build
 
 ```bash

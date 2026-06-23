@@ -60,6 +60,17 @@ Namestitveni program izbere pravo statično binarno datoteko za vaš OS/arhitekt
 preveri njen SHA256 glede na manifest izdaje in jo namesti. Preverite z ukazom
 `graffiti version`. Ali pa zgradite iz izvorne kode (spodaj).
 
+## ⚡ Namestitev s Claude Code (vibe-code)
+
+<!-- vibe-install -->
+Brez terminala — pustite, da vse opravi **Claude Code**. Prilepite ta en sam poziv
+v sejo Claude Code in pri vsakem koraku odgovorite z `y`. Prenese pravo binarno
+datoteko, zgradi zemljevid za vaš repozitorij, vzpostavi integracijo in odpre graf:
+
+```text
+Namesti mi graffiti od amazopic. Iz zadnje izdaje na github.com/amazopic/graffiti prenesi pravo statično binarno datoteko za moj OS/arhitekturo (ali pa jo zgradi iz izvorne kode z `make build`, če je na voljo Go), jo postavi v moj PATH kot `graffiti` in preveri z `graffiti version`. Nato v korenu mojega repozitorija zaženi `graffiti .`, da zgradiš zemljevid, zaženi `graffiti init --hook`, da vključiš graffiti v Claude Code, in na koncu odpri `.graffiti/map.html`, da vidim graf. Pred vsakim korakom vprašaj.
+```
+
 ## Build
 
 ```bash

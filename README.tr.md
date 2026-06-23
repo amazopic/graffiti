@@ -60,6 +60,17 @@ Yükleyici, işletim sisteminize/mimarinize uygun statik ikili dosyayı seçer, 
 değerini sürüm bildirimine göre doğrular ve kurar. `graffiti version` ile doğrulayın.
 Ya da kaynaktan derleyin (aşağıda).
 
+## ⚡ Claude Code ile kurun (vibe-code)
+
+<!-- vibe-install -->
+Terminale gerek yok — bırakın her şeyi **Claude Code** yapsın. Şu tek istemi bir Claude
+Code oturumuna yapıştırın ve her adımda `y` ile yanıt verin. Doğru ikili dosyayı indirir,
+deponuz için haritayı oluşturur, entegrasyonu bağlar ve grafiği açar:
+
+```text
+Benim için amazopic'in graffiti'sini kur. github.com/amazopic/graffiti adresindeki en son sürümden işletim sistemime/mimarime uygun statik ikili dosyayı indir (ya da Go varsa `make build` ile kaynaktan derle), `graffiti` olarak PATH'ime ekle ve `graffiti version` ile doğrula. Ardından haritayı oluşturmak için depo kökümde `graffiti .` çalıştır, graffiti'yi Claude Code'a bağlamak için `graffiti init --hook` çalıştır ve son olarak grafiği görebilmem için `.graffiti/map.html` dosyasını aç. Her adımdan önce sor.
+```
+
 ## Derleme
 
 ```bash

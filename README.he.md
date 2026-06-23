@@ -58,6 +58,17 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 מול מניפסט הגרסה ומתקין אותו. אמתו באמצעות `graffiti version`.
 או בנו מהמקור (להלן).
 
+## ⚡ התקנה באמצעות Claude Code (vibe-code)
+
+<!-- vibe-install -->
+לא צריך טרמינל — תנו ל**Claude Code** לעשות את כל העבודה. הדביקו את ההנחיה הזו
+בסשן של Claude Code וענו `y` בכל שלב. היא מורידה את הקובץ הבינארי המתאים,
+בונה את המפה עבור המאגר שלכם, מחברת את האינטגרציה ופותחת את הגרף:
+
+```text
+התקן לי את graffiti מאת amazopic. הורד את הקובץ הבינארי הסטטי המתאים למערכת ההפעלה/הארכיטקטורה שלי מהגרסה האחרונה ב-github.com/amazopic/graffiti (או בנה אותו מהמקור באמצעות `make build` אם Go זמין), הצב אותו ב-PATH שלי בשם `graffiti`, ואמת באמצעות `graffiti version`. לאחר מכן הרץ `graffiti .` בשורש המאגר שלי כדי לבנות את המפה, הרץ `graffiti init --hook` כדי לחבר את graffiti אל Claude Code, ולבסוף פתח את `.graffiti/map.html` כדי שאוכל לראות את הגרף. שאל לפני כל שלב.
+```
+
 ## Build
 
 ```bash

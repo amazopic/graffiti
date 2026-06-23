@@ -58,6 +58,17 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 SHA256，然後完成安裝。可用 `graffiti version` 驗證。
 或從原始碼建置（見下文）。
 
+## ⚡ 用 Claude Code 安裝（vibe-code）
+
+<!-- vibe-install -->
+不需要終端機 — 讓 **Claude Code** 幫你一手包辦。把下面這段提示詞貼進一個
+Claude Code 工作階段，並在每個步驟回答 `y`。它會抓取正確的執行檔、為你的
+儲存庫建置地圖、串接好整合，然後打開圖譜：
+
+```text
+幫我安裝 amazopic 的 graffiti。從 github.com/amazopic/graffiti 的最新發行版本下載適合我 OS/架構的靜態執行檔（若已安裝 Go，也可以用 `make build` 從原始碼建置），把它以 `graffiti` 之名放到我的 PATH 上，並用 `graffiti version` 驗證。接著在我的儲存庫根目錄執行 `graffiti .` 來建置地圖，執行 `graffiti init --hook` 把 graffiti 串接進 Claude Code，最後打開 `.graffiti/map.html`，讓我可以看到圖譜。每個步驟前都先問我。
+```
+
 ## Build
 
 ```bash

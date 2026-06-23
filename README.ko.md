@@ -59,6 +59,18 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 대조해 SHA256을 검증한 뒤 설치합니다. `graffiti version`으로 확인하세요.
 또는 소스에서 직접 빌드할 수도 있습니다(아래 참고).
 
+## ⚡ Claude Code로 설치하기 (바이브 코딩)
+
+<!-- vibe-install -->
+터미널이 필요 없습니다 — **Claude Code**가 전부 알아서 처리하게 하세요. 아래 프롬프트
+하나를 Claude Code 세션에 붙여 넣고 각 단계마다 `y`로 답하기만 하면 됩니다. 알맞은
+바이너리를 받아 와, 여러분의 저장소에 맞는 지도를 빌드하고, 통합을 연결한 뒤, 그래프를
+열어 줍니다:
+
+```text
+amazopic이 만든 graffiti를 설치해 줘. github.com/amazopic/graffiti의 최신 릴리스에서 내 OS/아키텍처에 맞는 정적 바이너리를 받거나(Go가 있으면 `make build`로 소스에서 빌드해도 돼), `graffiti`라는 이름으로 내 PATH에 올린 다음 `graffiti version`으로 확인해 줘. 그다음 내 저장소 루트에서 `graffiti .`를 실행해 지도를 빌드하고, `graffiti init --hook`을 실행해 graffiti를 Claude Code에 연결하고, 마지막으로 `.graffiti/map.html`을 열어서 그래프를 볼 수 있게 해 줘. 각 단계 전에 먼저 물어봐 줘.
+```
+
 ## 빌드
 
 ```bash

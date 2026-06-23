@@ -56,6 +56,17 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 安装程序会为你的操作系统/架构挑选合适的静态二进制文件，依据发布清单校验其 SHA256，
 然后完成安装。可用 `graffiti version` 进行验证。或者从源码构建(见下文)。
 
+## ⚡ 使用 Claude Code 安装(vibe-code)
+
+<!-- vibe-install -->
+无需终端 —— 让 **Claude Code** 替你完成全部工作。把下面这段提示词粘贴到 Claude Code
+会话中，并在每一步都回答 `y` 即可。它会拉取合适的二进制文件、为你的仓库构建地图、
+接好集成，并打开图谱:
+
+```text
+帮我安装 amazopic 的 graffiti。从 github.com/amazopic/graffiti 的最新发布中下载适配我操作系统/架构的静态二进制文件(如果有 Go，也可以用 `make build` 从源码构建),把它作为 `graffiti` 放到我的 PATH 上，并用 `graffiti version` 验证。然后在我的仓库根目录运行 `graffiti .` 构建地图,运行 `graffiti init --hook` 把 graffiti 接入 Claude Code,最后打开 `.graffiti/map.html` 让我看到图谱。每一步执行前都先问我。
+```
+
 ## 构建
 
 ```bash

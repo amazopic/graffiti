@@ -213,54 +213,189 @@ func parseProto(rel string, data []byte) []graph.Endpoint {
 	return out
 }
 
-// ─── Source heuristics (router DSLs, literal URLs, queue calls) ────────────
+// ─── Source heuristics: framework recognizers (INFERRED confidence) ─────────
+//
+// Covers, best-effort and per file role:
+//   provides — generic router DSLs (Express/gin/chi/echo), Go net/http, Flask
+//     `.route`, FastAPI/`@app.get` decorators, Spring (@*Mapping / @RequestMapping
+//     with class-prefix), NestJS (@Controller prefix + @Get…/@MessagePattern/
+//     @EventPattern), Kafka (@KafkaListener) / NATS / generic subscribe.
+//   consumes — literal http(s):// URLs, frontend HTTP clients (fetch/axios/$fetch/
+//     useFetch/HttpClient/HttpService), and queue producers (publish/emit/produce,
+//     KafkaTemplate.send).
+//
+// React/Vue/Angular/Svelte/Nuxt files are detected as FRONTEND, where a
+// `.get("/x")` call is a CONSUME (client request), not a route.
 
 var (
-	rxRoute  = regexp.MustCompile(`(?i)\.(get|post|put|delete|patch|head|options)\(\s*["']([^"']+)["']`)
-	rxHandle = regexp.MustCompile(`(?i)\b(?:handlefunc|handle)\(\s*["']([^"']+)["']`)
-	rxSpring = regexp.MustCompile(`@(Get|Post|Put|Delete|Patch)Mapping\(\s*["']([^"']+)["']`)
-	rxURL    = regexp.MustCompile(`["'](https?://[^"'\s]+)["']`)
-	rxPub    = regexp.MustCompile(`(?i)\.(publish|emit|produce)\(\s*["']([^"']+)["']`)
-	rxSub    = regexp.MustCompile(`(?i)\.(subscribe|consume|queuesubscribe)\(\s*["']([^"']+)["']`)
+	rxRoute    = regexp.MustCompile(`(?i)\.(get|post|put|delete|patch|head|options|route)\(\s*["']([^"']+)["']`)
+	rxHandle   = regexp.MustCompile(`(?i)\b(?:handlefunc|handle)\(\s*["']([^"']+)["']`)
+	rxSpring   = regexp.MustCompile(`@(Get|Post|Put|Delete|Patch)Mapping\(\s*["']([^"']+)["']`)
+	rxSpringR  = regexp.MustCompile(`@RequestMapping\(([^)]*)\)`)
+	rxReqVal   = regexp.MustCompile(`(?:value|path)\s*=\s*\{?\s*["']([^"']+)`)
+	rxReqStr   = regexp.MustCompile(`["']([^"']+)["']`)
+	rxReqMeth  = regexp.MustCompile(`RequestMethod\.(\w+)`)
+	rxNestCtl  = regexp.MustCompile(`@Controller\(\s*["']?([^"')]*)`)
+	rxNestRt   = regexp.MustCompile(`@(Get|Post|Put|Delete|Patch|All)\(\s*["']?([^"')]*)`)
+	rxNestMsg  = regexp.MustCompile(`@(MessagePattern|EventPattern)\(\s*["']([^"']+)`)
+	rxKafkaL   = regexp.MustCompile(`@KafkaListener\(([^)]*)\)`)
+	rxKafkaTop = regexp.MustCompile(`(?:topics|destinations)\s*=\s*\{?\s*["']([^"']+)`)
+	rxURL      = regexp.MustCompile(`["'](https?://[^"'\s]+)["']`)
+	rxClient   = regexp.MustCompile(`(?i)\b(?:fetch|\$fetch|usefetch|axios(?:\.(?:get|post|put|delete|patch|request))?|http\.(?:get|post|put|delete|patch)|httpclient\.(?:get|post|put|delete|patch)|httpservice\.(?:get|post|put|delete|patch))\(\s*["']([^"']+)["']`)
+	rxPub      = regexp.MustCompile(`(?i)\.(publish|emit|produce)\(\s*["']([^"']+)["']`)
+	rxKafkaS   = regexp.MustCompile(`(?i)(?:kafkatemplate|kafkaproducer|producer)\.send\(\s*["']([^"']+)["']`)
+	rxSub      = regexp.MustCompile(`(?i)\.(subscribe|consume|queuesubscribe)\(\s*["']([^"']+)["']`)
+	rxFrontend = regexp.MustCompile(`(?i)from\s+["'](?:react|react-dom|vue|@angular/|svelte|next|nuxt|@tanstack/react-query)|createApp\(|defineComponent\(`)
 )
 
+// fileRole classifies a source file as "frontend" (HTTP-client consumer) or
+// "backend" (route provider) so the same `.get("/x")` pattern is read correctly.
+func fileRole(rel string, data []byte) string {
+	switch strings.ToLower(filepathExt(rel)) {
+	case ".tsx", ".jsx", ".vue", ".svelte":
+		return "frontend"
+	case ".ts", ".js", ".mjs":
+		if rxFrontend.Match(data) {
+			return "frontend"
+		}
+	}
+	return "backend"
+}
+
+func filepathExt(p string) string {
+	if i := strings.LastIndexByte(p, '.'); i >= 0 {
+		return p[i:]
+	}
+	return ""
+}
+
+func meth(v string) string {
+	if strings.EqualFold(v, "route") || strings.EqualFold(v, "all") {
+		return "GET"
+	}
+	return strings.ToUpper(v)
+}
+
+func joinPath(prefix, p string) string {
+	prefix, p = strings.Trim(prefix, "/"), strings.Trim(p, "/")
+	full := prefix
+	if p != "" {
+		if full != "" {
+			full += "/" + p
+		} else {
+			full = p
+		}
+	}
+	return "/" + full
+}
+
+func validTopic(s string) bool { return s != "" && !strings.HasPrefix(s, "/") }
+
 func scanSource(rel string, data []byte) (provides, consumes []graph.Endpoint) {
+	frontend := fileRole(rel, data) == "frontend"
 	sc := bufio.NewScanner(bytes.NewReader(data))
 	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 	line := 0
+	prefix := "" // current NestJS @Controller / Spring class @RequestMapping prefix
 	add := func(dst *[]graph.Endpoint, kind graph.EndpointKind, key, disp, source string, ln int) {
 		*dst = append(*dst, graph.Endpoint{
 			Kind: kind, Key: key, Display: disp, File: rel, Line: ln,
 			Confidence: graph.ConfInferred, Source: source,
 		})
 	}
+	httpC := func(method, raw string) {
+		p := stripHost(raw)
+		add(&consumes, graph.EPHTTP, httpKey(method, p), strings.ToUpper(method)+" "+p, "client", line)
+	}
+
 	for sc.Scan() {
 		line++
 		t := sc.Text()
 
-		for _, m := range rxRoute.FindAllStringSubmatch(t, -1) {
-			if strings.HasPrefix(m[2], "/") {
-				add(&provides, graph.EPHTTP, httpKey(m[1], m[2]), strings.ToUpper(m[1])+" "+m[2], "route", line)
+		// ── consumes (every role) ──
+		clientHit := false
+		for _, m := range rxClient.FindAllStringSubmatch(t, -1) {
+			clientHit = true
+			httpC("GET", m[1])
+		}
+		for _, m := range rxURL.FindAllStringSubmatch(t, -1) {
+			httpC("GET", m[1])
+		}
+		for _, m := range rxPub.FindAllStringSubmatch(t, -1) {
+			if validTopic(m[2]) {
+				add(&consumes, graph.EPQueue, m[2], "publish "+m[2], "literal", line)
 			}
 		}
-		for _, m := range rxSpring.FindAllStringSubmatch(t, -1) {
-			add(&provides, graph.EPHTTP, httpKey(m[1], m[2]), strings.ToUpper(m[1])+" "+m[2], "route", line)
+		for _, m := range rxKafkaS.FindAllStringSubmatch(t, -1) {
+			if validTopic(m[1]) {
+				add(&consumes, graph.EPQueue, m[1], "publish "+m[1], "kafka", line)
+			}
+		}
+
+		if frontend {
+			// In frontend files, router-style calls are client CONSUMES, not routes.
+			for _, m := range rxRoute.FindAllStringSubmatch(t, -1) {
+				if strings.HasPrefix(m[2], "/") {
+					httpC(meth(m[1]), m[2])
+				}
+			}
+			continue
+		}
+
+		// ── backend provides ──
+		if !clientHit {
+			for _, m := range rxRoute.FindAllStringSubmatch(t, -1) {
+				if strings.HasPrefix(m[2], "/") {
+					add(&provides, graph.EPHTTP, httpKey(meth(m[1]), m[2]), strings.ToUpper(meth(m[1]))+" "+m[2], "route", line)
+				}
+			}
 		}
 		for _, m := range rxHandle.FindAllStringSubmatch(t, -1) {
 			if strings.HasPrefix(m[1], "/") {
 				add(&provides, graph.EPHTTP, httpKey("GET", m[1]), "GET "+m[1], "route", line)
 			}
 		}
+		for _, m := range rxSpring.FindAllStringSubmatch(t, -1) {
+			p := joinPath(prefix, m[2])
+			add(&provides, graph.EPHTTP, httpKey(m[1], p), strings.ToUpper(m[1])+" "+p, "route", line)
+		}
+		for _, m := range rxSpringR.FindAllStringSubmatch(t, -1) {
+			path := ""
+			if pm := rxReqVal.FindStringSubmatch(m[1]); pm != nil {
+				path = pm[1]
+			} else if pm := rxReqStr.FindStringSubmatch(m[1]); pm != nil {
+				path = pm[1]
+			}
+			if path == "" {
+				continue
+			}
+			if mm := rxReqMeth.FindStringSubmatch(m[1]); mm != nil {
+				method := strings.ToUpper(mm[1])
+				full := joinPath(prefix, path)
+				add(&provides, graph.EPHTTP, httpKey(method, full), method+" "+full, "route", line)
+			} else {
+				prefix = strings.Trim(path, "/") // class-level @RequestMapping → prefix
+			}
+		}
+		if m := rxNestCtl.FindStringSubmatch(t); m != nil {
+			prefix = strings.Trim(m[1], "/")
+		}
+		for _, m := range rxNestRt.FindAllStringSubmatch(t, -1) {
+			method, full := meth(m[1]), joinPath(prefix, m[2])
+			add(&provides, graph.EPHTTP, httpKey(method, full), method+" "+full, "route", line)
+		}
+		for _, m := range rxNestMsg.FindAllStringSubmatch(t, -1) {
+			add(&provides, graph.EPQueue, m[2], strings.ToLower(m[1])+" "+m[2], "route", line)
+		}
 		for _, m := range rxSub.FindAllStringSubmatch(t, -1) {
-			add(&provides, graph.EPQueue, m[2], "subscribe "+m[2], "literal", line)
+			if validTopic(m[2]) {
+				add(&provides, graph.EPQueue, m[2], "subscribe "+m[2], "literal", line)
+			}
 		}
-
-		for _, m := range rxURL.FindAllStringSubmatch(t, -1) {
-			p := stripHost(m[1])
-			add(&consumes, graph.EPHTTP, httpKey("GET", p), "GET "+m[1], "literal", line)
-		}
-		for _, m := range rxPub.FindAllStringSubmatch(t, -1) {
-			add(&consumes, graph.EPQueue, m[2], "publish "+m[2], "literal", line)
+		for _, m := range rxKafkaL.FindAllStringSubmatch(t, -1) {
+			if tm := rxKafkaTop.FindStringSubmatch(m[1]); tm != nil {
+				add(&provides, graph.EPQueue, tm[1], "subscribe "+tm[1], "kafka", line)
+			}
 		}
 	}
 	return provides, consumes

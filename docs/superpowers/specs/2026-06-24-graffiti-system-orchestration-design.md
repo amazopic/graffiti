@@ -52,8 +52,20 @@ Every `map.json` gains two arrays (deterministic, sorted, optional):
 1. **`graffiti.contract.json`** (explicit, repo-authored) — EXTRACTED. Always works, any stack.
 2. **OpenAPI** (`openapi.json` / `swagger.json`, stdlib JSON) → http provides — EXTRACTED.
 3. **`.proto`** (small line scanner) → rpc provides — EXTRACTED.
-4. **Framework route recognizers** (Go net/http, gin, chi, echo, gorilla/mux) → http provides — INFERRED.
-5. **Literal heuristic** (string literals: `http(s)://…`, `/path`; queue `Publish/Subscribe("topic")`) → http/queue consumes & queue provides — INFERRED.
+4. **Framework recognizers** (INFERRED), per detected file role:
+   - **Backend providers** — Go net/http, gin/chi/echo, Flask `.route`, FastAPI/`@app.get`,
+     **Spring** (`@*Mapping` + `@RequestMapping` with class-prefix tracking),
+     **NestJS** (`@Controller` prefix + `@Get`/`@Post`/… + `@MessagePattern`/`@EventPattern`),
+     **Kafka** (`@KafkaListener`) / **NATS** / generic `.subscribe` → http/queue provides.
+   - **Frontend consumers** — React / Vue / Angular / Svelte / Nuxt files (by extension or
+     `react`/`vue`/`@angular` import) where `fetch`/`axios`/`$fetch`/`useFetch`/`HttpClient`
+     and `.get("/x")` calls are CONSUMES, not routes.
+5. **Literal / producer heuristic** — `http(s)://…` literals and queue producers
+   (`publish`/`emit`/`produce`, `KafkaTemplate.send`, NATS `Publish`) → http/queue consumes.
+
+Role detection resolves the key ambiguity: `.get("/x")` is a *route* (provide) in a
+backend file but a *client call* (consume) in a frontend file; a client call
+(`axios.get`) on a backend gateway line is also read as a consume.
 
 Honest under-extraction: recognize the common, mark confidence, let `graffiti.contract.json`
 fill gaps. New package `internal/contract`; wired into `app.Build` after assembly.
@@ -106,8 +118,12 @@ philosophy, scaled to published artifacts and automatic links.
 
 ## Honest limits (v1)
 
-- Contract extraction is framework-shaped; v1 leads with declared specs
-  (OpenAPI/proto) + `graffiti.contract.json` + a Go route recognizer + a generic
-  literal heuristic. Other frameworks/languages under-extract → use the explicit
-  contract file. Confidence is always surfaced; low-confidence is never asserted as fact.
+- Contract extraction is framework-shaped. v1 covers declared specs (OpenAPI/proto)
+  + `graffiti.contract.json` + recognizers for Go net/http·gin·chi·echo, Flask,
+  FastAPI, Spring (`@*Mapping`/`@RequestMapping`/`@KafkaListener`), NestJS
+  (`@Controller`/`@Get…`/`@MessagePattern`), Kafka/NATS producers & subscribers, and
+  frontend HTTP clients (React/Vue/Angular/Svelte/Nuxt). Frameworks outside this set
+  under-extract → declare them in `graffiti.contract.json`. Confidence is always
+  surfaced; low-confidence is never asserted as fact. Class-prefix combination is
+  best-effort (Spring/Nest); deeply nested or programmatically-built routes may be missed.
 - Object-store/artifact-registry adapters beyond git/dir are follow-ups.

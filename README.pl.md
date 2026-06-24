@@ -204,6 +204,35 @@ najwyższym poziomem** drzewa oraz narysowanymi połączeniami między projektam
 Dodaj `.graffiti-workspace/overlay.json` do `.gitignore` (jest pochodny i można go
 przeliczyć ponownie).
 
+## 🛰️ Orkiestracja systemu — wiele usług, jeden graf
+
+<!-- system-orchestration -->
+System mikrousługowy to wiele niezależnych repozytoriów, które tworzą jeden produkt.
+graffiti mapuje każde z nich, a następnie **odkrywa krawędzie między nimi** — HTTP, gRPC,
+kolejki — na podstawie *powierzchni kontraktu* każdej usługi (tego, co `provides`
+[dostarcza] i `consumes` [konsumuje]). Bez ręcznego łączenia: każda usługa publikuje
+własną mapę; orkiestrator federuje opublikowane artefakty i dopasowuje konsumentów do
+dostawców.
+
+```bash
+# in each service's CI (or locally) — publish its map into a shared store:
+graffiti publish --to ../system-store --as carts
+
+# then, in CI or on demand, over the whole system:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+Każda mapa niesie ze sobą **powierzchnię kontraktu** wyodrębnioną z `openapi.json`,
+`.proto`, tras frameworka, wywołań kolejek lub jawnego `graffiti.contract.json`.
+Połączenia między usługami są punktowane wedle pewności; konsumenci **niejednoznaczni**
+oraz **wiszący** (z martwym punktem końcowym) są raportowani, nigdy po cichu pomijani.
+Magazyn systemu to po prostu katalog lub repozytorium git — $0, offline, możliwy do
+ponownego przeliczenia.
+
 ## Jak to działa
 
 parsowanie tree-sitter (czysty Go, bez CGO) → rozwiązywanie krawędzi → grupowanie w

@@ -3,7 +3,7 @@
 // All other locales are lazy-loaded per-code chunks from ./locales/<code>.js
 // ─────────────────────────────────────────────────────────────────────
 
-export const ASSET_V = '4';
+export const ASSET_V = '5';
 
 export const supportedLocales = [
   { code: 'en',   label: 'English',     native: 'English'    },
@@ -36,7 +36,7 @@ export const defaultLocale = 'en';
 // ─── English dictionary — eternal fallback, always resident ──────────────
 const en = {
   "meta.title": "graffiti — turn any repo into a queryable code graph for AI",
-  "meta.description": "graffiti turns a code repository into a directed knowledge graph your AI coding assistant reads instead of grepping. One static Go binary — zero API keys, $0, fully offline, byte-deterministic. Go, Python, JS, TS, Rust, Java, PHP.",
+  "meta.description": "graffiti turns each repo into a directed code graph your AI assistant reads instead of grepping — and federates many microservices into ONE system graph with automatic cross-service links (HTTP, gRPC, queues). One static Go binary: zero API keys, $0, fully offline, byte-deterministic. Go, Python, JS, TS, Rust, Java, PHP.",
   "lang.label": "Language",
 
   "hero.brand": "graffiti · code graph",
@@ -77,6 +77,19 @@ const en = {
   "tok.gr.note": "one scoped subgraph — defs, callers, callees",
   "tok.delta": "≈ 55% fewer tokens",
   "tok.note": "Illustrative — actual savings vary by repo and task. graffiti query caps each answer at a soft ~2,000-token budget, so context stays lean and cheap.",
+
+  "sys.eyebrow": "★ Service architecture · the killer feature",
+  "sys.title": "Many repos.<br/><em>One system graph.</em>",
+  "sys.body": "A microservice system is N independent repos that form one product. graffiti maps each one, then <strong>discovers the edges between them</strong> — HTTP, gRPC, queues — from each service's contract. No hand-wiring, no cloud. Every repo stays independent; the system graph is a thin, recomputable overlay.",
+  "sys.term.label": "one command — in CI or local:",
+  "sys.f1.t": "Auto cross-service links",
+  "sys.f1.d": "Matches what each service <em>consumes</em> against what others <em>provide</em> — with confidence, ambiguity flags and dead-endpoint detection.",
+  "sys.f2.t": "Impact analysis",
+  "sys.f2.d": "Change an endpoint → <code class=\"mono\">graffiti system impact</code> lists every service that breaks.",
+  "sys.f3.t": "Contract audit",
+  "sys.f3.d": "Dangling consumers, orphan providers and ambiguous matches — a CI gate for your wire contracts.",
+  "sys.f4.t": "Each service publishes its own map",
+  "sys.f4.d": "Per-repo CI builds a map + contract; the orchestrator federates the published artifacts (git-as-registry, $0).",
 
   "vibe.eyebrow": "Vibe-chill install",
   "vibe.title": "Why touch a terminal<br/>when you have <em>Claude Code</em>?",

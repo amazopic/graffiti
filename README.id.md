@@ -197,6 +197,34 @@ level teratas** pohon dan tautan lintas-proyek tergambar.
 
 Tambahkan `.graffiti-workspace/overlay.json` ke `.gitignore` (ia turunan dan bisa dihitung ulang).
 
+## 🛰️ Orkestrasi sistem — banyak layanan, satu graf
+
+<!-- system-orchestration -->
+Sebuah sistem microservice adalah banyak repo independen yang membentuk satu produk.
+graffiti memetakan masing-masing, lalu **menemukan edge di antara mereka** — HTTP, gRPC,
+queue — dari *permukaan kontrak* setiap layanan (apa yang `provides` (disediakan) dan
+`consumes` (dikonsumsi)). Tanpa penyambungan manual: setiap layanan menerbitkan petanya
+sendiri; orchestrator menyatukan artefak yang diterbitkan dan mencocokkan consumer dengan
+provider.
+
+```bash
+# di CI setiap layanan (atau secara lokal) — terbitkan petanya ke store bersama:
+graffiti publish --to ../system-store --as carts
+
+# lalu, di CI atau sesuai permintaan, atas keseluruhan sistem:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+Setiap peta membawa **permukaan kontrak** yang diekstrak dari `openapi.json`, `.proto`,
+route framework, panggilan queue, atau `graffiti.contract.json` eksplisit. Tautan lintas-layanan
+diberi skor berdasarkan keyakinan; consumer yang **ambigu** dan **dangling** (endpoint-mati)
+dilaporkan, tidak pernah dibuang secara diam-diam. System store hanyalah sebuah direktori
+atau repo git — $0, offline, bisa dihitung ulang.
+
 ## Cara kerjanya
 
 Parsing tree-sitter (Go murni, tanpa CGO) → resolusi edge → pengelompokan ke dalam

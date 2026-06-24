@@ -194,6 +194,34 @@ render` একটি `workspace.html` লেখে — একই ফোর্স
 
 `.graffiti-workspace/overlay.json`-কে `.gitignore`-এ যোগ করুন (এটি উদ্ভূত এবং পুনরায়-গণনাযোগ্য)।
 
+## 🛰️ সিস্টেম অর্কেস্ট্রেশন — অনেক সার্ভিস, একটি গ্রাফ
+
+<!-- system-orchestration -->
+একটি মাইক্রোসার্ভিস সিস্টেম হলো অনেকগুলো স্বাধীন রিপো যা মিলে একটি প্রোডাক্ট গঠন করে।
+graffiti প্রতিটিকে মানচিত্রিত করে, তারপর **তাদের মধ্যকার এজগুলো আবিষ্কার করে** — HTTP,
+gRPC, কিউ — প্রতিটি সার্ভিসের *কন্ট্রাক্ট সারফেস* থেকে (এটি যা `provides` অর্থাৎ সরবরাহ করে
+এবং `consumes` অর্থাৎ গ্রহণ করে)। কোনো হাত-দিয়ে-তার-জোড়া নেই: প্রতিটি সার্ভিস নিজের মানচিত্র
+প্রকাশ করে; অর্কেস্ট্রেটর প্রকাশিত আর্টিফ্যাক্টগুলো ফেডারেট করে এবং কনজিউমারদের প্রোভাইডারদের
+সাথে মেলায়।
+
+```bash
+# প্রতিটি সার্ভিসের CI-তে (বা লোকালি) — এর মানচিত্র একটি শেয়ার্ড স্টোরে প্রকাশ করুন:
+graffiti publish --to ../system-store --as carts
+
+# তারপর, CI-তে বা চাহিদামতো, পুরো সিস্টেমের উপর:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+প্রতিটি মানচিত্র একটি **কন্ট্রাক্ট সারফেস** বহন করে, যা `openapi.json`, `.proto`, ফ্রেমওয়ার্ক
+রুট, কিউ কল, বা একটি স্পষ্ট `graffiti.contract.json` থেকে নিষ্কাশিত হয়। ক্রস-সার্ভিস লিঙ্কগুলো
+আত্মবিশ্বাস (confidence) অনুসারে স্কোর করা হয়; **ambiguous** (অস্পষ্ট) এবং **dangling**
+(ডেড-এন্ডপয়েন্ট) কনজিউমারদের রিপোর্ট করা হয়, কখনো নীরবে বাদ দেওয়া হয় না। সিস্টেম স্টোর কেবল
+একটি ডিরেক্টরি বা git রিপো — $0, অফলাইন, পুনরায়-গণনাযোগ্য।
+
 ## এটি কীভাবে কাজ করে
 
 tree-sitter পার্সিং (বিশুদ্ধ-Go, কোনো CGO নেই) → এজ রিজলিউশন → কমিউনিটিতে

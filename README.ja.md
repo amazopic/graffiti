@@ -210,6 +210,35 @@ graffiti workspace render                      # → .graffiti-workspace/workspa
 `.graffiti-workspace/overlay.json` を `.gitignore` に追加してください(これは派生
 物であり、再計算可能です)。
 
+## 🛰️ システムオーケストレーション — 多数のサービス、1つのグラフ
+
+<!-- system-orchestration -->
+マイクロサービスシステムとは、1つのプロダクトを形作る多数の独立したリポジトリの集
+まりです。graffiti はそれぞれを地図化し、次に各サービスの*コントラクトサーフェス*
+(そのサービスが提供する `provides` ものと、消費する `consumes` もの)から、
+**それらの間のエッジ** — HTTP、gRPC、キュー — を**発見します**。手作業の配線は不要
+です。各サービスが自分自身の地図を公開し、オーケストレーターが公開されたアーティ
+ファクトをフェデレートして、コンシューマーをプロバイダーにマッチングします。
+
+```bash
+# 各サービスの CI(またはローカル)で — その地図を共有ストアに公開する:
+graffiti publish --to ../system-store --as carts
+
+# 次に、CI またはオンデマンドで、システム全体に対して:
+graffiti system build       # フェデレート + サービス間リンクの自動発見
+graffiti system render      # → .graffiti-system/system.html(サービスをレーンとして表示)
+graffiti system impact carts::"GET /carts/{}"   # これが変わると誰が壊れる?
+graffiti system audit       # ぶら下がったコンシューマー · 孤立したプロバイダー · 曖昧なもの(CI ゲート)
+graffiti system query "where is the cart fetched and served"
+```
+
+各地図は、`openapi.json`、`.proto`、フレームワークのルート、キュー呼び出し、また
+は明示的な `graffiti.contract.json` から抽出された**コントラクトサーフェス**を担い
+ます。サービス間リンクは確信度でスコアリングされ、**曖昧な(ambiguous)** コン
+シューマーや**ぶら下がった(dangling、デッドエンドポイント)** コンシューマーは報告
+され、決して黙って捨てられることはありません。システムストアは単なるディレクトリ
+または git リポジトリにすぎません — $0、オフライン、再計算可能です。
+
 ## 仕組み
 
 tree-sitter によるパース(ピュアGo、CGOなし)→ エッジ解決 → コミュニティへのクラ

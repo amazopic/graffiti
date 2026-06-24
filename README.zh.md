@@ -189,6 +189,33 @@ graffiti workspace render                      # → .graffiti-workspace/workspa
 
 把 `.graffiti-workspace/overlay.json` 加入 `.gitignore`(它是派生出来的，可以重新计算)。
 
+## 🛰️ 系统编排 —— 众多服务，一张图谱
+
+<!-- system-orchestration -->
+一个微服务系统就是众多相互独立、却共同构成一个产品的仓库。graffiti 会分别为
+每一个仓库绘制地图，然后从每个服务的*契约面*(它所 `provides`(提供)与
+`consumes`(消费)的内容)出发，**发现它们之间的边** —— HTTP、gRPC、消息队列。
+无需手工接线:每个服务发布自己的地图;编排器把已发布的产物联邦起来，并将消费者
+与提供者进行匹配。
+
+```bash
+# in each service's CI (or locally) — publish its map into a shared store:
+graffiti publish --to ../system-store --as carts
+
+# then, in CI or on demand, over the whole system:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+每张地图都带有一个**契约面**,它从 `openapi.json`、`.proto`、框架路由、队列调用，
+或一个显式的 `graffiti.contract.json` 中提取而来。跨服务链接会按置信度评分;
+**有歧义的(ambiguous)**与**悬空的(dangling，即死端点)**消费者都会被报告出来，
+绝不会被悄无声息地丢弃。系统存储不过是一个目录或一个 git 仓库 —— $0 成本、完全
+离线、可重新计算。
+
 ## 工作原理
 
 tree-sitter 解析(纯 Go，无 CGO)→ 边解析 → 聚类成社区 → 轻量级分析 →

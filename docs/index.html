@@ -8,7 +8,7 @@
 
     <!-- Primary SEO -->
     <title>graffiti — turn any repo into a queryable code graph for AI</title>
-    <meta name="description" content="graffiti turns a code repository into a directed knowledge graph your AI coding assistant reads instead of grepping. One static Go binary — zero API keys, $0, fully offline, byte-deterministic. Go, Python, JS, TS, Rust, Java, PHP." />
+    <meta name="description" content="graffiti turns each repo into a directed code graph your AI assistant reads instead of grepping — and federates many microservices into one system graph with automatic cross-service links (HTTP, gRPC, queues). One static Go binary: zero API keys, $0, fully offline, deterministic." />
     <meta name="author" content="Yevgeniy Achin" />
     <meta name="keywords" content="code graph, knowledge graph, ai coding assistant, claude code, mcp, tree-sitter, static analysis, code map, repo graph, golang, developer tools, offline, deterministic, code intelligence" />
     <link rel="canonical" href="https://amazopic.github.io/graffiti/" />
@@ -76,9 +76,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/tokens.css?v=4" />
-    <link rel="stylesheet" href="css/base.css?v=4" />
-    <link rel="stylesheet" href="css/sections.css?v=4" />
+    <link rel="stylesheet" href="css/tokens.css?v=5" />
+    <link rel="stylesheet" href="css/base.css?v=5" />
+    <link rel="stylesheet" href="css/sections.css?v=5" />
 
     <!-- JSON-LD: SoftwareApplication -->
     <script type="application/ld+json">
@@ -256,7 +256,35 @@
         <span class="section-divider__ornament" aria-hidden="true">❖</span>
       </div>
 
-      <!-- ═══════════════════ 02 · VIBE INSTALL ═══════════════════ -->
+      <!-- ═══════════════════ 02 · SYSTEM ORCHESTRATION (killer feature) ═══════════════════ -->
+      <section class="s-system" aria-labelledby="system-title" id="system">
+        <div class="wrap">
+          <span class="eyebrow" data-i18n="sys.eyebrow">★ Service architecture · the killer feature</span>
+          <h2 id="system-title" class="catalog__title" data-i18n-html="sys.title">Many repos.<br/><em>One system graph.</em></h2>
+          <p class="map__intro" data-i18n-html="sys.body">A microservice system is N independent repos that form one product. graffiti maps each one, then discovers the edges between them — HTTP, gRPC, queues — from each service's contract.</p>
+          <div class="install__code-wrap" style="margin-bottom:2rem;">
+            <span class="smcp" style="color:var(--ink-subtle); display:block; margin-bottom:0.5rem;" data-i18n="sys.term.label">one command — in CI or local:</span>
+<pre class="code mono"><span class="prompt">$</span> graffiti system build
+<span class="ok">✓</span> System: 12 services → 38 cross-service links <span class="dim">(2 ambiguous, 1 dangling, 4 orphan). 0 API calls, $0.</span>
+<span class="prompt">$</span> graffiti system impact carts::GET /carts/{}
+  ← checkout, web-bff, mobile-bff depend on it</pre>
+          </div>
+          <div class="sys-features" data-io>
+            <article class="map-card map-card--feature"><h3 class="map-card__title" data-i18n="sys.f1.t">Auto cross-service links</h3><p class="map-card__desc" data-i18n-html="sys.f1.d">Matches what each service consumes against what others provide.</p></article>
+            <article class="map-card"><h3 class="map-card__title" data-i18n="sys.f2.t">Impact analysis</h3><p class="map-card__desc" data-i18n-html="sys.f2.d">Change an endpoint → see every service that breaks.</p></article>
+            <article class="map-card"><h3 class="map-card__title" data-i18n="sys.f3.t">Contract audit</h3><p class="map-card__desc" data-i18n-html="sys.f3.d">Dangling consumers, orphan providers, ambiguous matches.</p></article>
+            <article class="map-card"><h3 class="map-card__title" data-i18n="sys.f4.t">Each service publishes its own map</h3><p class="map-card__desc" data-i18n-html="sys.f4.d">The orchestrator federates the published artifacts.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">⬡</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">⬡</span>
+      </div>
+
+      <!-- ═══════════════════ 03 · VIBE INSTALL ═══════════════════ -->
       <section class="s-vibe" aria-labelledby="vibe-title" id="vibe">
         <div class="wrap vibe-grid">
           <div class="vibe-text">
@@ -569,6 +597,6 @@ graffiti query "auth flow"   <span class="cmt"># LLM-free scoped subgraph</span>
       <p style="padding:2rem;text-align:center;">This page is enhanced with JavaScript. graffiti is fully documented in the <a href="https://github.com/amazopic/graffiti">GitHub repository</a>.</p>
     </noscript>
 
-    <script type="module" src="js/main.js?v=4"></script>
+    <script type="module" src="js/main.js?v=5"></script>
   </body>
 </html>

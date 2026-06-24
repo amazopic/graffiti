@@ -201,6 +201,35 @@ comme niveau supérieur** de l'arborescence et les liens inter-projets tracés.
 
 Ajoutez `.graffiti-workspace/overlay.json` à votre `.gitignore` (il est dérivé et recalculable).
 
+## 🛰️ Orchestration de système — de nombreux services, un seul graphe
+
+<!-- system-orchestration -->
+Un système de microservices, c'est de nombreux dépôts indépendants qui forment un seul
+produit. graffiti cartographie chacun d'eux, puis **découvre les arêtes entre eux** —
+HTTP, gRPC, files de messages — à partir de la *surface de contrat* de chaque service
+(ce qu'il fournit, `provides`, et ce qu'il consomme, `consumes`). Aucun câblage
+manuel : chaque service publie sa propre carte ; l'orchestrateur fédère les artefacts
+publiés et associe les consommateurs aux fournisseurs.
+
+```bash
+# dans la CI de chaque service (ou en local) — publie sa carte dans un store partagé :
+graffiti publish --to ../system-store --as carts
+
+# ensuite, en CI ou à la demande, sur l'ensemble du système :
+graffiti system build       # fédère + découvre automatiquement les liens inter-services
+graffiti system render      # → .graffiti-system/system.html (services en tant que couloirs)
+graffiti system impact carts::"GET /carts/{}"   # qui casse si ceci change ?
+graffiti system audit       # consommateurs orphelins · fournisseurs orphelins · ambigus (garde-fou CI)
+graffiti system query "where is the cart fetched and served"
+```
+
+Chaque carte porte une **surface de contrat** extraite de `openapi.json`, de `.proto`,
+des routes de framework, des appels aux files de messages, ou d'un `graffiti.contract.json`
+explicite. Les liens inter-services sont notés selon leur niveau de confiance ; les
+consommateurs **ambigus** et **orphelins** (point de terminaison mort) sont signalés,
+jamais abandonnés en silence. Le system store n'est qu'un répertoire ou un dépôt git —
+0 $, hors ligne, recalculable.
+
 ## Comment ça marche
 
 Analyse tree-sitter (pur Go, sans CGO) → résolution des arêtes → regroupement en

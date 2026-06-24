@@ -198,6 +198,33 @@ graffiti workspace render                      # → .graffiti-workspace/workspa
 
 `.graffiti-workspace/overlay.json`을 `.gitignore`에 추가하세요(파생물이며 다시 계산할 수 있습니다).
 
+## 🛰️ 시스템 오케스트레이션 — 여러 서비스, 하나의 그래프
+
+<!-- system-orchestration -->
+마이크로서비스 시스템은 하나의 제품을 이루는 여러 개의 독립된 저장소들입니다. graffiti는
+각각을 지도화한 다음, 각 서비스의 *계약 표면*(무엇을 제공(`provides`)하고 무엇을
+소비(`consumes`)하는지)으로부터 **그들 사이의 엣지를 발견합니다** — HTTP, gRPC, 큐를요.
+수작업 배선은 없습니다: 각 서비스가 자신의 지도를 게시하면, 오케스트레이터가 게시된
+아티팩트들을 페더레이션하고 소비자를 제공자에 매칭합니다.
+
+```bash
+# in each service's CI (or locally) — publish its map into a shared store:
+graffiti publish --to ../system-store --as carts
+
+# then, in CI or on demand, over the whole system:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+각 지도는 `openapi.json`, `.proto`, 프레임워크 라우트, 큐 호출, 또는 명시적인
+`graffiti.contract.json`에서 추출된 **계약 표면**을 지닙니다. 서비스 간 링크는 신뢰도로
+점수가 매겨지며, **모호한(ambiguous)** 소비자와 **끊어진(dangling)**(죽은 엔드포인트)
+소비자는 보고될 뿐, 결코 조용히 버려지지 않습니다. 시스템 스토어는 그저 디렉터리나 git
+저장소일 뿐입니다 — $0, 오프라인, 다시 계산 가능합니다.
+
 ## 작동 방식
 
 tree-sitter 파싱(순수 Go, CGO 없음) → 엣지 해석 → 커뮤니티로 클러스터링 →

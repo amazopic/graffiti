@@ -203,6 +203,34 @@ görüntüleyicisi.
 `.graffiti-workspace/overlay.json`'ı `.gitignore`'a ekleyin (türetilmiştir ve yeniden
 hesaplanabilir).
 
+## 🛰️ Sistem orkestrasyonu — birçok servis, tek bir grafik
+
+<!-- system-orchestration -->
+Bir mikroservis sistemi, tek bir ürünü oluşturan birçok bağımsız depodan oluşur.
+graffiti her birini haritalandırır, ardından her servisin *sözleşme yüzeyinden*
+(neyi `provides`, yani sunduğu ve neyi `consumes`, yani tükettiği) yola çıkarak
+**aralarındaki kenarları keşfeder** — HTTP, gRPC, kuyruklar. Elle bağlama yok: her
+servis kendi haritasını yayımlar; orkestratör yayımlanan yapıtları birleştirir ve
+tüketicileri sağlayıcılarla eşleştirir.
+
+```bash
+# her servisin CI'ında (ya da yerelde) — haritasını paylaşılan bir depoya yayımlayın:
+graffiti publish --to ../system-store --as carts
+
+# ardından, CI'da veya talep üzerine, tüm sistem genelinde:
+graffiti system build       # birleştir + servisler arası bağlantıları otomatik keşfet
+graffiti system render      # → .graffiti-system/system.html (servisler şeritler olarak)
+graffiti system impact carts::"GET /carts/{}"   # bu değişirse kim bozulur?
+graffiti system audit       # boşta tüketiciler · yetim sağlayıcılar · belirsizler (CI kapısı)
+graffiti system query "where is the cart fetched and served"
+```
+
+Her harita, `openapi.json`, `.proto`, çerçeve rotaları, kuyruk çağrıları ya da açık
+bir `graffiti.contract.json` dosyasından çıkarılan bir **sözleşme yüzeyi** taşır.
+Servisler arası bağlantılar güven düzeyine göre puanlanır; **belirsiz** ve **boşta**
+(ölü uç noktalı) tüketiciler raporlanır, asla sessizce atılmaz. Sistem deposu yalnızca
+bir dizin veya git deposudur — $0, çevrimdışı, yeniden hesaplanabilir.
+
 ## Nasıl çalışır
 
 tree-sitter ayrıştırma (saf Go, CGO yok) → kenar çözümleme → topluluklara kümeleme →

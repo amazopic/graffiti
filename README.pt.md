@@ -202,6 +202,35 @@ desenhados.
 
 Adicione `.graffiti-workspace/overlay.json` ao `.gitignore` (ele é derivado e recalculável).
 
+## 🛰️ Orquestração de sistemas — muitos serviços, um grafo
+
+<!-- system-orchestration -->
+Um sistema de microsserviços é composto por muitos repositórios independentes que
+formam um único produto. O graffiti mapeia cada um deles e então **descobre as arestas
+entre eles** — HTTP, gRPC, filas — a partir da *superfície de contrato* de cada serviço
+(o que ele fornece via `provides` e o que ele consome via `consumes`). Sem fiação
+manual: cada serviço publica seu próprio mapa; o orquestrador federa os artefatos
+publicados e casa os consumidores com os provedores.
+
+```bash
+# no CI de cada serviço (ou localmente) — publique seu mapa em um repositório compartilhado:
+graffiti publish --to ../system-store --as carts
+
+# então, no CI ou sob demanda, sobre todo o sistema:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+Cada mapa carrega uma **superfície de contrato** extraída de `openapi.json`, `.proto`,
+rotas de framework, chamadas de fila ou de um `graffiti.contract.json` explícito. Os
+links entre serviços são pontuados por confiança; consumidores **ambíguos** e
+**pendentes** (com endpoint inexistente) são reportados, nunca descartados em silêncio.
+O repositório do sistema é apenas um diretório ou um repositório git — $0, offline,
+recalculável.
+
 ## Como funciona
 
 análise com tree-sitter (puro Go, sem CGO) → resolução de arestas → agrupamento em

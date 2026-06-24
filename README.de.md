@@ -195,6 +195,34 @@ oberster Ebene** des Baums und eingezeichneten projektübergreifenden Verknüpfu
 
 Füge `.graffiti-workspace/overlay.json` zu `.gitignore` hinzu (es ist abgeleitet und neu berechenbar).
 
+## 🛰️ System-Orchestrierung — viele Services, ein Graph
+
+<!-- system-orchestration -->
+Ein Microservice-System besteht aus vielen unabhängigen Repos, die zusammen ein Produkt
+bilden. graffiti kartiert jedes davon und **entdeckt dann die Kanten zwischen ihnen** —
+HTTP, gRPC, Queues — aus der *Vertragsoberfläche* jedes Services (was er `provides`
+bereitstellt und was er `consumes` verbraucht). Kein händisches Verdrahten: Jeder Service
+veröffentlicht seine eigene Karte; der Orchestrator föderiert die veröffentlichten Artefakte
+und ordnet Konsumenten den Anbietern zu.
+
+```bash
+# in der CI jedes Services (oder lokal) — seine Karte in einen gemeinsamen Speicher veröffentlichen:
+graffiti publish --to ../system-store --as carts
+
+# dann, in der CI oder bei Bedarf, über das gesamte System hinweg:
+graffiti system build       # föderieren + projektübergreifende Verknüpfungen automatisch entdecken
+graffiti system render      # → .graffiti-system/system.html (Services als Spuren)
+graffiti system impact carts::"GET /carts/{}"   # wer bricht, wenn sich dies ändert?
+graffiti system audit       # hängende Konsumenten · verwaiste Anbieter · mehrdeutige (CI-Gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+Jede Karte trägt eine **Vertragsoberfläche**, die aus `openapi.json`, `.proto`,
+Framework-Routen, Queue-Aufrufen oder einer expliziten `graffiti.contract.json` extrahiert wird.
+Projektübergreifende Verknüpfungen werden nach Konfidenz bewertet; **mehrdeutige** und
+**hängende** (Dead-Endpoint-)Konsumenten werden gemeldet, niemals stillschweigend verworfen.
+Der System-Speicher ist einfach ein Verzeichnis oder git-Repo — $0, offline, neu berechenbar.
+
 ## Wie es funktioniert
 
 tree-sitter-Parsing (reines Go, kein CGO) → Kantenauflösung → Clustern in

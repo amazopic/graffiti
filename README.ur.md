@@ -194,6 +194,33 @@ render` ایک `workspace.html` لکھتی ہے — وہی force-graph ویور 
 
 `.graffiti-workspace/overlay.json` کو `.gitignore` میں شامل کریں (یہ مشتق اور دوبارہ قابلِ حساب ہے)۔
 
+## 🛰️ System orchestration — بہت سی سروسز، ایک گراف
+
+<!-- system-orchestration -->
+ایک microservice سسٹم بہت سی آزاد repos پر مشتمل ہوتا ہے جو مل کر ایک پروڈکٹ بناتی ہیں۔ graffiti
+ہر ایک کا نقشہ بناتی ہے، پھر **ان کے درمیان edges کو دریافت کرتی ہے** — HTTP، gRPC، queues — ہر
+سروس کی *contract surface* سے (وہ کیا `provides` یعنی فراہم کرتی ہے اور کیا `consumes` یعنی
+استعمال کرتی ہے)۔ کوئی ہاتھ سے wiring نہیں: ہر سروس اپنا نقشہ خود شائع کرتی ہے؛ orchestrator شائع
+شدہ آرٹیفیکٹس کو federate کرتا ہے اور consumers کو providers کے ساتھ ملاتا ہے۔
+
+```bash
+# ہر سروس کی CI میں (یا مقامی طور پر) — اس کا نقشہ ایک مشترکہ store میں شائع کریں:
+graffiti publish --to ../system-store --as carts
+
+# پھر، CI میں یا طلب پر، پورے سسٹم کے اوپر:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+ہر نقشہ ایک **contract surface** اپنے ساتھ رکھتا ہے جو `openapi.json`، `.proto`،
+framework routes، queue calls، یا کسی واضح `graffiti.contract.json` سے نکالی جاتی ہے۔ کراس-سروس
+links کو اعتماد (confidence) کے لحاظ سے سکور کیا جاتا ہے؛ **ambiguous** اور **dangling**
+(dead-endpoint) consumers کی رپورٹ دی جاتی ہے، انہیں کبھی خاموشی سے نظرانداز نہیں کیا جاتا۔ system store
+محض ایک ڈائریکٹری یا git repo ہے — $0، آف لائن، دوبارہ قابلِ حساب۔
+
 ## یہ کیسے کام کرتا ہے
 
 tree-sitter پارسنگ (خالص-Go، نہ CGO) → edge resolution → communities میں

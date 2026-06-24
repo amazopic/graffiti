@@ -194,6 +194,34 @@ the top level** of the tree and cross-project links drawn.
 
 Add `.graffiti-workspace/overlay.json` to `.gitignore` (it is derived and recomputable).
 
+## 🛰️ System orchestration — many services, one graph
+
+<!-- system-orchestration -->
+A microservice system is many independent repos that form one product. graffiti
+maps each, then **discovers the edges between them** — HTTP, gRPC, queues — from
+each service's *contract surface* (what it `provides` and `consumes`). No
+hand-wiring: each service publishes its own map; the orchestrator federates the
+published artifacts and matches consumers to providers.
+
+```bash
+# in each service's CI (or locally) — publish its map into a shared store:
+graffiti publish --to ../system-store --as carts
+
+# then, in CI or on demand, over the whole system:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+Each map carries a **contract surface** extracted from `openapi.json`, `.proto`,
+framework routes, queue calls, or an explicit `graffiti.contract.json`. Cross-service
+links are scored by confidence; **ambiguous** and **dangling** (dead-endpoint)
+consumers are reported, never silently dropped. The system store is just a directory
+or git repo — $0, offline, recomputable. See the
+[design doc](docs/superpowers/specs/2026-06-24-graffiti-system-orchestration-design.md).
+
 ## How it works
 
 tree-sitter parsing (pure-Go, no CGO) → edge resolution → clustering into

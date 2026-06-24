@@ -195,6 +195,34 @@ render` записывает `workspace.html` — тот же просмотрщ
 
 Добавьте `.graffiti-workspace/overlay.json` в `.gitignore` (он производный и пересчитываемый).
 
+## 🛰️ Оркестрация системы — много сервисов, один граф
+
+<!-- system-orchestration -->
+Микросервисная система — это множество независимых репозиториев, которые образуют один
+продукт. graffiti строит карту каждого из них, а затем **обнаруживает рёбра между ними** —
+HTTP, gRPC, очереди — исходя из *контрактной поверхности* каждого сервиса (того, что он
+предоставляет, `provides`, и потребляет, `consumes`). Никакого ручного связывания: каждый
+сервис публикует собственную карту; оркестратор федерирует опубликованные артефакты и
+сопоставляет потребителей с поставщиками.
+
+```bash
+# in each service's CI (or locally) — publish its map into a shared store:
+graffiti publish --to ../system-store --as carts
+
+# then, in CI or on demand, over the whole system:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+Каждая карта несёт **контрактную поверхность**, извлечённую из `openapi.json`, `.proto`,
+маршрутов фреймворка, вызовов очередей или явного `graffiti.contract.json`. Межсервисные
+связи оцениваются по уверенности; **неоднозначные** и **повисшие** (с мёртвой конечной точкой)
+потребители сообщаются, а не молча отбрасываются. Системное хранилище — это просто каталог
+или git-репозиторий — $0, офлайн, пересчитываемое.
+
 ## Как это работает
 
 разбор tree-sitter (чисто Go, без CGO) → разрешение рёбер → кластеризация в

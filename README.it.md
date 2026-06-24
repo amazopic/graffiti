@@ -209,6 +209,36 @@ render` scrive un `workspace.html` — lo stesso visualizzatore force-graph con 
 Aggiungi `.graffiti-workspace/overlay.json` al `.gitignore` (è derivato e
 ricalcolabile).
 
+## 🛰️ Orchestrazione di sistema — molti servizi, un solo grafo
+
+<!-- system-orchestration -->
+Un sistema a microservizi è costituito da molti repository indipendenti che
+formano un solo prodotto. graffiti mappa ciascuno di essi, poi **scopre gli archi
+tra di loro** — HTTP, gRPC, code — a partire dalla *superficie di contratto* di
+ogni servizio (ciò che `provides` e `consumes`, cioè ciò che offre e ciò che
+consuma). Nessun cablaggio manuale: ogni servizio pubblica la propria mappa;
+l'orchestratore federa gli artefatti pubblicati e abbina i consumatori ai
+fornitori.
+
+```bash
+# nella CI di ogni servizio (o localmente) — pubblica la sua mappa in uno store condiviso:
+graffiti publish --to ../system-store --as carts
+
+# poi, nella CI o su richiesta, sull'intero sistema:
+graffiti system build       # federate + auto-discover cross-service links
+graffiti system render      # → .graffiti-system/system.html (services as lanes)
+graffiti system impact carts::"GET /carts/{}"   # who breaks if this changes?
+graffiti system audit       # dangling consumers · orphan providers · ambiguous (CI gate)
+graffiti system query "where is the cart fetched and served"
+```
+
+Ogni mappa porta con sé una **superficie di contratto** estratta da `openapi.json`,
+`.proto`, le rotte del framework, le chiamate alle code oppure un esplicito
+`graffiti.contract.json`. I link cross-service vengono valutati per livello di
+confidenza; i consumatori **ambigui** e **dangling** (endpoint morto) vengono
+segnalati, mai scartati in silenzio. Lo store di sistema è semplicemente una
+directory o un repository git — $0, offline, ricalcolabile.
+
 ## Come funziona
 
 parsing con tree-sitter (puro-Go, niente CGO) → risoluzione degli archi →

@@ -202,6 +202,35 @@ najvišjo ravnjo** drevesa in izrisanimi navzkrižnimi povezavami med projekti.
 
 Dodajte `.graffiti-workspace/overlay.json` v `.gitignore` (je izpeljan in ga je mogoče znova izračunati).
 
+## 🛰️ Sistemska orkestracija — veliko storitev, en graf
+
+<!-- system-orchestration -->
+Mikrostoritveni sistem je veliko neodvisnih repozitorijev, ki sestavljajo en
+sam izdelek. graffiti preslika vsakega, nato pa **odkrije povezave med njimi** —
+HTTP, gRPC, čakalne vrste — iz *pogodbene površine* vsake storitve (kaj
+`provides` ponuja in kaj `consumes` porablja). Brez ročnega povezovanja: vsaka
+storitev objavi svoj zemljevid; orkestrator federira objavljene artefakte in
+uskladi porabnike s ponudniki.
+
+```bash
+# v CI vsake storitve (ali lokalno) — objavite njen zemljevid v skupno shrambo:
+graffiti publish --to ../system-store --as carts
+
+# nato, v CI ali na zahtevo, čez celoten sistem:
+graffiti system build       # federacija + samodejno odkrivanje povezav med storitvami
+graffiti system render      # → .graffiti-system/system.html (storitve kot proge)
+graffiti system impact carts::"GET /carts/{}"   # kdo se zlomi, če se to spremeni?
+graffiti system audit       # viseči porabniki · osiroteli ponudniki · dvoumni (vrata CI)
+graffiti system query "where is the cart fetched and served"
+```
+
+Vsak zemljevid nosi **pogodbeno površino**, izvlečeno iz `openapi.json`,
+`.proto`, ogrodnih poti, klicev čakalnih vrst ali izrecnega
+`graffiti.contract.json`. Povezave med storitvami so ocenjene po zaupanju;
+**dvoumni** in **viseči** (mrtva končna točka) porabniki so prijavljeni, nikoli
+tiho zavrženi. Sistemska shramba je le imenik ali repozitorij git — $0, brez
+povezave, ponovno izračunljiva.
+
 ## Kako deluje
 
 razčlenjevanje s tree-sitter (čisti Go, brez CGO) → razrešitev povezav →

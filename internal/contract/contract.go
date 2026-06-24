@@ -45,6 +45,7 @@ type srcFile struct {
 // nearest enclosing graph node (handler / call site) by file:line.
 func Extract(root string, doc *graph.Document) (provides, consumes []graph.Endpoint) {
 	var p, c []graph.Endpoint
+	registered := map[string]bool{} // gRPC services this repo serves
 	for _, f := range walk(root) {
 		base := strings.ToLower(filepath.Base(f.rel))
 		ext := strings.ToLower(filepath.Ext(f.rel))
@@ -60,8 +61,13 @@ func Extract(root string, doc *graph.Document) (provides, consumes []graph.Endpo
 		if codeExts[ext] {
 			pp, cc := scanSource(f.rel, f.data)
 			p, c = append(p, pp...), append(c, cc...)
+			collectGrpcServers(f.data, registered)
 		}
 	}
+	// Attribute gRPC providers by server registration: a repo provides only the
+	// gRPC services it actually registers as a server — so vendoring a shared .proto
+	// (or generated stubs for many services) doesn't make a pure client a provider.
+	p = filterProtoRPC(p, registered)
 	associate(doc, p)
 	associate(doc, c)
 	return finalize(p), finalize(c)

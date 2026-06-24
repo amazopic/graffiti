@@ -209,3 +209,12 @@ resp = stub.GetCart(req)`
 		t.Errorf("gRPC Python: missing consume CartService.GetCart; got %+v", c2)
 	}
 }
+
+func TestScan_GrpcChainedClient(t *testing.T) {
+	src := `package main
+func h() { resp, _ := pb.NewCartServiceClient(conn).GetCart(ctx, req) }`
+	_, c := provKeys(t, "rpc.go", src)
+	if has(c, graph.EPRPC, "CartService.GetCart") == nil {
+		t.Errorf("chained gRPC consume missing; got %+v", c)
+	}
+}

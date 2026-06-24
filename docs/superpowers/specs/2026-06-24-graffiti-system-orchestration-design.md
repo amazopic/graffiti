@@ -62,8 +62,25 @@ Every `map.json` gains two arrays (deterministic, sorted, optional):
    - **Frontend consumers** — React / Vue / Angular / Svelte / Nuxt files (by extension or
      `react`/`vue`/`@angular` import) where `fetch`/`axios`/`$fetch`/`useFetch`/`HttpClient`
      and `.get("/x")` calls are CONSUMES, not routes.
-   - **gRPC clients** — Go `New<Svc>Client(...)` / Python `<Svc>Stub(...)` construction +
-     method calls on that var → rpc CONSUMES (`Svc.Method`).
+   - **gRPC clients** — Go `New<Svc>Client(conn).Method(...)` (chained) and
+     `c := New<Svc>Client(...)` + `c.Method(...)`, Python `<Svc>Stub(...)` → rpc
+     CONSUMES (`Svc.Method`).
+   - **gRPC providers** are attributed by **server registration** (Go
+     `RegisterXServer`, Python `add_XServicer_to_server`, C# `MapGrpcService<X>`,
+     Java `XImplBase`, Node `.X.service` — call sites only, not generated definitions)
+     + the rpc method set from the `.proto` or generated `XServer`/`XServicer` stub.
+     A repo that merely vendors a shared multi-service proto/stub as a client (no
+     registration) provides nothing — defeating false ambiguity.
+
+> **Validated on a real polyglot system.** Run against Google's *Online Boutique*
+> (`microservices-demo`, 12 services in Go/C#/Node/Python/Java over gRPC), `graffiti
+> system build` reconstructed the actual service dependency graph — 14 cross-service
+> links, **0 ambiguous** (checkout→{cart,currency,email,payment,productcatalog,
+> shipping}, frontend→{ad,cart,recommendation,shipping}, recommendation→
+> productcatalog) — fully offline, $0. Server-registration attribution was the key:
+> the demo vendors the full `demo.proto` into several services, which naïvely makes
+> every one a provider of every rpc; scoping provides to registered servers
+> eliminated the ambiguity.
 5. **Literal / producer heuristic** — `http(s)://…` literals and queue producers
    (`publish`/`emit`/`produce`, `KafkaTemplate.send`, NATS `Publish`) → http/queue consumes.
 

@@ -95,3 +95,35 @@ func TestNormPath(t *testing.T) {
 		}
 	}
 }
+
+// gRPC provider attribution from a shared multi-service proto.
+const sharedProto = "service CartService {\n  rpc AddItem (R) returns (E);\n}\nservice OrderService {\n  rpc Place (R) returns (E);\n}\n"
+
+func TestExtract_GrpcServerAttribution(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "demo.proto", sharedProto)
+	writeFile(t, dir, "main.go", "package main\nfunc main() {\n\tpb.RegisterCartServiceServer(s, impl)\n}\n")
+	p, _ := Extract(dir, &graph.Document{})
+	if has(p, graph.EPRPC, "CartService.AddItem") == nil {
+		t.Errorf("registered service should be provided; got %+v", p)
+	}
+	if has(p, graph.EPRPC, "OrderService.Place") != nil {
+		t.Errorf("unregistered service must NOT be provided; got %+v", p)
+	}
+}
+
+func TestExtract_GrpcClientOnlyProvidesNothing(t *testing.T) {
+	dir := t.TempDir()
+	writeFile(t, dir, "demo.proto", sharedProto)
+	writeFile(t, dir, "client.go", "package main\nfunc h() {\n\tpb.NewCartServiceClient(conn).AddItem(ctx, req)\n}\n")
+	p, c := Extract(dir, &graph.Document{})
+	for _, e := range p {
+		if e.Kind == graph.EPRPC {
+			t.Errorf("client-only repo (multi-service proto, no registration) must provide no rpc; got %+v", p)
+			break
+		}
+	}
+	if has(c, graph.EPRPC, "CartService.AddItem") == nil {
+		t.Errorf("client-only repo should consume CartService.AddItem; got %+v", c)
+	}
+}

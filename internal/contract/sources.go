@@ -258,10 +258,86 @@ var (
 	// Ktor (.kt): routing DSL (bare verb + path starting "/")
 	rxKtor = regexp.MustCompile(`(?i)\b(get|post|put|delete|patch|route)\(\s*"(/[^"]*)"`)
 	// gRPC clients: generated stub/client construction + method calls (consumes)
-	rxGrpcNew  = regexp.MustCompile(`(\w+)\s*(?::=|=)\s*[\w.]*?New(\w+)Client\(`)
-	rxGrpcStub = regexp.MustCompile(`(\w+)\s*=\s*[\w.]*?(\w+)Stub\(`)
-	rxCall     = regexp.MustCompile(`\b(\w+)\.(\w+)\(`)
+	rxGrpcNew   = regexp.MustCompile(`(\w+)\s*(?::=|=)\s*[\w.]*?New(\w+)Client\(`)
+	rxGrpcStub  = regexp.MustCompile(`(\w+)\s*=\s*[\w.]*?(\w+)Stub\(`)
+	rxGrpcChain = regexp.MustCompile(`New(\w+)Client\([^)]*\)\.(\w+)\(`) // NewXClient(conn).Method(
+	rxCall      = regexp.MustCompile(`\b(\w+)\.(\w+)\(`)
+
+	// gRPC generated server interfaces (provides for services shipping only codegen).
+	rxGoSrvIface  = regexp.MustCompile(`type (\w+)Server interface`)
+	rxIfaceMethod = regexp.MustCompile(`^\s+(\w+)\(`)
+	rxPySvcr      = regexp.MustCompile(`class (\w+)Servicer\b`)
+	rxPyDef       = regexp.MustCompile(`def (\w+)\(self`)
+
+	// gRPC server registration (provider attribution): which service a repo serves.
+	rxSrvGo   = regexp.MustCompile(`Register(\w+)Server\(`)
+	rxSrvPy   = regexp.MustCompile(`add_(\w+)Servicer_to_server`)
+	rxSrvCs   = regexp.MustCompile(`MapGrpcService<(\w+)>`)
+	rxSrvJava = regexp.MustCompile(`(\w+?)ImplBase\b`)
+	rxSrvNode = regexp.MustCompile(`\.(\w+)\.service\b`)
 )
+
+// collectGrpcServers adds the gRPC service names a file registers as a SERVER
+// (Go/Python/C#/Java/Node call sites). Lines that are function/method DEFINITIONS
+// (generated `func RegisterXServer`/`def add_XServicer_to_server`) or comments are
+// skipped, so only real registration CALL sites count. "Health" is ignored.
+func collectGrpcServers(data []byte, set map[string]bool) {
+	sc := bufio.NewScanner(bytes.NewReader(data))
+	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	for sc.Scan() {
+		ts := strings.TrimSpace(sc.Text())
+		if strings.HasPrefix(ts, "func ") || strings.HasPrefix(ts, "def ") ||
+			strings.HasPrefix(ts, "//") || strings.HasPrefix(ts, "#") || strings.HasPrefix(ts, "*") {
+			continue
+		}
+		for _, re := range []*regexp.Regexp{rxSrvGo, rxSrvPy, rxSrvCs, rxSrvJava, rxSrvNode} {
+			for _, m := range re.FindAllStringSubmatch(ts, -1) {
+				if svc := m[1]; svc != "" && svc != "Health" {
+					set[svc] = true
+				}
+			}
+		}
+	}
+}
+
+func serviceOf(key string) string {
+	if i := strings.IndexByte(key, '.'); i >= 0 {
+		return key[:i]
+	}
+	return key
+}
+
+// filterProtoRPC attributes gRPC providers from a service's proto/generated stubs:
+//   - if the repo registers any server → keep only the registered services' rpcs;
+//   - else if its stubs define MANY services → it merely vendored a shared contract
+//     as a client → drop all (can't attribute);
+//   - else (a single-service proto, no registration) → keep (it's the owner).
+// Explicit `graffiti.contract.json` rpc provides (source "contract") are never touched.
+func filterProtoRPC(eps []graph.Endpoint, registered map[string]bool) []graph.Endpoint {
+	svcSet := map[string]bool{}
+	for _, e := range eps {
+		if e.Kind == graph.EPRPC && (e.Source == "proto" || e.Source == "grpcgen") {
+			svcSet[serviceOf(e.Key)] = true
+		}
+	}
+	hasReg := len(registered) > 0
+	multi := len(svcSet) > 1
+	out := eps[:0]
+	for _, e := range eps {
+		if e.Kind == graph.EPRPC && (e.Source == "proto" || e.Source == "grpcgen") {
+			svc := serviceOf(e.Key)
+			if hasReg {
+				if !registered[svc] {
+					continue
+				}
+			} else if multi {
+				continue
+			}
+		}
+		out = append(out, e)
+	}
+	return out
+}
 
 // fileRole classifies a source file as "frontend" (HTTP-client consumer) or
 // "backend" (route provider) so the same `.get("/x")` pattern is read correctly.
@@ -305,6 +381,8 @@ func joinPath(prefix, p string) string {
 }
 
 func validTopic(s string) bool { return s != "" && !strings.HasPrefix(s, "/") }
+
+func isExported(s string) bool { return s != "" && s[0] >= 'A' && s[0] <= 'Z' }
 
 // djangoPath cleans a Django/DRF route pattern (path() or re_path() regex) into a
 // match template: strip ^$ anchors, collapse regex groups to {} (named groups too).
@@ -361,6 +439,8 @@ func scanSource(rel string, data []byte) (provides, consumes []graph.Endpoint) {
 	line := 0
 	prefix := "" // current NestJS @Controller / Spring / ASP.NET class prefix
 	csCtl := ""  // ASP.NET controller name (for the [controller] token)
+	goSrv := ""  // current Go `type XServer interface` being scanned
+	pySvcr := "" // current Python `class XServicer` being scanned
 	if ext == ".cs" {
 		if m := rxCsClass.FindSubmatch(data); m != nil { // pre-scan: [Route] often precedes the class line
 			csCtl = strings.ToLower(string(m[1]))
@@ -406,6 +486,12 @@ func scanSource(rel string, data []byte) (provides, consumes []graph.Endpoint) {
 					key := svc + "." + m[2]
 					add(&consumes, graph.EPRPC, key, key, "grpc", line)
 				}
+			}
+		}
+		for _, m := range rxGrpcChain.FindAllStringSubmatch(t, -1) { // NewXClient(conn).Method(
+			if !grpcSkipMethods[m[2]] {
+				key := m[1] + "." + m[2]
+				add(&consumes, graph.EPRPC, key, key, "grpc", line)
 			}
 		}
 
@@ -504,6 +590,33 @@ func scanSource(rel string, data []byte) (provides, consumes []graph.Endpoint) {
 		if ext == ".kt" {
 			for _, m := range rxKtor.FindAllStringSubmatch(t, -1) {
 				add(&provides, graph.EPHTTP, httpKey(meth(m[1]), m[2]), strings.ToUpper(meth(m[1]))+" "+m[2], "route", line)
+			}
+		}
+		// gRPC generated server interface (Go) → rpc provides (filtered by registration).
+		if ext == ".go" {
+			if m := rxGoSrvIface.FindStringSubmatch(t); m != nil {
+				goSrv = m[1]
+			} else if goSrv != "" {
+				if strings.Contains(t, "}") {
+					goSrv = ""
+				} else if mm := rxIfaceMethod.FindStringSubmatch(t); mm != nil && isExported(mm[1]) && !strings.HasPrefix(mm[1], "Unimplemented") {
+					key := goSrv + "." + mm[1]
+					add(&provides, graph.EPRPC, key, key, "grpcgen", line)
+				}
+			}
+		}
+		// gRPC generated servicer (Python) → rpc provides (filtered by registration).
+		if ext == ".py" {
+			if m := rxPySvcr.FindStringSubmatch(t); m != nil {
+				pySvcr = m[1]
+			} else if strings.HasPrefix(t, "class ") || strings.HasPrefix(t, "def ") {
+				pySvcr = ""
+			}
+			if pySvcr != "" {
+				if mm := rxPyDef.FindStringSubmatch(t); mm != nil && isExported(mm[1]) {
+					key := pySvcr + "." + mm[1]
+					add(&provides, graph.EPRPC, key, key, "grpcgen", line)
+				}
 			}
 		}
 	}

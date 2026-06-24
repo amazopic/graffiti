@@ -85,6 +85,41 @@ type Community struct {
 	Members []string `json:"members"`
 }
 
+// EndpointKind enumerates contract-surface kinds (system orchestration).
+type EndpointKind string
+
+const (
+	EPHTTP  EndpointKind = "http"  // an HTTP route / call
+	EPRPC   EndpointKind = "rpc"   // a gRPC/RPC service.method
+	EPQueue EndpointKind = "queue" // a message-queue topic/subject
+	EPLib   EndpointKind = "lib"   // an exported / imported library symbol
+)
+
+// ValidEndpointKinds is the closed set of contract-surface kinds.
+var ValidEndpointKinds = map[EndpointKind]bool{
+	EPHTTP: true, EPRPC: true, EPQueue: true, EPLib: true,
+}
+
+// Endpoint is one entry in a service's contract surface — something the service
+// PROVIDES (exposes) or CONSUMES (reaches out to). Key is the normalized
+// cross-service match key: a `consume` and a `provide` in two different services
+// with equal (Kind, Key) are the same wire contract and get a cross-service edge.
+//
+//	http  → "GET /carts/{}"     (method + path template, host stripped, params → {})
+//	rpc   → "Cart.Get"          (service.Method)
+//	queue → "orders.created"    (topic / subject)
+//	lib   → "pkg/path:Symbol"   (exported / imported symbol)
+type Endpoint struct {
+	Kind       EndpointKind `json:"kind"`
+	Key        string       `json:"key"`
+	Display    string       `json:"display"`        // human-readable form
+	Node       string       `json:"node,omitempty"` // nearest handler / call-site node id
+	File       string       `json:"file"`
+	Line       int          `json:"line"`
+	Confidence Confidence   `json:"confidence"`
+	Source     string       `json:"source"` // openapi|proto|contract|route|literal
+}
+
 // Document is the on-disk shape of .graffiti/map.json (spec §6).
 type Document struct {
 	Version     string      `json:"version"`
@@ -93,6 +128,11 @@ type Document struct {
 	Nodes       []Node      `json:"nodes"`
 	Edges       []Edge      `json:"edges"`
 	Communities []Community `json:"communities"`
+
+	// Contract surface (system orchestration): what this service exposes / calls.
+	// Optional and empty for repos without any extractable contract.
+	Provides []Endpoint `json:"provides"`
+	Consumes []Endpoint `json:"consumes"`
 
 	// nodeHighWaterMark tracks the maximum node count ever committed via Merge,
 	// enabling the anti-shrink guard to detect out-of-band pruning.
@@ -107,5 +147,7 @@ func NewDocument(root string) *Document {
 		Nodes:       []Node{},
 		Edges:       []Edge{},
 		Communities: []Community{},
+		Provides:    []Endpoint{},
+		Consumes:    []Endpoint{},
 	}
 }

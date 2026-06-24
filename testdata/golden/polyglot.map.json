@@ -74,6 +74,7 @@
       ]
     }
   ],
+  "consumes": [],
   "edges": [
     {
       "from": "app-js:app-js",
@@ -244,7 +245,7 @@
       "confidence": "EXTRACTED"
     }
   ],
-  "generated_at": "2026-06-16T18:56:54Z",
+  "generated_at": "2026-06-24T04:46:41Z",
   "nodes": [
     {
       "id": "app-js:app",
@@ -495,6 +496,7 @@
       "community": 6
     }
   ],
-  "root": "tmp.Eng860VpoF",
+  "provides": [],
+  "root": "polyglot",
   "version": "1"
 }

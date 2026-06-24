@@ -10,6 +10,7 @@ import (
 	"github.com/amazopic/graffiti/internal/build"
 	"github.com/amazopic/graffiti/internal/cache"
 	"github.com/amazopic/graffiti/internal/cluster"
+	"github.com/amazopic/graffiti/internal/contract"
 	"github.com/amazopic/graffiti/internal/graph"
 	"github.com/amazopic/graffiti/internal/parse"
 	"github.com/amazopic/graffiti/internal/render"
@@ -101,6 +102,10 @@ func Build(root, generatedAt string) (Stats, error) {
 	deg := analyze.Degrees(doc)
 	doc.Communities = cluster.NameCommunities(doc, deg)
 	an := analyze.Analyze(doc, deg)
+
+	// System orchestration: extract this repo's contract surface (what it exposes
+	// and calls out to) so it can be federated and cross-linked across services.
+	doc.Provides, doc.Consumes = contract.Extract(absRoot, doc)
 
 	if err := render.WriteMapJSON(doc, absRoot); err != nil {
 		return stats, err

@@ -16,9 +16,11 @@ import (
 // nodes, root, version) for byte-determinism (spec §8.8/§14).
 type orderedDocument struct {
 	Communities []graph.Community `json:"communities"`
+	Consumes    []graph.Endpoint  `json:"consumes"`
 	Edges       []graph.Edge      `json:"edges"`
 	GeneratedAt string            `json:"generated_at"`
 	Nodes       []graph.Node      `json:"nodes"`
+	Provides    []graph.Endpoint  `json:"provides"`
 	Root        string            `json:"root"`
 	Version     string            `json:"version"`
 }
@@ -30,9 +32,11 @@ type orderedDocument struct {
 func WriteMapJSON(doc *graph.Document, root string) error {
 	od := orderedDocument{
 		Communities: nonNilCommunities(doc.Communities),
+		Consumes:    nonNilEndpoints(doc.Consumes),
 		Edges:       nonNilEdges(doc.Edges),
 		GeneratedAt: doc.GeneratedAt,
 		Nodes:       nonNilNodes(doc.Nodes),
+		Provides:    nonNilEndpoints(doc.Provides),
 		Root:        doc.Root,
 		Version:     doc.Version,
 	}
@@ -69,4 +73,10 @@ func nonNilCommunities(c []graph.Community) []graph.Community {
 		return []graph.Community{}
 	}
 	return c
+}
+func nonNilEndpoints(e []graph.Endpoint) []graph.Endpoint {
+	if e == nil {
+		return []graph.Endpoint{}
+	}
+	return e
 }

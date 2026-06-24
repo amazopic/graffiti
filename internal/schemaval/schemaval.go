@@ -62,5 +62,32 @@ func ValidateDocument(d *graph.Document) error {
 			return fmt.Errorf("edges[%d]: dangling 'to' node %q", i, e.To)
 		}
 	}
+
+	if err := validateEndpoints("provides", d.Provides); err != nil {
+		return err
+	}
+	if err := validateEndpoints("consumes", d.Consumes); err != nil {
+		return err
+	}
+	return nil
+}
+
+// validateEndpoints checks the contract-surface arrays: closed kind enum,
+// non-empty key, valid confidence, non-negative line.
+func validateEndpoints(field string, eps []graph.Endpoint) error {
+	for i, ep := range eps {
+		if !graph.ValidEndpointKinds[ep.Kind] {
+			return fmt.Errorf("%s[%d]: invalid kind %q", field, i, ep.Kind)
+		}
+		if ep.Key == "" {
+			return fmt.Errorf("%s[%d]: empty key", field, i)
+		}
+		if !graph.ValidConfidences[ep.Confidence] {
+			return fmt.Errorf("%s[%d]: invalid confidence %q", field, i, ep.Confidence)
+		}
+		if ep.Line < 0 {
+			return fmt.Errorf("%s[%d]: negative line %d", field, i, ep.Line)
+		}
+	}
 	return nil
 }

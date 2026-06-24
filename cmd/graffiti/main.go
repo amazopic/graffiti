@@ -15,6 +15,7 @@ import (
 	"github.com/amazopic/graffiti/internal/query"
 	"github.com/amazopic/graffiti/internal/render"
 	"github.com/amazopic/graffiti/internal/store"
+	"github.com/amazopic/graffiti/internal/system"
 	"github.com/amazopic/graffiti/internal/workspace"
 )
 
@@ -102,6 +103,10 @@ func run(args []string, stdin io.Reader, stdout, stderr io.Writer) int {
 		cwd, _ := os.Getwd()
 		integrate.RunHook(stdin, stdout, cwd)
 		return 0
+	case "publish":
+		return runPublish(args[2:], stdout, stderr)
+	case "system":
+		return runSystem(args[2:], stdout, stderr)
 	case "version", "--version", "-v":
 		fmt.Fprintln(stdout, "graffiti "+version)
 		return 0
@@ -133,6 +138,16 @@ func usage(w io.Writer) {
 	fmt.Fprintln(w, `  query --workspace "<q>" [--root dir]  federated retrieval across the workspace`)
 	fmt.Fprintln(w, "  serve --workspace [--root dir]  MCP server over the federated index")
 	fmt.Fprintln(w, "  update --workspace [--root dir]  rebuild changed members + recompute links")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "  multi-service system orchestration:")
+	fmt.Fprintln(w, "  publish --to <dir> [--as name]  publish this service's map into a system store")
+	fmt.Fprintln(w, "  system build [--root dir]   federate published services + discover cross-service links")
+	fmt.Fprintln(w, "  system render [--root dir]  → .graffiti-system/system.html")
+	fmt.Fprintln(w, `  system impact <svc[::key]>  who breaks if this service/endpoint changes`)
+	fmt.Fprintln(w, "  system audit [--root dir]   dangling consumers / orphan providers / ambiguous matches")
+	fmt.Fprintln(w, "  system status [--root dir]  which services drifted since last federation")
+	fmt.Fprintln(w, `  system query "<q>" [--root dir]  LLM-free retrieval across the whole system`)
+	fmt.Fprintln(w, "  system list [--root dir]    list registered services")
 	fmt.Fprintln(w, "  version           print the graffiti version")
 }
 
@@ -454,6 +469,239 @@ func runFederateExplain(args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stdout, "AMBIGUOUS: %s -> %s (via %s)\n", l.From, l.To, l.Via)
 	}
 	return 0
+}
+
+// runPublish publishes this service's map into a system store and registers it.
+// Flags: --to <systemRoot> (defaults to the discovered system root), --as <name>.
+func runPublish(args []string, stdout, stderr io.Writer) int {
+	to, name, service := "", "", "."
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
+		case "--to":
+			if i+1 >= len(args) {
+				fmt.Fprintln(stderr, "graffiti: --to requires a directory")
+				return 2
+			}
+			i++
+			to = args[i]
+		case "--as":
+			if i+1 >= len(args) {
+				fmt.Fprintln(stderr, "graffiti: --as requires a name")
+				return 2
+			}
+			i++
+			name = args[i]
+		default:
+			service = args[i]
+		}
+	}
+	absService, err := filepath.Abs(service)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	if name == "" {
+		name = filepath.Base(absService)
+	}
+	systemRoot := to
+	if systemRoot == "" {
+		cwd, _ := os.Getwd()
+		systemRoot = system.FindRoot(cwd)
+		if systemRoot == "" {
+			fmt.Fprintln(stderr, "graffiti: no system store found — pass --to <dir> to create one")
+			return 2
+		}
+	}
+	absSystem, err := filepath.Abs(systemRoot)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+
+	// Build the service map if it hasn't been built yet.
+	if _, statErr := os.Stat(filepath.Join(absService, ".graffiti", "map.json")); statErr != nil {
+		if _, berr := app.Build(absService, nowRFC3339()); berr != nil {
+			fmt.Fprintf(stderr, "graffiti: build %s: %v\n", absService, berr)
+			return 1
+		}
+	}
+
+	svc, err := system.Publish(absService, absSystem, name)
+	if err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	reg, err := system.LoadRegistry(absSystem)
+	if err != nil {
+		reg = system.NewRegistry(filepath.Base(absSystem))
+	}
+	system.AddService(reg, svc)
+	reg.GeneratedAt = nowRFC3339()
+	if err := system.SaveRegistry(absSystem, reg); err != nil {
+		fmt.Fprintf(stderr, "graffiti: %v\n", err)
+		return 1
+	}
+	commit := svc.Commit
+	if commit == "" {
+		commit = "(no git)"
+	}
+	fmt.Fprintf(stdout, "✓ Published %q to %s (commit %s). %d services registered.\n",
+		name, absSystem, commit, len(reg.Services))
+	return 0
+}
+
+// resolveSystemRoot mirrors resolveWorkspaceRoot for the system store.
+func resolveSystemRoot(args []string, stderr io.Writer) (root string, rest []string, code int) {
+	rest = make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--root" {
+			if i+1 >= len(args) {
+				fmt.Fprintln(stderr, "graffiti: --root requires a directory")
+				return "", nil, 2
+			}
+			root = args[i+1]
+			i++
+			continue
+		}
+		rest = append(rest, args[i])
+	}
+	if root == "" {
+		cwd, _ := os.Getwd()
+		root = system.FindRoot(cwd)
+		if root == "" {
+			fmt.Fprintln(stderr, "graffiti: no system store found (run `graffiti publish --to <dir>` first, or pass --root)")
+			return "", nil, 1
+		}
+	}
+	return root, rest, 0
+}
+
+func runSystem(args []string, stdout, stderr io.Writer) int {
+	root, rest, code := resolveSystemRoot(args, stderr)
+	if code != 0 {
+		return code
+	}
+	if len(rest) == 0 {
+		fmt.Fprintln(stderr, "graffiti: system <build|render|impact|audit|status|query|list>")
+		return 2
+	}
+	switch rest[0] {
+	case "list":
+		reg, err := system.LoadRegistry(root)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		for _, s := range reg.Services {
+			commit := s.Commit
+			if commit == "" {
+				commit = "-"
+			}
+			fmt.Fprintf(stdout, "%s\t%s\t%s\n", s.Name, s.Path, commit)
+		}
+		return 0
+	case "build":
+		reg, _, res, err := system.Federate(root)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		if err := system.SaveOverlay(root, system.OverlayFromMatch(res, nowRFC3339())); err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "✓ System %q: %d services → %d cross-service links (%d ambiguous, %d dangling, %d orphan). 0 API calls, $0.\n",
+			reg.Name, len(reg.Services), len(res.Links), len(res.Ambiguous), len(res.Dangling), len(res.Orphans))
+		return 0
+	case "render":
+		reg, docs, res, err := system.Federate(root)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		doc := system.Combine(reg.Name, docs, res)
+		out := filepath.Join(root, system.SystemDir, "system.html")
+		if err := render.WriteWorkspaceHTML(doc, nowRFC3339(), out); err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "✓ wrote %s (%d nodes, %d edges, %d services, %d cross-service links).\n",
+			out, len(doc.Nodes), len(doc.Edges), len(reg.Services), len(res.Links))
+		return 0
+	case "impact":
+		if len(rest) < 2 {
+			fmt.Fprintln(stderr, `graffiti: system impact <service[::key]>`)
+			return 2
+		}
+		_, _, res, err := system.Federate(root)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		rep := system.Impact(res, rest[1])
+		fmt.Fprintf(stdout, "Impact of %s:\n", rep.Target)
+		if len(rep.Direct) == 0 {
+			fmt.Fprintln(stdout, "  (no service directly depends on it)")
+		}
+		for _, l := range rep.Direct {
+			fmt.Fprintf(stdout, "  ← %s consumes %s %q (%s)\n", l.FromService, l.Kind, l.Key, l.Confidence)
+		}
+		if len(rep.Affected) > 0 {
+			fmt.Fprintf(stdout, "Affected services (transitive): %s\n", strings.Join(rep.Affected, ", "))
+		}
+		return 0
+	case "audit":
+		_, _, res, err := system.Federate(root)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		fmt.Fprintf(stdout, "Cross-service audit: %d links, %d ambiguous, %d dangling, %d orphan.\n",
+			len(res.Links), len(res.Ambiguous), len(res.Dangling), len(res.Orphans))
+		for _, d := range res.Dangling {
+			fmt.Fprintf(stdout, "  DANGLING  %s consumes %s %q — no provider\n", d.Service, d.Kind, d.Key)
+		}
+		for _, o := range res.Orphans {
+			fmt.Fprintf(stdout, "  ORPHAN    %s provides %s %q — no consumer\n", o.Service, o.Kind, o.Key)
+		}
+		for _, a := range res.Ambiguous {
+			fmt.Fprintf(stdout, "  AMBIGUOUS %s → %s %q\n", a.FromService, a.ToService, a.Key)
+		}
+		if len(res.Dangling) > 0 {
+			return 1 // non-zero so audit can gate CI
+		}
+		return 0
+	case "status":
+		reg, err := system.LoadRegistry(root)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		stale := system.StaleServices(root, reg)
+		fmt.Fprintf(stdout, "%d services registered.\n", len(reg.Services))
+		if len(stale) == 0 {
+			fmt.Fprintln(stdout, "All artifacts match the registry.")
+			return 0
+		}
+		fmt.Fprintf(stdout, "Stale: %s\n", strings.Join(stale, ", "))
+		return 1
+	case "query":
+		if len(rest) < 2 {
+			fmt.Fprintln(stderr, `graffiti: system query "<question>"`)
+			return 2
+		}
+		reg, docs, res, err := system.Federate(root)
+		if err != nil {
+			fmt.Fprintf(stderr, "graffiti: %v\n", err)
+			return 1
+		}
+		idx := store.NewIndex(system.Combine(reg.Name, docs, res))
+		fmt.Fprint(stdout, query.Query(idx, rest[1], query.DefaultTokenBudget))
+		return 0
+	default:
+		fmt.Fprintf(stderr, "graffiti: unknown system subcommand %q\n", rest[0])
+		return 2
+	}
 }
 
 func hasFlag(args []string, flag string) bool {

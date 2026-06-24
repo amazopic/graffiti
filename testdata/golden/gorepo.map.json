@@ -30,6 +30,7 @@
       ]
     }
   ],
+  "consumes": [],
   "edges": [
     {
       "from": "greet-greet-go:greet-greet-go",
@@ -201,6 +202,7 @@
       "community": 0
     }
   ],
+  "provides": [],
   "root": "001",
   "version": "1"
 }

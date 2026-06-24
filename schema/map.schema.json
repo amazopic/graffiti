@@ -52,6 +52,29 @@
           "members": { "type": "array", "items": { "type": "string" } }
         }
       }
+    },
+    "provides": { "$ref": "#/$defs/endpoints" },
+    "consumes": { "$ref": "#/$defs/endpoints" }
+  },
+  "$defs": {
+    "endpoints": {
+      "type": "array",
+      "description": "Contract surface: what the service exposes (provides) or calls out to (consumes).",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "key", "display", "file", "line", "confidence", "source"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["http", "rpc", "queue", "lib"] },
+          "key": { "type": "string", "minLength": 1 },
+          "display": { "type": "string" },
+          "node": { "type": "string" },
+          "file": { "type": "string" },
+          "line": { "type": "integer", "minimum": 0 },
+          "confidence": { "type": "string", "enum": ["EXTRACTED", "INFERRED", "AMBIGUOUS"] },
+          "source": { "type": "string" }
+        }
+      }
     }
   }
 }

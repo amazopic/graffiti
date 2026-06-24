@@ -28,8 +28,9 @@ var skipDirs = map[string]bool{
 
 // codeExts are scanned by the source heuristics (router/URL/queue patterns).
 var codeExts = map[string]bool{
-	".go": true, ".js": true, ".ts": true, ".tsx": true, ".jsx": true,
-	".py": true, ".rs": true, ".java": true, ".php": true, ".rb": true,
+	".go": true, ".js": true, ".mjs": true, ".ts": true, ".tsx": true, ".jsx": true,
+	".py": true, ".rs": true, ".java": true, ".kt": true, ".php": true, ".rb": true,
+	".cs": true, ".vue": true, ".svelte": true,
 }
 
 const maxFileBytes = 1 << 20 // 1 MiB — skip larger files for the heuristics

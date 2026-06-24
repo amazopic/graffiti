@@ -54,12 +54,16 @@ Every `map.json` gains two arrays (deterministic, sorted, optional):
 3. **`.proto`** (small line scanner) → rpc provides — EXTRACTED.
 4. **Framework recognizers** (INFERRED), per detected file role:
    - **Backend providers** — Go net/http, gin/chi/echo, Flask `.route`, FastAPI/`@app.get`,
-     **Spring** (`@*Mapping` + `@RequestMapping` with class-prefix tracking),
-     **NestJS** (`@Controller` prefix + `@Get`/`@Post`/… + `@MessagePattern`/`@EventPattern`),
+     **Django/DRF** (`path`/`re_path`/`url` in urls.py), **Spring** (`@*Mapping` +
+     `@RequestMapping` with class-prefix tracking), **NestJS** (`@Controller` prefix +
+     `@Get`/`@Post`/… + `@MessagePattern`/`@EventPattern`), **ASP.NET** (`[HttpGet]`/
+     `[Route]`/`MapGet` with `[controller]` substitution), **Ktor** (routing DSL),
      **Kafka** (`@KafkaListener`) / **NATS** / generic `.subscribe` → http/queue provides.
    - **Frontend consumers** — React / Vue / Angular / Svelte / Nuxt files (by extension or
      `react`/`vue`/`@angular` import) where `fetch`/`axios`/`$fetch`/`useFetch`/`HttpClient`
      and `.get("/x")` calls are CONSUMES, not routes.
+   - **gRPC clients** — Go `New<Svc>Client(...)` / Python `<Svc>Stub(...)` construction +
+     method calls on that var → rpc CONSUMES (`Svc.Method`).
 5. **Literal / producer heuristic** — `http(s)://…` literals and queue producers
    (`publish`/`emit`/`produce`, `KafkaTemplate.send`, NATS `Publish`) → http/queue consumes.
 

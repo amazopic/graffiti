@@ -246,6 +246,21 @@ var (
 	rxKafkaS   = regexp.MustCompile(`(?i)(?:kafkatemplate|kafkaproducer|producer)\.send\(\s*["']([^"']+)["']`)
 	rxSub      = regexp.MustCompile(`(?i)\.(subscribe|consume|queuesubscribe)\(\s*["']([^"']+)["']`)
 	rxFrontend = regexp.MustCompile(`(?i)from\s+["'](?:react|react-dom|vue|@angular/|svelte|next|nuxt|@tanstack/react-query)|createApp\(|defineComponent\(`)
+
+	// Django/DRF (.py): urls.py route table
+	rxDjango  = regexp.MustCompile(`(?i)\b(?:path|re_path|url)\(\s*r?["']([^"']+)["']`)
+	rxReGroup = regexp.MustCompile(`\(\?P<[^>]*>[^)]*\)|\([^)]*\)`)
+	// ASP.NET (.cs): attributes + minimal APIs
+	rxAspAttr  = regexp.MustCompile(`\[Http(Get|Post|Put|Delete|Patch)(?:\(\s*"([^"]*)")?`)
+	rxAspMap   = regexp.MustCompile(`\.Map(Get|Post|Put|Delete|Patch)\(\s*"([^"]+)"`)
+	rxAspRoute = regexp.MustCompile(`\[Route\(\s*"([^"]+)"`)
+	rxCsClass  = regexp.MustCompile(`class\s+(\w+?)Controller\b`)
+	// Ktor (.kt): routing DSL (bare verb + path starting "/")
+	rxKtor = regexp.MustCompile(`(?i)\b(get|post|put|delete|patch|route)\(\s*"(/[^"]*)"`)
+	// gRPC clients: generated stub/client construction + method calls (consumes)
+	rxGrpcNew  = regexp.MustCompile(`(\w+)\s*(?::=|=)\s*[\w.]*?New(\w+)Client\(`)
+	rxGrpcStub = regexp.MustCompile(`(\w+)\s*=\s*[\w.]*?(\w+)Stub\(`)
+	rxCall     = regexp.MustCompile(`\b(\w+)\.(\w+)\(`)
 )
 
 // fileRole classifies a source file as "frontend" (HTTP-client consumer) or
@@ -291,12 +306,66 @@ func joinPath(prefix, p string) string {
 
 func validTopic(s string) bool { return s != "" && !strings.HasPrefix(s, "/") }
 
+// djangoPath cleans a Django/DRF route pattern (path() or re_path() regex) into a
+// match template: strip ^$ anchors, collapse regex groups to {} (named groups too).
+// `<int:id>`-style converters are handled later by normPath.
+func djangoPath(p string) string {
+	p = strings.TrimPrefix(p, "^")
+	p = strings.TrimSuffix(p, "$")
+	return rxReGroup.ReplaceAllString(p, "{}")
+}
+
+// aspPath substitutes ASP.NET route tokens: [controller] → the controller class
+// name (without the "Controller" suffix), [action] → dropped.
+func aspPath(p, ctl string) string {
+	if p == "" {
+		return ""
+	}
+	p = strings.ReplaceAll(p, "[controller]", ctl)
+	p = strings.ReplaceAll(p, "[action]", "")
+	return p
+}
+
+// scanGrpcClients pre-scans a Go/Python file for generated gRPC client/stub
+// constructions, returning var-name → service-name so method calls on those vars
+// can be emitted as rpc consumes.
+func scanGrpcClients(data []byte, ext string) map[string]string {
+	vars := map[string]string{}
+	if ext != ".go" && ext != ".py" {
+		return vars
+	}
+	re := rxGrpcNew
+	if ext == ".py" {
+		re = rxGrpcStub
+	}
+	sc := bufio.NewScanner(bytes.NewReader(data))
+	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	for sc.Scan() {
+		for _, m := range re.FindAllStringSubmatch(sc.Text(), -1) {
+			if m[2] != "" {
+				vars[m[1]] = m[2]
+			}
+		}
+	}
+	return vars
+}
+
+var grpcSkipMethods = map[string]bool{"Close": true, "String": true, "Error": true, "Reset": true}
+
 func scanSource(rel string, data []byte) (provides, consumes []graph.Endpoint) {
 	frontend := fileRole(rel, data) == "frontend"
+	ext := strings.ToLower(filepathExt(rel))
+	grpcVars := scanGrpcClients(data, ext)
 	sc := bufio.NewScanner(bytes.NewReader(data))
 	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
 	line := 0
-	prefix := "" // current NestJS @Controller / Spring class @RequestMapping prefix
+	prefix := "" // current NestJS @Controller / Spring / ASP.NET class prefix
+	csCtl := ""  // ASP.NET controller name (for the [controller] token)
+	if ext == ".cs" {
+		if m := rxCsClass.FindSubmatch(data); m != nil { // pre-scan: [Route] often precedes the class line
+			csCtl = strings.ToLower(string(m[1]))
+		}
+	}
 	add := func(dst *[]graph.Endpoint, kind graph.EndpointKind, key, disp, source string, ln int) {
 		*dst = append(*dst, graph.Endpoint{
 			Kind: kind, Key: key, Display: disp, File: rel, Line: ln,
@@ -329,6 +398,14 @@ func scanSource(rel string, data []byte) (provides, consumes []graph.Endpoint) {
 		for _, m := range rxKafkaS.FindAllStringSubmatch(t, -1) {
 			if validTopic(m[1]) {
 				add(&consumes, graph.EPQueue, m[1], "publish "+m[1], "kafka", line)
+			}
+		}
+		if len(grpcVars) > 0 {
+			for _, m := range rxCall.FindAllStringSubmatch(t, -1) {
+				if svc, ok := grpcVars[m[1]]; ok && !grpcSkipMethods[m[2]] {
+					key := svc + "." + m[2]
+					add(&consumes, graph.EPRPC, key, key, "grpc", line)
+				}
 			}
 		}
 
@@ -395,6 +472,38 @@ func scanSource(rel string, data []byte) (provides, consumes []graph.Endpoint) {
 		for _, m := range rxKafkaL.FindAllStringSubmatch(t, -1) {
 			if tm := rxKafkaTop.FindStringSubmatch(m[1]); tm != nil {
 				add(&provides, graph.EPQueue, tm[1], "subscribe "+tm[1], "kafka", line)
+			}
+		}
+
+		// Django / DRF (.py): urls.py route table → http provides.
+		if ext == ".py" {
+			for _, m := range rxDjango.FindAllStringSubmatch(t, -1) {
+				if p := djangoPath(m[1]); p != "" {
+					full := joinPath(prefix, p)
+					add(&provides, graph.EPHTTP, httpKey("GET", full), "GET "+full, "route", line)
+				}
+			}
+		}
+		// ASP.NET (.cs): [controller] class, [Route] prefix, [HttpGet] attrs, MapGet.
+		if ext == ".cs" {
+			if m := rxCsClass.FindStringSubmatch(t); m != nil {
+				csCtl = strings.ToLower(m[1])
+			}
+			for _, m := range rxAspRoute.FindAllStringSubmatch(t, -1) {
+				prefix = strings.Trim(aspPath(m[1], csCtl), "/")
+			}
+			for _, m := range rxAspAttr.FindAllStringSubmatch(t, -1) {
+				full := joinPath(prefix, aspPath(m[2], csCtl))
+				add(&provides, graph.EPHTTP, httpKey(m[1], full), strings.ToUpper(m[1])+" "+full, "route", line)
+			}
+			for _, m := range rxAspMap.FindAllStringSubmatch(t, -1) {
+				add(&provides, graph.EPHTTP, httpKey(m[1], m[2]), strings.ToUpper(m[1])+" "+m[2], "route", line)
+			}
+		}
+		// Ktor (.kt): routing DSL.
+		if ext == ".kt" {
+			for _, m := range rxKtor.FindAllStringSubmatch(t, -1) {
+				add(&provides, graph.EPHTTP, httpKey(meth(m[1]), m[2]), strings.ToUpper(meth(m[1]))+" "+m[2], "route", line)
 			}
 		}
 	}

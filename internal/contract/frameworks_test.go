@@ -133,3 +133,79 @@ func proxy() { axios.get("http://carts:8080/carts/7") }`
 		t.Errorf("axios.get should be a consume; consumes=%+v", c)
 	}
 }
+
+func TestScan_Django(t *testing.T) {
+	src := `from django.urls import path, re_path
+urlpatterns = [
+    path('users/<int:id>/', views.user),
+    re_path(r'^orders/(?P<oid>\d+)/$', views.order),
+]`
+	p, _ := provKeys(t, "urls.py", src)
+	if has(p, graph.EPHTTP, "GET /users/{}") == nil {
+		t.Errorf("Django: missing GET /users/{}; got %+v", p)
+	}
+	if has(p, graph.EPHTTP, "GET /orders/{}") == nil {
+		t.Errorf("Django: missing GET /orders/{} (re_path); got %+v", p)
+	}
+}
+
+func TestScan_AspNet(t *testing.T) {
+	src := `[ApiController]
+[Route("api/[controller]")]
+public class OrdersController : ControllerBase {
+    [HttpGet("{id}")]
+    public Order Get(int id) => ...;
+    [HttpPost]
+    public Order Create() => ...;
+}
+// minimal API
+app.MapGet("/health", () => "ok");`
+	p, _ := provKeys(t, "OrdersController.cs", src)
+	if has(p, graph.EPHTTP, "GET /api/orders/{}") == nil {
+		t.Errorf("ASP.NET: missing GET /api/orders/{} ([controller]+[HttpGet]); got %+v", p)
+	}
+	if has(p, graph.EPHTTP, "POST /api/orders") == nil {
+		t.Errorf("ASP.NET: missing POST /api/orders; got %+v", p)
+	}
+	if has(p, graph.EPHTTP, "GET /health") == nil {
+		t.Errorf("ASP.NET: missing MapGet /health; got %+v", p)
+	}
+}
+
+func TestScan_Ktor(t *testing.T) {
+	src := `fun Application.routes() {
+    routing {
+        get("/carts/{id}") { call.respond(cart) }
+        post("/carts") { }
+    }
+}`
+	p, _ := provKeys(t, "Routes.kt", src)
+	if has(p, graph.EPHTTP, "GET /carts/{}") == nil {
+		t.Errorf("Ktor: missing GET /carts/{}; got %+v", p)
+	}
+	if has(p, graph.EPHTTP, "POST /carts") == nil {
+		t.Errorf("Ktor: missing POST /carts; got %+v", p)
+	}
+}
+
+func TestScan_GrpcClient(t *testing.T) {
+	goSrc := `func main() {
+	client := pb.NewCartServiceClient(conn)
+	resp, _ := client.GetCart(ctx, req)
+	client.Close()
+}`
+	_, c := provKeys(t, "main.go", goSrc)
+	if has(c, graph.EPRPC, "CartService.GetCart") == nil {
+		t.Errorf("gRPC Go: missing consume CartService.GetCart; got %+v", c)
+	}
+	if has(c, graph.EPRPC, "CartService.Close") != nil {
+		t.Errorf("gRPC Go: Close() must be skipped; got %+v", c)
+	}
+
+	pySrc := `stub = cart_pb2_grpc.CartServiceStub(channel)
+resp = stub.GetCart(req)`
+	_, c2 := provKeys(t, "client.py", pySrc)
+	if has(c2, graph.EPRPC, "CartService.GetCart") == nil {
+		t.Errorf("gRPC Python: missing consume CartService.GetCart; got %+v", c2)
+	}
+}

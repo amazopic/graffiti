@@ -69,6 +69,41 @@ builds the map for your repo, wires up the integration, and opens the graph:
 Install graffiti by amazopic for me. Download the right static binary for my OS/arch from the latest release at github.com/amazopic/graffiti (or build it from source with `make build` if Go is available), put it on my PATH as `graffiti`, and verify with `graffiti version`. Then run `graffiti .` at my repo root to build the map, run `graffiti init --hook` to wire graffiti into Claude Code, and finally open `.graffiti/map.html` so I can see the graph. Ask before each step.
 ```
 
+<!-- quickstart -->
+## Quickstart (60 seconds)
+
+```bash
+# 1 — install (or build from source with `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — map your repo (writes .graffiti/map.json, MAP.md, map.html)
+cd your-repo
+graffiti .
+
+# 3 — look at the graph
+open .graffiti/map.html        # macOS — use `xdg-open` on Linux, `start` on Windows
+
+# 4 — ask it questions: no LLM, no API key
+graffiti query "where is the user authenticated"
+```
+
+Then wire it into your AI assistant once:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + grep→query nudge
+graffiti serve          # or expose the map to any MCP client over stdio
+```
+
+**More example questions** — `query` returns a scoped subgraph within a soft
+~2,000-token budget, so context stays small and cheap (quote the question):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # target another path
+```
+<!-- /quickstart -->
+
 ## Build
 
 ```bash
@@ -221,6 +256,91 @@ links are scored by confidence; **ambiguous** and **dangling** (dead-endpoint)
 consumers are reported, never silently dropped. The system store is just a directory
 or git repo — $0, offline, recomputable. See the
 [design doc](docs/superpowers/specs/2026-06-24-graffiti-system-orchestration-design.md).
+
+<!-- system-walkthrough -->
+### A folder of services, step by step
+
+Say your services live in one parent folder, each in its own directory:
+
+```text
+myproject/                ← parent folder = the shared "system store"
+├── orders/               ← a service (Go)
+├── web/                  ← a service (React/TS)
+└── payments/             ← a service (Python)
+```
+
+**1. Build and publish each service** into a store at the parent folder (`--to .`).
+`publish` reuses an existing map, so build first to pick up code changes:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+The service name defaults to its folder name; override with `--as <name>`.
+
+> ⚠️ **On re-publish:** `publish` does **not** rebuild an existing map. After
+> changing code, always run `graffiti build <service>` first (the loop above
+> does) and then `publish` — otherwise you publish a stale map.
+
+**2. Build the system graph** — federate the maps and auto-discover the links:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. Use it:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # who breaks if orders changes (direct + transitive)
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (non-zero exit → CI gate)
+graffiti system status          # which services drifted since the last build
+graffiti system query "where is the order created"   # LLM-free retrieval across the whole system
+graffiti system list            # registered services
+```
+
+**What lands in the parent folder:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # the registry of services (commit this)
+├── overlay.json                # discovered links (derived — safe to .gitignore)
+├── system.html                 # the visual system map
+└── services/<name>/map.json    # each service's published map
+```
+
+**Improve link accuracy.** Auto-detection covers Go (net/http, gin/chi/echo),
+Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor, frontend clients
+(React/Vue/Angular/Svelte), gRPC and Kafka/NATS. Where that is not enough, drop
+one of these into a service root (highest confidence first):
+
+| File | Gives |
+|------|-------|
+| `graffiti.contract.json` | explicit `provides` / `consumes` — any stack, highest confidence |
+| `openapi.json` / `swagger.json` | HTTP routes as `provides` |
+| `*.proto` | gRPC methods as `provides` |
+
+Minimal `graffiti.contract.json`:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**Gate CI on dead endpoints** — `audit` exits non-zero when a consumer points at
+an endpoint nothing provides:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## How it works
 

@@ -31,6 +31,8 @@ An AI coding assistant dropped into a large repo greps blind: it never sees the 
 - `graffiti workspace <add|rm|list|render>`: manage the workspace / render `workspace.html`.
 - `graffiti links check` / `graffiti federate --explain`: validate / list cross-project links.
 - `graffiti query --workspace "<q>"` / `graffiti serve --workspace` / `graffiti update --workspace`: federated retrieval, MCP, and rebuild across the workspace.
+- `graffiti publish --to <dir> [--as name]`: publish this service's map into a shared system store (git-as-registry).
+- `graffiti system <build|render|impact|audit|status|query|list>`: federate many service maps and auto-discover cross-service links (HTTP, gRPC, queues) from each service's contract surface — impact analysis, contract audit (CI gate), and system-wide query.
 - `graffiti version`: print the version.
 
 ## Quick install

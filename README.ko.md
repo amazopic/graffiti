@@ -71,6 +71,41 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 amazopic이 만든 graffiti를 설치해 줘. github.com/amazopic/graffiti의 최신 릴리스에서 내 OS/아키텍처에 맞는 정적 바이너리를 받거나(Go가 있으면 `make build`로 소스에서 빌드해도 돼), `graffiti`라는 이름으로 내 PATH에 올린 다음 `graffiti version`으로 확인해 줘. 그다음 내 저장소 루트에서 `graffiti .`를 실행해 지도를 빌드하고, `graffiti init --hook`을 실행해 graffiti를 Claude Code에 연결하고, 마지막으로 `.graffiti/map.html`을 열어서 그래프를 볼 수 있게 해 줘. 각 단계 전에 먼저 물어봐 줘.
 ```
 
+<!-- quickstart -->
+## 빠른 시작 (60초)
+
+```bash
+# 1 — 설치 (또는 `make build`로 소스에서 빌드)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — 저장소 지도화 (.graffiti/map.json, MAP.md, map.html을 기록)
+cd your-repo
+graffiti .
+
+# 3 — 그래프 들여다보기
+open .graffiti/map.html        # macOS — Linux에서는 `xdg-open`, Windows에서는 `start`
+
+# 4 — 질문하기: LLM도, API 키도 없이
+graffiti query "where is the user authenticated"
+```
+
+그런 다음 AI 어시스턴트에 한 번만 연결해 두세요:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + grep→query 권유
+graffiti serve          # 또는 stdio를 통해 어떤 MCP 클라이언트에든 지도를 노출
+```
+
+**더 많은 예시 질문** — `query`는 약 2,000 토큰의 느슨한 예산 안에서 범위가 좁혀진
+서브그래프를 반환하므로, 컨텍스트가 작고 저렴하게 유지됩니다(질문은 따옴표로 감싸세요):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # 다른 경로를 대상으로
+```
+<!-- /quickstart -->
+
 ## 빌드
 
 ```bash
@@ -224,6 +259,92 @@ graffiti system query "where is the cart fetched and served"
 점수가 매겨지며, **모호한(ambiguous)** 소비자와 **끊어진(dangling)**(죽은 엔드포인트)
 소비자는 보고될 뿐, 결코 조용히 버려지지 않습니다. 시스템 스토어는 그저 디렉터리나 git
 저장소일 뿐입니다 — $0, 오프라인, 다시 계산 가능합니다.
+[설계 문서](docs/superpowers/specs/2026-06-24-graffiti-system-orchestration-design.md)를 참고하세요.
+
+<!-- system-walkthrough -->
+### 서비스 폴더, 단계별로
+
+서비스들이 하나의 상위 폴더 안에 각각 자체 디렉터리로 자리 잡고 있다고 합시다:
+
+```text
+myproject/                ← 상위 폴더 = 공유 "시스템 스토어"
+├── orders/               ← 서비스 (Go)
+├── web/                  ← 서비스 (React/TS)
+└── payments/             ← 서비스 (Python)
+```
+
+**1. 각 서비스를 빌드하고 게시**하여 상위 폴더의 스토어에 넣습니다(`--to .`).
+`publish`는 기존 지도를 재사용하므로, 코드 변경을 반영하려면 먼저 빌드하세요:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+서비스 이름은 기본적으로 폴더 이름을 따르며, `--as <name>`으로 재정의할 수 있습니다.
+
+> ⚠️ **재게시 시:** `publish`는 기존 지도를 **다시 빌드하지 않습니다**. 코드를
+> 변경한 뒤에는 항상 먼저 `graffiti build <service>`를 실행하고(위 루프가 그렇게 합니다)
+> 그다음 `publish`하세요 — 그러지 않으면 오래된 지도를 게시하게 됩니다.
+
+**2. 시스템 그래프를 빌드** — 지도들을 페더레이션하고 링크를 자동 발견합니다:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. 활용하기:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # who breaks if orders changes (direct + transitive)
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (non-zero exit → CI gate)
+graffiti system status          # which services drifted since the last build
+graffiti system query "where is the order created"   # LLM-free retrieval across the whole system
+graffiti system list            # registered services
+```
+
+**상위 폴더에 남는 것:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # 서비스 레지스트리 (이것을 커밋하세요)
+├── overlay.json                # 발견된 링크 (파생물 — .gitignore해도 안전)
+├── system.html                 # 시각적 시스템 지도
+└── services/<name>/map.json    # 각 서비스의 게시된 지도
+```
+
+**링크 정확도를 높이기.** 자동 감지는 Go(net/http, gin/chi/echo), Flask, FastAPI,
+Django/DRF, Spring, NestJS, ASP.NET, Ktor, 프런트엔드 클라이언트
+(React/Vue/Angular/Svelte), gRPC, Kafka/NATS를 다룹니다. 그것으로 충분하지 않은
+경우, 다음 중 하나를 서비스 루트에 넣으세요(신뢰도가 높은 순서대로):
+
+| File | Gives |
+|------|-------|
+| `graffiti.contract.json` | explicit `provides` / `consumes` — any stack, highest confidence |
+| `openapi.json` / `swagger.json` | HTTP routes as `provides` |
+| `*.proto` | gRPC methods as `provides` |
+
+최소한의 `graffiti.contract.json`:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**죽은 엔드포인트로 CI를 게이트하기** — 소비자가 아무것도 제공하지 않는 엔드포인트를
+가리키면 `audit`은 0이 아닌 종료 코드를 반환합니다:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## 작동 방식
 

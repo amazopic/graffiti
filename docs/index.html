@@ -76,9 +76,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/tokens.css?v=5" />
-    <link rel="stylesheet" href="css/base.css?v=5" />
-    <link rel="stylesheet" href="css/sections.css?v=5" />
+    <link rel="stylesheet" href="css/tokens.css?v=6" />
+    <link rel="stylesheet" href="css/base.css?v=6" />
+    <link rel="stylesheet" href="css/sections.css?v=6" />
 
     <!-- JSON-LD: SoftwareApplication -->
     <script type="application/ld+json">
@@ -274,6 +274,42 @@
             <article class="map-card"><h3 class="map-card__title" data-i18n="sys.f2.t">Impact analysis</h3><p class="map-card__desc" data-i18n-html="sys.f2.d">Change an endpoint → see every service that breaks.</p></article>
             <article class="map-card"><h3 class="map-card__title" data-i18n="sys.f3.t">Contract audit</h3><p class="map-card__desc" data-i18n-html="sys.f3.d">Dangling consumers, orphan providers, ambiguous matches.</p></article>
             <article class="map-card"><h3 class="map-card__title" data-i18n="sys.f4.t">Each service publishes its own map</h3><p class="map-card__desc" data-i18n-html="sys.f4.d">The orchestrator federates the published artifacts.</p></article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ 02b · SYSTEM GUIDE (folder of services) ═══════════════════ -->
+      <section class="s-install" aria-labelledby="guide-title" id="system-guide">
+        <div class="wrap">
+          <span class="compare-sub" data-i18n="guide.eyebrow">From zero to a system graph</span>
+          <h2 id="guide-title" class="install-title" data-i18n-html="guide.title">A folder of services,<br/>mapped in <em>three commands</em>.</h2>
+          <p class="install__intro" data-i18n-html="guide.body">Got a folder of independent services in subdirectories? Map them into one system graph — no merge, no cloud, no config.</p>
+
+          <div class="install-grid">
+            <div>
+              <div class="install-step"><div class="install-step__num">01</div><h3 class="install-step__title" data-i18n="guide.step1.t">Publish each service</h3><p class="install-step__desc" data-i18n-html="guide.step1.d">build then publish every subdirectory into a store at the parent folder.</p></div>
+              <div class="install-step"><div class="install-step__num">02</div><h3 class="install-step__title" data-i18n="guide.step2.t">Build the system graph</h3><p class="install-step__desc" data-i18n-html="guide.step2.d">system build federates the maps and auto-discovers cross-service links.</p></div>
+              <div class="install-step"><div class="install-step__num">03</div><h3 class="install-step__title" data-i18n="guide.step3.t">Explore &amp; guard</h3><p class="install-step__desc" data-i18n-html="guide.step3.d">render the map, ask impact/query, and gate CI with audit.</p></div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:1.5rem;">
+              <div class="install__code-wrap">
+                <span class="smcp" style="color:var(--sub); display:block; margin-bottom:0.5rem;" data-i18n="guide.term.label">in the parent folder of your services:</span>
+                <button class="copy-btn" data-copy="#guide-cmd" data-i18n="ui.copy">Copy</button>
+<pre class="code mono" id="guide-cmd"><span class="cmt"># parent folder; services live in ./orders, ./web, ./payments …</span>
+<span class="cmt"># 1 — build + publish every service into a shared store</span>
+for d in */; do graffiti build "$d" &amp;&amp; graffiti publish "$d" --to .; done
+
+<span class="cmt"># 2 — federate + auto-discover the calls between them</span>
+graffiti system build
+<span class="ok">✓</span> System: 3 services → 7 cross-service links <span class="dim">(0 ambiguous, 0 dangling). 0 API calls, $0.</span>
+
+<span class="cmt"># 3 — explore</span>
+graffiti system impact orders   <span class="cmt"># who breaks if orders changes</span>
+graffiti system render          <span class="cmt"># → .graffiti-system/system.html</span></pre>
+              </div>
+              <p class="install__refresh-tip" data-i18n-html="guide.note">Improve accuracy by dropping an openapi.json, a .proto, or a graffiti.contract.json into a service.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -597,6 +633,6 @@ graffiti query "auth flow"   <span class="cmt"># LLM-free scoped subgraph</span>
       <p style="padding:2rem;text-align:center;">This page is enhanced with JavaScript. graffiti is fully documented in the <a href="https://github.com/amazopic/graffiti">GitHub repository</a>.</p>
     </noscript>
 
-    <script type="module" src="js/main.js?v=5"></script>
+    <script type="module" src="js/main.js?v=6"></script>
   </body>
 </html>

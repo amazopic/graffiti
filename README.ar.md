@@ -69,6 +69,41 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 ثبّت لي graffiti من amazopic. نزّل الملف التنفيذي الثابت المناسب لنظام التشغيل/المعمارية لديّ من أحدث إصدار على github.com/amazopic/graffiti (أو ابنِه من المصدر بـ `make build` إن كان Go متاحًا)، وضعه في PATH باسم `graffiti`، وتحقّق منه بـ `graffiti version`. ثم شغّل `graffiti .` في جذر مستودعي لبناء الخريطة، وشغّل `graffiti init --hook` لربط graffiti بـ Claude Code، وأخيرًا افتح `.graffiti/map.html` كي أرى الرسم البياني. اسأل قبل كل خطوة.
 ```
 
+<!-- quickstart -->
+## بدء سريع (60 ثانية)
+
+```bash
+# 1 — التثبيت (أو البناء من المصدر بـ `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — خرائط مستودعك (تكتب .graffiti/map.json وMAP.md وmap.html)
+cd your-repo
+graffiti .
+
+# 3 — انظر إلى الرسم البياني
+open .graffiti/map.html        # macOS — استخدم `xdg-open` على Linux، و`start` على Windows
+
+# 4 — اطرح عليه الأسئلة: بلا نموذج لغوي، بلا مفتاح API
+graffiti query "where is the user authenticated"
+```
+
+ثم اربطه بمساعدك الذكي مرة واحدة:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + grep→query nudge
+graffiti serve          # أو اعرض الخريطة لأي عميل MCP عبر stdio
+```
+
+**مزيد من الأسئلة كأمثلة** — يُرجِع `query` رسمًا بيانيًا فرعيًا محدَّد النطاق ضمن ميزانية
+مرنة تبلغ ~2000 رمز، فيبقى السياق صغيرًا وزهيدًا (ضع السؤال بين علامتي اقتباس):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # استهدف مسارًا آخر
+```
+<!-- /quickstart -->
+
 ## البناء
 
 ```bash
@@ -220,6 +255,91 @@ graffiti system query "where is the cart fetched and served"
 للروابط بين الخدمات؛ ويُبلَّغ عن المستهلِكين **الملتبِسين** و**المعلّقين** (ذوي النقاط
 الطرفية الميتة)، ولا يُسقَطون أبدًا بصمت. مخزن النظام ليس سوى دليل أو مستودع git —
 بتكلفة 0$، يعمل دون اتصال، وقابل لإعادة الحساب.
+
+<!-- system-walkthrough -->
+### مجلد من الخدمات، خطوة بخطوة
+
+لنفترض أن خدماتك تعيش في مجلد أب واحد، كل واحدة في دليلها الخاص:
+
+```text
+myproject/                ← parent folder = the shared "system store"
+├── orders/               ← خدمة (Go)
+├── web/                  ← خدمة (React/TS)
+└── payments/             ← خدمة (Python)
+```
+
+**1. ابنِ كل خدمة وانشرها** في مخزن عند المجلد الأب (`--to .`).
+يعيد `publish` استخدام خريطة موجودة، لذا ابنِ أولًا لالتقاط تغييرات الشيفرة:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+يأخذ اسم الخدمة افتراضيًا اسم مجلدها؛ تجاوزه بـ `--as <name>`.
+
+> ⚠️ **عند إعادة النشر:** لا يعيد `publish` بناء خريطة موجودة. بعد
+> تغيير الشيفرة، شغّل دائمًا `graffiti build <service>` أولًا (كما تفعل الحلقة
+> أعلاه) ثم `publish` — وإلا فإنك تنشر خريطة قديمة.
+
+**2. ابنِ رسم النظام البياني** — اتّحِد الخرائط واكتشف الروابط تلقائيًا:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. استخدمه:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # من ينكسر إذا تغيّرت orders (مباشر + متعدٍّ)
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (non-zero exit → CI gate)
+graffiti system status          # أي خدمات انحرفت منذ آخر بناء
+graffiti system query "where is the order created"   # استرجاع خالٍ من نماذج اللغة عبر النظام بأكمله
+graffiti system list            # الخدمات المسجَّلة
+```
+
+**ما الذي يَحُلّ في المجلد الأب:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # سجل الخدمات (أودِع هذا)
+├── overlay.json                # الروابط المكتشَفة (مشتقة — آمن تجاهلها بـ .gitignore)
+├── system.html                 # خريطة النظام المرئية
+└── services/<name>/map.json    # خريطة كل خدمة المنشورة
+```
+
+**حسّن دقة الروابط.** يغطي الاكتشاف التلقائي Go (net/http، gin/chi/echo)،
+وFlask وFastAPI وDjango/DRF وSpring وNestJS وASP.NET وKtor وعملاء الواجهة الأمامية
+(React/Vue/Angular/Svelte) وgRPC وKafka/NATS. وحيث لا يكفي ذلك، أَسقِط
+أحد هذه في جذر خدمة (الأعلى ثقةً أولًا):
+
+| File | Gives |
+|------|-------|
+| `graffiti.contract.json` | تصريح `provides` / `consumes` — أي حزمة تقنية، أعلى ثقة |
+| `openapi.json` / `swagger.json` | مسارات HTTP كـ `provides` |
+| `*.proto` | توابع gRPC كـ `provides` |
+
+أدنى `graffiti.contract.json`:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**اجعل النقاط الطرفية الميتة بوابةً لـ CI** — يخرج `audit` بقيمة غير صفرية حين يشير
+مستهلِك إلى نقطة طرفية لا يوفّرها أحد:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## كيف تعمل
 

@@ -72,6 +72,42 @@ graphe :
 Installe graffiti d'amazopic pour moi. Télécharge le bon binaire statique pour mon OS/architecture depuis la dernière release sur github.com/amazopic/graffiti (ou compile-le depuis les sources avec `make build` si Go est disponible), place-le sur mon PATH sous le nom `graffiti`, et vérifie avec `graffiti version`. Ensuite, lance `graffiti .` à la racine de mon dépôt pour construire la carte, lance `graffiti init --hook` pour intégrer graffiti à Claude Code, et enfin ouvre `.graffiti/map.html` pour que je puisse voir le graphe. Demande-moi confirmation avant chaque étape.
 ```
 
+<!-- quickstart -->
+## Démarrage rapide (60 secondes)
+
+```bash
+# 1 — installer (ou compiler depuis les sources avec `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — cartographier votre dépôt (écrit .graffiti/map.json, MAP.md, map.html)
+cd your-repo
+graffiti .
+
+# 3 — regarder le graphe
+open .graffiti/map.html        # macOS — utilisez `xdg-open` sous Linux, `start` sous Windows
+
+# 4 — lui poser des questions : sans LLM, sans clé d'API
+graffiti query "where is the user authenticated"
+```
+
+Puis intégrez-le une seule fois à votre assistant IA :
+
+```bash
+graffiti init --hook    # Claude Code : skill + CLAUDE.md + incitation grep→query
+graffiti serve          # ou exposez la carte à n'importe quel client MCP via stdio
+```
+
+**Plus d'exemples de questions** — `query` renvoie un sous-graphe ciblé dans une limite
+souple d'environ 2 000 tokens, ce qui maintient le contexte petit et peu coûteux (mettez
+la question entre guillemets) :
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # cibler un autre chemin
+```
+<!-- /quickstart -->
+
 ## Build
 
 ```bash
@@ -229,6 +265,91 @@ explicite. Les liens inter-services sont notés selon leur niveau de confiance ;
 consommateurs **ambigus** et **orphelins** (point de terminaison mort) sont signalés,
 jamais abandonnés en silence. Le system store n'est qu'un répertoire ou un dépôt git —
 0 $, hors ligne, recalculable.
+
+<!-- system-walkthrough -->
+### Un dossier de services, étape par étape
+
+Supposons que vos services vivent dans un seul dossier parent, chacun dans son propre répertoire :
+
+```text
+myproject/                ← dossier parent = le « system store » partagé
+├── orders/               ← un service (Go)
+├── web/                  ← un service (React/TS)
+└── payments/             ← un service (Python)
+```
+
+**1. Construire et publier chaque service** dans un store au niveau du dossier parent (`--to .`).
+`publish` réutilise une carte existante, alors construisez d'abord pour prendre en compte les changements de code :
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+Le nom du service prend par défaut celui de son dossier ; remplacez-le avec `--as <name>`.
+
+> ⚠️ **À la republication :** `publish` ne **reconstruit pas** une carte existante. Après
+> avoir modifié le code, lancez toujours d'abord `graffiti build <service>` (la boucle ci-dessus
+> le fait) puis `publish` — sinon vous publiez une carte périmée.
+
+**2. Construire le graphe du système** — fédérer les cartes et découvrir automatiquement les liens :
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. L'utiliser :**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # who breaks if orders changes (direct + transitive)
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (non-zero exit → CI gate)
+graffiti system status          # which services drifted since the last build
+graffiti system query "where is the order created"   # LLM-free retrieval across the whole system
+graffiti system list            # registered services
+```
+
+**Ce qui atterrit dans le dossier parent :**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # the registry of services (commit this)
+├── overlay.json                # discovered links (derived — safe to .gitignore)
+├── system.html                 # the visual system map
+└── services/<name>/map.json    # each service's published map
+```
+
+**Améliorer la précision des liens.** La détection automatique couvre Go (net/http, gin/chi/echo),
+Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor, les clients frontend
+(React/Vue/Angular/Svelte), gRPC et Kafka/NATS. Lorsque cela ne suffit pas, déposez
+l'un de ces fichiers à la racine d'un service (le plus fiable en premier) :
+
+| File | Gives |
+|------|-------|
+| `graffiti.contract.json` | explicit `provides` / `consumes` — any stack, highest confidence |
+| `openapi.json` / `swagger.json` | HTTP routes as `provides` |
+| `*.proto` | gRPC methods as `provides` |
+
+`graffiti.contract.json` minimal :
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**Verrouiller la CI sur les points de terminaison morts** — `audit` sort avec un code non nul lorsqu'un
+consommateur pointe vers un point de terminaison que rien ne fournit :
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## Comment ça marche
 

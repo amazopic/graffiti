@@ -71,6 +71,42 @@ constrói o mapa do seu repositório, configura a integração e abre o grafo:
 Instale o graffiti, do amazopic, para mim. Baixe o binário estático certo para o meu SO/arquitetura a partir do último release em github.com/amazopic/graffiti (ou compile a partir do código-fonte com `make build` se o Go estiver disponível), coloque-o no meu PATH como `graffiti` e verifique com `graffiti version`. Em seguida, execute `graffiti .` na raiz do meu repositório para construir o mapa, execute `graffiti init --hook` para integrar o graffiti ao Claude Code e, por fim, abra o `.graffiti/map.html` para que eu possa ver o grafo. Pergunte antes de cada etapa.
 ```
 
+<!-- quickstart -->
+## Início rápido (60 segundos)
+
+```bash
+# 1 — instale (ou compile a partir do código-fonte com `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — mapeie seu repositório (escreve .graffiti/map.json, MAP.md, map.html)
+cd your-repo
+graffiti .
+
+# 3 — observe o grafo
+open .graffiti/map.html        # macOS — use `xdg-open` no Linux, `start` no Windows
+
+# 4 — faça perguntas a ele: sem LLM, sem chave de API
+graffiti query "where is the user authenticated"
+```
+
+Depois, integre-o ao seu assistente de IA uma única vez:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + aviso grep→query
+graffiti serve          # ou exponha o mapa a qualquer cliente MCP por stdio
+```
+
+**Mais perguntas de exemplo** — `query` retorna um subgrafo delimitado dentro de um
+orçamento flexível de ~2.000 tokens, então o contexto permanece pequeno e barato
+(coloque a pergunta entre aspas):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # mire em outro caminho
+```
+<!-- /quickstart -->
+
 ## Build
 
 ```bash
@@ -229,7 +265,94 @@ rotas de framework, chamadas de fila ou de um `graffiti.contract.json` explícit
 links entre serviços são pontuados por confiança; consumidores **ambíguos** e
 **pendentes** (com endpoint inexistente) são reportados, nunca descartados em silêncio.
 O repositório do sistema é apenas um diretório ou um repositório git — $0, offline,
-recalculável.
+recalculável. Veja o
+[documento de design](docs/superpowers/specs/2026-06-24-graffiti-system-orchestration-design.md).
+
+<!-- system-walkthrough -->
+### Uma pasta de serviços, passo a passo
+
+Suponha que seus serviços vivam em uma única pasta-pai, cada um em seu próprio diretório:
+
+```text
+myproject/                ← pasta-pai = o "repositório do sistema" compartilhado
+├── orders/               ← um serviço (Go)
+├── web/                  ← um serviço (React/TS)
+└── payments/             ← um serviço (Python)
+```
+
+**1. Construa e publique cada serviço** em um repositório na pasta-pai (`--to .`).
+O `publish` reutiliza um mapa existente, então faça o build primeiro para capturar
+alterações de código:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+O nome do serviço usa por padrão o nome da pasta; sobrescreva com `--as <name>`.
+
+> ⚠️ **Na republicação:** o `publish` **não** reconstrói um mapa existente. Após
+> alterar o código, sempre execute `graffiti build <service>` primeiro (o loop acima
+> faz isso) e então `publish` — caso contrário, você publica um mapa desatualizado.
+
+**2. Construa o grafo do sistema** — federe os mapas e descubra automaticamente os links:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. Use-o:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # who breaks if orders changes (direct + transitive)
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (non-zero exit → CI gate)
+graffiti system status          # which services drifted since the last build
+graffiti system query "where is the order created"   # LLM-free retrieval across the whole system
+graffiti system list            # registered services
+```
+
+**O que aparece na pasta-pai:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # the registry of services (commit this)
+├── overlay.json                # discovered links (derived — safe to .gitignore)
+├── system.html                 # the visual system map
+└── services/<name>/map.json    # each service's published map
+```
+
+**Melhore a precisão dos links.** A detecção automática cobre Go (net/http, gin/chi/echo),
+Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor, clientes de frontend
+(React/Vue/Angular/Svelte), gRPC e Kafka/NATS. Quando isso não for suficiente, coloque
+um destes na raiz de um serviço (maior confiança primeiro):
+
+| Arquivo | Fornece |
+|------|-------|
+| `graffiti.contract.json` | `provides` / `consumes` explícitos — qualquer stack, maior confiança |
+| `openapi.json` / `swagger.json` | rotas HTTP como `provides` |
+| `*.proto` | métodos gRPC como `provides` |
+
+`graffiti.contract.json` mínimo:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**Bloqueie o CI em endpoints inexistentes** — o `audit` sai com código diferente de
+zero quando um consumidor aponta para um endpoint que ninguém fornece:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## Como funciona
 

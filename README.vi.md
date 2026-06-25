@@ -70,6 +70,42 @@ cho repo của bạn, kết nối phần tích hợp, rồi mở đồ thị:
 Cài graffiti của amazopic giúp tôi. Tải đúng static binary cho OS/kiến trúc của tôi từ bản phát hành mới nhất tại github.com/amazopic/graffiti (hoặc build từ mã nguồn bằng `make build` nếu có Go), đặt nó vào PATH với tên `graffiti`, và xác minh bằng `graffiti version`. Sau đó chạy `graffiti .` ở thư mục gốc repo của tôi để build bản đồ, chạy `graffiti init --hook` để kết nối graffiti vào Claude Code, và cuối cùng mở `.graffiti/map.html` để tôi xem được đồ thị. Hãy hỏi tôi trước mỗi bước.
 ```
 
+<!-- quickstart -->
+## Bắt đầu nhanh (60 giây)
+
+```bash
+# 1 — cài đặt (hoặc build từ mã nguồn bằng `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — lập bản đồ cho repo của bạn (ghi ra .graffiti/map.json, MAP.md, map.html)
+cd your-repo
+graffiti .
+
+# 3 — xem đồ thị
+open .graffiti/map.html        # macOS — dùng `xdg-open` trên Linux, `start` trên Windows
+
+# 4 — đặt câu hỏi cho nó: không cần LLM, không cần API key
+graffiti query "where is the user authenticated"
+```
+
+Sau đó chỉ cần kết nối nó vào trợ lý AI của bạn một lần:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + gợi ý grep→query
+graffiti serve          # hoặc đưa bản đồ ra cho bất kỳ client MCP nào qua stdio
+```
+
+**Thêm câu hỏi ví dụ** — `query` trả về một đồ thị con đã được khoanh vùng trong
+ngân sách mềm khoảng ~2.000 token, nên ngữ cảnh giữ được nhỏ gọn và rẻ (hãy đặt câu
+hỏi trong dấu ngoặc kép):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # nhắm tới một đường dẫn khác
+```
+<!-- /quickstart -->
+
 ## Build
 
 ```bash
@@ -227,6 +263,91 @@ theo độ tin cậy; các bên tiêu thụ **mơ hồ (ambiguous)** và **lơ l
 trỏ tới điểm cuối đã chết — đều được báo cáo, không bao giờ bị âm thầm bỏ qua. Kho
 lưu trữ hệ thống chỉ đơn thuần là một thư mục hoặc một repo git — $0, ngoại tuyến,
 có thể tính toán lại.
+
+<!-- system-walkthrough -->
+### Một thư mục chứa các dịch vụ, từng bước một
+
+Giả sử các dịch vụ của bạn nằm trong một thư mục cha, mỗi dịch vụ ở thư mục riêng của nó:
+
+```text
+myproject/                ← thư mục cha = "kho lưu trữ hệ thống" dùng chung
+├── orders/               ← một dịch vụ (Go)
+├── web/                  ← một dịch vụ (React/TS)
+└── payments/             ← một dịch vụ (Python)
+```
+
+**1. Build và publish từng dịch vụ** vào một kho lưu trữ tại thư mục cha (`--to .`).
+`publish` tái sử dụng bản đồ hiện có, nên hãy build trước để cập nhật các thay đổi mã:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+Tên dịch vụ mặc định lấy theo tên thư mục của nó; ghi đè bằng `--as <name>`.
+
+> ⚠️ **Khi publish lại:** `publish` **không** build lại một bản đồ đã có. Sau khi
+> thay đổi mã, hãy luôn chạy `graffiti build <service>` trước (vòng lặp ở trên đã
+> làm vậy) rồi mới `publish` — nếu không bạn sẽ publish một bản đồ cũ.
+
+**2. Build đồ thị hệ thống** — liên kết các bản đồ và tự động khám phá các liên kết:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. Dùng nó:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (các dịch vụ là cấp cao nhất của cây)
+graffiti system impact orders   # ai bị hỏng nếu orders thay đổi (trực tiếp + bắc cầu)
+graffiti system audit           # bên tiêu thụ lơ lửng · bên cung cấp mồ côi · mơ hồ (thoát khác 0 → cổng CI)
+graffiti system status          # những dịch vụ nào đã trôi dạt kể từ lần build trước
+graffiti system query "where is the order created"   # truy xuất không cần LLM xuyên suốt cả hệ thống
+graffiti system list            # các dịch vụ đã đăng ký
+```
+
+**Những gì xuất hiện trong thư mục cha:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # sổ đăng ký các dịch vụ (hãy commit tệp này)
+├── overlay.json                # các liên kết đã khám phá (dẫn xuất — an toàn để .gitignore)
+├── system.html                 # bản đồ hệ thống trực quan
+└── services/<name>/map.json    # bản đồ đã publish của mỗi dịch vụ
+```
+
+**Cải thiện độ chính xác của liên kết.** Tự động phát hiện bao phủ Go (net/http,
+gin/chi/echo), Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor, các client
+frontend (React/Vue/Angular/Svelte), gRPC và Kafka/NATS. Ở những chỗ chừng đó là chưa
+đủ, hãy thả một trong các tệp này vào thư mục gốc của dịch vụ (độ tin cậy cao nhất trước):
+
+| Tệp | Cung cấp |
+|------|-------|
+| `graffiti.contract.json` | `provides` / `consumes` tường minh — bất kỳ stack nào, độ tin cậy cao nhất |
+| `openapi.json` / `swagger.json` | các route HTTP dưới dạng `provides` |
+| `*.proto` | các phương thức gRPC dưới dạng `provides` |
+
+`graffiti.contract.json` tối thiểu:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**Đặt cổng CI dựa trên các điểm cuối đã chết** — `audit` thoát với mã khác 0 khi một
+bên tiêu thụ trỏ tới một điểm cuối mà không gì cung cấp:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## Cách hoạt động
 

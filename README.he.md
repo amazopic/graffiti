@@ -69,6 +69,41 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 התקן לי את graffiti מאת amazopic. הורד את הקובץ הבינארי הסטטי המתאים למערכת ההפעלה/הארכיטקטורה שלי מהגרסה האחרונה ב-github.com/amazopic/graffiti (או בנה אותו מהמקור באמצעות `make build` אם Go זמין), הצב אותו ב-PATH שלי בשם `graffiti`, ואמת באמצעות `graffiti version`. לאחר מכן הרץ `graffiti .` בשורש המאגר שלי כדי לבנות את המפה, הרץ `graffiti init --hook` כדי לחבר את graffiti אל Claude Code, ולבסוף פתח את `.graffiti/map.html` כדי שאוכל לראות את הגרף. שאל לפני כל שלב.
 ```
 
+<!-- quickstart -->
+## התחלה מהירה (60 שניות)
+
+```bash
+# 1 — install (or build from source with `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — map your repo (writes .graffiti/map.json, MAP.md, map.html)
+cd your-repo
+graffiti .
+
+# 3 — look at the graph
+open .graffiti/map.html        # macOS — use `xdg-open` on Linux, `start` on Windows
+
+# 4 — ask it questions: no LLM, no API key
+graffiti query "where is the user authenticated"
+```
+
+לאחר מכן חברו אותו אל עוזר הבינה המלאכותית שלכם פעם אחת:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + grep→query nudge
+graffiti serve          # or expose the map to any MCP client over stdio
+```
+
+**עוד שאלות לדוגמה** — `query` מחזיר תת-גרף ממוקד בתוך תקציב רך של
+‏~2,000 טוקנים, כך שההקשר נשאר קטן וזול (הקיפו את השאלה במרכאות):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # target another path
+```
+<!-- /quickstart -->
+
 ## Build
 
 ```bash
@@ -219,7 +254,93 @@ graffiti system query "where is the cart fetched and served"
 נתיבי framework, קריאות לתורים, או קובץ `graffiti.contract.json` מפורש. הקישורים
 בין השירותים מדורגים לפי רמת ביטחון; צרכנים **דו-משמעיים** (ambiguous) ו**תלושים**
 (dangling — נקודת קצה מתה) מדווחים, ולעולם אינם מושמטים בשקט. מאגר המערכת הוא פשוט
-ספרייה או מאגר git — ‏$0, לא מקוון, ניתן לחישוב מחדש.
+ספרייה או מאגר git — ‏$0, לא מקוון, ניתן לחישוב מחדש. ראו את
+[מסמך התכן](docs/superpowers/specs/2026-06-24-graffiti-system-orchestration-design.md).
+
+<!-- system-walkthrough -->
+### תיקיית שירותים, שלב אחר שלב
+
+נניח שהשירותים שלכם נמצאים בתיקיית אב אחת, כל אחד בספרייה משלו:
+
+```text
+myproject/                ← parent folder = the shared "system store"
+├── orders/               ← a service (Go)
+├── web/                  ← a service (React/TS)
+└── payments/             ← a service (Python)
+```
+
+**1. בנו ופרסמו כל שירות** לתוך מאגר בתיקיית האב (`--to .`).
+‏`publish` עושה שימוש חוזר במפה קיימת, לכן בנו תחילה כדי לקלוט שינויים בקוד:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+שם השירות מוגדר כברירת מחדל לשם התיקייה שלו; דרסו זאת באמצעות `--as <name>`.
+
+> ⚠️ **בעת פרסום מחדש:** `publish` **אינו** בונה מחדש מפה קיימת. לאחר
+> שינוי קוד, תמיד הריצו תחילה `graffiti build <service>` (הלולאה לעיל
+> עושה זאת) ולאחר מכן `publish` — אחרת תפרסמו מפה מיושנת.
+
+**2. בנו את גרף המערכת** — אחדו את המפות וגלו את הקישורים אוטומטית:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. השתמשו בו:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # who breaks if orders changes (direct + transitive)
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (non-zero exit → CI gate)
+graffiti system status          # which services drifted since the last build
+graffiti system query "where is the order created"   # LLM-free retrieval across the whole system
+graffiti system list            # registered services
+```
+
+**מה נוחת בתיקיית האב:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # the registry of services (commit this)
+├── overlay.json                # discovered links (derived — safe to .gitignore)
+├── system.html                 # the visual system map
+└── services/<name>/map.json    # each service's published map
+```
+
+**שפרו את דיוק הקישורים.** הזיהוי האוטומטי מכסה את Go (net/http, gin/chi/echo),
+Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor, לקוחות frontend
+‏(React/Vue/Angular/Svelte), gRPC ו-Kafka/NATS. כאשר זה לא מספיק, הניחו
+אחד מאלה בשורש שירות (הביטחון הגבוה ביותר תחילה):
+
+| File | Gives |
+|------|-------|
+| `graffiti.contract.json` | explicit `provides` / `consumes` — any stack, highest confidence |
+| `openapi.json` / `swagger.json` | HTTP routes as `provides` |
+| `*.proto` | gRPC methods as `provides` |
+
+‏`graffiti.contract.json` מינימלי:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**הגנו על CI מפני נקודות קצה מתות** — `audit` יוצא עם קוד שאינו אפס כאשר צרכן מצביע
+אל נקודת קצה שדבר אינו מספק:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## איך זה עובד
 

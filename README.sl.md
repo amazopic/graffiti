@@ -71,6 +71,41 @@ datoteko, zgradi zemljevid za vaš repozitorij, vzpostavi integracijo in odpre g
 Namesti mi graffiti od amazopic. Iz zadnje izdaje na github.com/amazopic/graffiti prenesi pravo statično binarno datoteko za moj OS/arhitekturo (ali pa jo zgradi iz izvorne kode z `make build`, če je na voljo Go), jo postavi v moj PATH kot `graffiti` in preveri z `graffiti version`. Nato v korenu mojega repozitorija zaženi `graffiti .`, da zgradiš zemljevid, zaženi `graffiti init --hook`, da vključiš graffiti v Claude Code, in na koncu odpri `.graffiti/map.html`, da vidim graf. Pred vsakim korakom vprašaj.
 ```
 
+<!-- quickstart -->
+## Hitri začetek (60 sekund)
+
+```bash
+# 1 — namestitev (ali gradnja iz izvorne kode z `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — preslikajte svoj repozitorij (zapiše .graffiti/map.json, MAP.md, map.html)
+cd your-repo
+graffiti .
+
+# 3 — oglejte si graf
+open .graffiti/map.html        # macOS — uporabite `xdg-open` v Linuxu, `start` v Windows
+
+# 4 — postavljajte mu vprašanja: brez LLM, brez API-ključa
+graffiti query "where is the user authenticated"
+```
+
+Nato ga enkrat vključite v svojega UI pomočnika:
+
+```bash
+graffiti init --hook    # Claude Code: spretnost + CLAUDE.md + namig grep→query
+graffiti serve          # ali izpostavite zemljevid kateremu koli odjemalcu MCP prek stdio
+```
+
+**Več primerov vprašanj** — `query` vrne omejen podgraf znotraj mehkega
+proračuna ~2.000 žetonov, zato kontekst ostane majhen in poceni (vprašanje dajte v narekovaje):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # ciljajte na drugo pot
+```
+<!-- /quickstart -->
+
 ## Build
 
 ```bash
@@ -230,6 +265,91 @@ Vsak zemljevid nosi **pogodbeno površino**, izvlečeno iz `openapi.json`,
 **dvoumni** in **viseči** (mrtva končna točka) porabniki so prijavljeni, nikoli
 tiho zavrženi. Sistemska shramba je le imenik ali repozitorij git — $0, brez
 povezave, ponovno izračunljiva.
+
+<!-- system-walkthrough -->
+### Mapa storitev, korak za korakom
+
+Recimo, da vaše storitve živijo v eni nadrejeni mapi, vsaka v svojem imeniku:
+
+```text
+myproject/                ← nadrejena mapa = skupna "sistemska shramba"
+├── orders/               ← storitev (Go)
+├── web/                  ← storitev (React/TS)
+└── payments/             ← storitev (Python)
+```
+
+**1. Zgradite in objavite vsako storitev** v shrambo v nadrejeni mapi (`--to .`).
+`publish` ponovno uporabi obstoječi zemljevid, zato najprej zgradite, da zajamete spremembe kode:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+Ime storitve privzeto prevzame ime svoje mape; prepišite ga z `--as <name>`.
+
+> ⚠️ **Pri ponovni objavi:** `publish` obstoječega zemljevida **ne** zgradi
+> znova. Po spremembi kode vedno najprej zaženite `graffiti build <service>`
+> (zanka zgoraj to stori) in nato `publish` — sicer objavite zastarel zemljevid.
+
+**2. Zgradite sistemski graf** — federirajte zemljevide in samodejno odkrijte povezave:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. Uporabite ga:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (storitve kot najvišja raven drevesa)
+graffiti system impact orders   # kdo se zlomi, če se orders spremeni (neposredno + tranzitivno)
+graffiti system audit           # viseči porabniki · osiroteli ponudniki · dvoumni (izhod, ki ni nič → vrata CI)
+graffiti system status          # katere storitve so se premaknile od zadnje gradnje
+graffiti system query "where is the order created"   # pridobivanje brez LLM čez celoten sistem
+graffiti system list            # registrirane storitve
+```
+
+**Kaj pristane v nadrejeni mapi:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # register storitev (tega commitajte)
+├── overlay.json                # odkrite povezave (izpeljano — varno za .gitignore)
+├── system.html                 # vizualni sistemski zemljevid
+└── services/<name>/map.json    # objavljeni zemljevid vsake storitve
+```
+
+**Izboljšajte natančnost povezav.** Samodejno zaznavanje pokriva Go (net/http,
+gin/chi/echo), Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor,
+sprednje odjemalce (React/Vue/Angular/Svelte), gRPC in Kafka/NATS. Kjer to ne
+zadošča, spustite eno od teh datotek v koren storitve (najprej tiste z najvišjim zaupanjem):
+
+| Datoteka | Daje |
+|------|-------|
+| `graffiti.contract.json` | izrecno `provides` / `consumes` — kateri koli sklad, najvišje zaupanje |
+| `openapi.json` / `swagger.json` | poti HTTP kot `provides` |
+| `*.proto` | metode gRPC kot `provides` |
+
+Minimalni `graffiti.contract.json`:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**Zaprite vrata CI ob mrtvih končnih točkah** — `audit` se konča z neničelnim
+izhodom, kadar porabnik kaže na končno točko, ki je nič ne ponuja:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## Kako deluje
 

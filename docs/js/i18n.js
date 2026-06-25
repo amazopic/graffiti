@@ -3,7 +3,7 @@
 // All other locales are lazy-loaded per-code chunks from ./locales/<code>.js
 // ─────────────────────────────────────────────────────────────────────
 
-export const ASSET_V = '5';
+export const ASSET_V = '6';
 
 export const supportedLocales = [
   { code: 'en',   label: 'English',     native: 'English'    },
@@ -90,6 +90,18 @@ const en = {
   "sys.f3.d": "Dangling consumers, orphan providers and ambiguous matches — a CI gate for your wire contracts.",
   "sys.f4.t": "Each service publishes its own map",
   "sys.f4.d": "Per-repo CI builds a map + contract; the orchestrator federates the published artifacts (git-as-registry, $0).",
+
+  "guide.eyebrow": "From zero to a system graph",
+  "guide.title": "A folder of services,<br/>mapped in <em>three commands</em>.",
+  "guide.body": "Got a folder of independent services in subdirectories? Map them into one system graph — no merge, no cloud, no config. Each service is built and published into a shared store; the orchestrator discovers the calls between them and draws the cross-service edges.",
+  "guide.step1.t": "Publish each service",
+  "guide.step1.d": "<code class=\"mono\">graffiti build</code> then <code class=\"mono\">publish</code> every subdirectory into a store at the parent folder.",
+  "guide.step2.t": "Build the system graph",
+  "guide.step2.d": "<code class=\"mono\">graffiti system build</code> federates the maps and auto-discovers the cross-service links.",
+  "guide.step3.t": "Explore & guard",
+  "guide.step3.d": "Render the map, ask <code class=\"mono\">impact</code> / <code class=\"mono\">query</code>, and gate CI with <code class=\"mono\">audit</code>.",
+  "guide.term.label": "in the parent folder of your services:",
+  "guide.note": "Improve accuracy by dropping an <code class=\"mono\">openapi.json</code>, a <code class=\"mono\">.proto</code>, or an explicit <code class=\"mono\">graffiti.contract.json</code> into a service. After code changes, re-run <code class=\"mono\">build</code> → <code class=\"mono\">publish</code> → <code class=\"mono\">system build</code>.",
 
   "vibe.eyebrow": "Vibe-chill install",
   "vibe.title": "Why touch a terminal<br/>when you have <em>Claude Code</em>?",

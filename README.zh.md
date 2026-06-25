@@ -67,6 +67,41 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 帮我安装 amazopic 的 graffiti。从 github.com/amazopic/graffiti 的最新发布中下载适配我操作系统/架构的静态二进制文件(如果有 Go，也可以用 `make build` 从源码构建),把它作为 `graffiti` 放到我的 PATH 上，并用 `graffiti version` 验证。然后在我的仓库根目录运行 `graffiti .` 构建地图,运行 `graffiti init --hook` 把 graffiti 接入 Claude Code,最后打开 `.graffiti/map.html` 让我看到图谱。每一步执行前都先问我。
 ```
 
+<!-- quickstart -->
+## 快速上手(60 秒)
+
+```bash
+# 1 — 安装(或用 `make build` 从源码构建)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — 为你的仓库构建地图(写出 .graffiti/map.json、MAP.md、map.html)
+cd your-repo
+graffiti .
+
+# 3 — 查看图谱
+open .graffiti/map.html        # macOS —— Linux 上用 `xdg-open`，Windows 上用 `start`
+
+# 4 — 向它提问:无需 LLM，无需 API 密钥
+graffiti query "where is the user authenticated"
+```
+
+然后只需将它接入你的 AI 助手一次:
+
+```bash
+graffiti init --hook    # Claude Code:skill + CLAUDE.md + grep→query 提示
+graffiti serve          # 或通过 stdio 把地图暴露给任意 MCP 客户端
+```
+
+**更多示例问题** —— `query` 会在约 2,000 token 的软预算内返回一个限定范围的
+子图，因此上下文保持精简且低成本(记得给问题加上引号):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # 指向另一个路径
+```
+<!-- /quickstart -->
+
 ## 构建
 
 ```bash
@@ -215,6 +250,91 @@ graffiti system query "where is the cart fetched and served"
 **有歧义的(ambiguous)**与**悬空的(dangling，即死端点)**消费者都会被报告出来，
 绝不会被悄无声息地丢弃。系统存储不过是一个目录或一个 git 仓库 —— $0 成本、完全
 离线、可重新计算。
+
+<!-- system-walkthrough -->
+### 一个装满服务的文件夹，逐步演练
+
+假设你的各个服务都放在同一个父文件夹中，每个服务各占一个目录:
+
+```text
+myproject/                ← 父文件夹 = 共享的“系统存储”
+├── orders/               ← 一个服务(Go)
+├── web/                  ← 一个服务(React/TS)
+└── payments/             ← 一个服务(Python)
+```
+
+**1. 构建并发布每个服务**到位于父文件夹的存储中(`--to .`)。
+`publish` 会复用已有的地图，所以要先 build 以纳入代码变更:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+服务名默认取其文件夹名;可用 `--as <name>` 覆盖。
+
+> ⚠️ **重新发布时:** `publish` **不会**重新构建已有的地图。改动代码后，
+> 务必先运行 `graffiti build <service>`(上面的循环已经这么做了),然后再
+> `publish` —— 否则你发布的将是一张过时的地图。
+
+**2. 构建系统图谱** —— 联邦各个地图并自动发现它们之间的链接:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. 使用它:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # 如果 orders 变了，谁会受影响(直接 + 传递)
+graffiti system audit           # 悬空消费者 · 孤立提供者 · 有歧义项(非零退出码 → CI 关卡)
+graffiti system status          # 自上次构建以来哪些服务发生了漂移
+graffiti system query "where is the order created"   # 跨整个系统的无 LLM 检索
+graffiti system list            # 已注册的服务
+```
+
+**最终落在父文件夹中的内容:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # 服务的注册表(提交这个)
+├── overlay.json                # 发现的链接(派生而来 —— 可安全地 .gitignore)
+├── system.html                 # 可视化的系统地图
+└── services/<name>/map.json    # 每个服务发布的地图
+```
+
+**提升链接准确度。** 自动检测覆盖 Go(net/http、gin/chi/echo)、
+Flask、FastAPI、Django/DRF、Spring、NestJS、ASP.NET、Ktor、前端客户端
+(React/Vue/Angular/Svelte)、gRPC 以及 Kafka/NATS。如果这还不够，可将以下
+之一放入服务根目录(按置信度从高到低):
+
+| 文件 | 提供 |
+|------|-------|
+| `graffiti.contract.json` | 显式的 `provides` / `consumes` —— 任意技术栈，置信度最高 |
+| `openapi.json` / `swagger.json` | 把 HTTP 路由作为 `provides` |
+| `*.proto` | 把 gRPC 方法作为 `provides` |
+
+最小化的 `graffiti.contract.json`:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**在 CI 中对死端点设卡** —— 当某个消费者指向一个无人提供的端点时，
+`audit` 会以非零状态退出:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## 工作原理
 

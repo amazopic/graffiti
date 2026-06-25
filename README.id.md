@@ -71,6 +71,42 @@ membangun peta untuk repo Anda, menyambungkan integrasinya, dan membuka grafnya:
 Install graffiti buatan amazopic untuk saya. Unduh binary statis yang tepat untuk OS/arsitektur saya dari rilis terbaru di github.com/amazopic/graffiti (atau build dari sumber dengan `make build` jika Go tersedia), letakkan di PATH saya sebagai `graffiti`, dan verifikasi dengan `graffiti version`. Lalu jalankan `graffiti .` di root repo saya untuk membangun peta, jalankan `graffiti init --hook` untuk menyambungkan graffiti ke Claude Code, dan terakhir buka `.graffiti/map.html` agar saya bisa melihat grafnya. Tanyakan sebelum setiap langkah.
 ```
 
+<!-- quickstart -->
+## Mulai cepat (60 detik)
+
+```bash
+# 1 — instal (atau build dari sumber dengan `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — petakan repo Anda (menulis .graffiti/map.json, MAP.md, map.html)
+cd your-repo
+graffiti .
+
+# 3 — lihat grafnya
+open .graffiti/map.html        # macOS — gunakan `xdg-open` di Linux, `start` di Windows
+
+# 4 — ajukan pertanyaan padanya: tanpa LLM, tanpa kunci API
+graffiti query "where is the user authenticated"
+```
+
+Lalu sambungkan ke asisten AI Anda sekali saja:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + dorongan grep→query
+graffiti serve          # atau ekspos peta ke klien MCP apa pun melalui stdio
+```
+
+**Lebih banyak contoh pertanyaan** — `query` mengembalikan subgraf tercakup dalam
+anggaran lunak ~2.000-token, sehingga konteks tetap kecil dan murah (kutip
+pertanyaannya):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # targetkan path lain
+```
+<!-- /quickstart -->
+
 ## Build
 
 ```bash
@@ -224,6 +260,91 @@ route framework, panggilan queue, atau `graffiti.contract.json` eksplisit. Tauta
 diberi skor berdasarkan keyakinan; consumer yang **ambigu** dan **dangling** (endpoint-mati)
 dilaporkan, tidak pernah dibuang secara diam-diam. System store hanyalah sebuah direktori
 atau repo git — $0, offline, bisa dihitung ulang.
+
+<!-- system-walkthrough -->
+### Sebuah folder layanan, langkah demi langkah
+
+Misalkan layanan-layanan Anda berada dalam satu folder induk, masing-masing di direktorinya sendiri:
+
+```text
+myproject/                ← folder induk = "system store" bersama
+├── orders/               ← sebuah layanan (Go)
+├── web/                  ← sebuah layanan (React/TS)
+└── payments/             ← sebuah layanan (Python)
+```
+
+**1. Build dan publish setiap layanan** ke sebuah store di folder induk (`--to .`).
+`publish` menggunakan kembali peta yang sudah ada, jadi build dulu untuk menangkap perubahan kode:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+Nama layanan secara default mengikuti nama foldernya; timpa dengan `--as <name>`.
+
+> ⚠️ **Saat publish ulang:** `publish` **tidak** membangun ulang peta yang sudah ada.
+> Setelah mengubah kode, selalu jalankan `graffiti build <service>` terlebih dahulu (loop di atas
+> melakukannya) lalu `publish` — jika tidak, Anda mem-publish peta yang basi.
+
+**2. Build graf sistem** — federasikan peta-peta itu dan temukan tautannya secara otomatis:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. Gunakan:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # who breaks if orders changes (direct + transitive)
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (non-zero exit → CI gate)
+graffiti system status          # which services drifted since the last build
+graffiti system query "where is the order created"   # LLM-free retrieval across the whole system
+graffiti system list            # registered services
+```
+
+**Apa yang muncul di folder induk:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # the registry of services (commit this)
+├── overlay.json                # discovered links (derived — safe to .gitignore)
+├── system.html                 # the visual system map
+└── services/<name>/map.json    # each service's published map
+```
+
+**Tingkatkan akurasi tautan.** Deteksi otomatis mencakup Go (net/http, gin/chi/echo),
+Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor, klien frontend
+(React/Vue/Angular/Svelte), gRPC dan Kafka/NATS. Bila itu tidak cukup, letakkan
+salah satu dari ini ke root sebuah layanan (keyakinan tertinggi lebih dahulu):
+
+| File | Memberikan |
+|------|-------|
+| `graffiti.contract.json` | `provides` / `consumes` eksplisit — stack apa pun, keyakinan tertinggi |
+| `openapi.json` / `swagger.json` | route HTTP sebagai `provides` |
+| `*.proto` | metode gRPC sebagai `provides` |
+
+`graffiti.contract.json` minimal:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**Jadikan endpoint mati sebagai gate CI** — `audit` keluar dengan kode non-nol ketika sebuah
+consumer menunjuk ke endpoint yang tidak disediakan apa pun:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## Cara kerjanya
 

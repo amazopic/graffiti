@@ -67,6 +67,14 @@ generics, nested definitions, dynamic dispatch) rather than emitting guesses.
 - `graffiti federate --explain` — print the computed cross-project links.
 - `graffiti query --workspace "<q>"` / `serve --workspace` / `update --workspace`
   — federated retrieval, MCP, and rebuild across the workspace.
+- `graffiti publish --to <dir> [--as name]` — publish this service's built map
+  into a shared system store (git-as-registry). Builds the map first if needed.
+- `graffiti system <build|render|impact|audit|status|query|list>` — federate the
+  published service maps and auto-discover cross-service links (HTTP, gRPC,
+  queues) from each service's contract surface. `build` discovers the links;
+  `render` writes `.graffiti-system/system.html`; `impact <svc[::key]>` lists who
+  breaks; `audit` reports dangling/orphan/ambiguous (non-zero exit gates CI);
+  `status` shows drift; `query "<q>"` retrieves across the whole system.
 - `graffiti version` — print the version.
 
 ## Install
@@ -79,6 +87,46 @@ The installer picks the right static binary for your OS/arch, verifies its
 SHA256 against the signed release manifest, and installs it. Pin a version or
 directory with `GRAFFITI_VERSION` and `INSTALL_DIR`. Or build from source with
 `make build` (CGO-free, ~10 MB). Verify with `graffiti version`.
+
+## Quickstart
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+graffiti .                                  # build the map for the current repo
+open .graffiti/map.html                     # see the graph (xdg-open / start elsewhere)
+graffiti query "where is the user authenticated"   # LLM-free scoped retrieval
+graffiti init --hook                        # wire into Claude Code (skill + CLAUDE.md + nudge)
+```
+
+## Multi-service system orchestration
+
+A microservice system is many independent repos that together form one product —
+often a single parent folder with one subdirectory per service. graffiti maps each
+service, then discovers the edges between them. From the parent folder:
+
+```bash
+# 1 — build + publish every service into a shared store
+for d in */; do graffiti build "$d" && graffiti publish "$d" --to .; done
+# 2 — federate + auto-discover the cross-service links
+graffiti system build
+# 3 — explore / guard
+graffiti system impact orders   # which services break if orders changes
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (CI gate)
+```
+
+This writes `.graffiti-system/` at the parent folder: `system.json` (the
+committable registry of services), `services/<name>/map.json` (each published
+map), `overlay.json` (the discovered links, derived/gitignorable), and
+`system.html` (the visual system map with services as the top tree level).
+Cross-service links are discovered from each map's contract surface — extracted
+from `openapi.json`, `.proto`, framework routes (Go net/http, gin/chi/echo,
+Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor), gRPC server
+registration, queue calls (Kafka/NATS), and frontend HTTP clients
+(React/Vue/Angular/Svelte), or declared explicitly in `graffiti.contract.json`.
+Matches are confidence-scored; ambiguous and dangling (dead-endpoint) consumers
+are reported, never silently dropped. `publish` reuses an existing map, so
+rebuild a service (`graffiti build`) before re-publishing it after code changes.
+The system store is just a directory or git repo — $0, offline, recomputable.
 
 ## Frequently asked questions
 

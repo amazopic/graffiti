@@ -71,6 +71,42 @@ deponuz için haritayı oluşturur, entegrasyonu bağlar ve grafiği açar:
 Benim için amazopic'in graffiti'sini kur. github.com/amazopic/graffiti adresindeki en son sürümden işletim sistemime/mimarime uygun statik ikili dosyayı indir (ya da Go varsa `make build` ile kaynaktan derle), `graffiti` olarak PATH'ime ekle ve `graffiti version` ile doğrula. Ardından haritayı oluşturmak için depo kökümde `graffiti .` çalıştır, graffiti'yi Claude Code'a bağlamak için `graffiti init --hook` çalıştır ve son olarak grafiği görebilmem için `.graffiti/map.html` dosyasını aç. Her adımdan önce sor.
 ```
 
+<!-- quickstart -->
+## Hızlı başlangıç (60 saniye)
+
+```bash
+# 1 — kur (ya da `make build` ile kaynaktan derle)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — deponu haritala (.graffiti/map.json, MAP.md, map.html yazar)
+cd your-repo
+graffiti .
+
+# 3 — grafiğe bak
+open .graffiti/map.html        # macOS — Linux'ta `xdg-open`, Windows'ta `start` kullan
+
+# 4 — ona sorular sor: LLM yok, API anahtarı yok
+graffiti query "where is the user authenticated"
+```
+
+Ardından bir kez yapay zeka asistanına bağla:
+
+```bash
+graffiti init --hook    # Claude Code: beceri + CLAUDE.md + grep→query teşviki
+graffiti serve          # ya da haritayı stdio üzerinden herhangi bir MCP istemcisine sun
+```
+
+**Daha fazla örnek soru** — `query`, yumuşak ~2.000 jetonluk bir bütçe içinde
+kapsamlı bir alt grafik döndürür, böylece bağlam küçük ve ucuz kalır (soruyu tırnak
+içine alın):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # başka bir yolu hedefle
+```
+<!-- /quickstart -->
+
 ## Derleme
 
 ```bash
@@ -230,6 +266,92 @@ bir `graffiti.contract.json` dosyasından çıkarılan bir **sözleşme yüzeyi*
 Servisler arası bağlantılar güven düzeyine göre puanlanır; **belirsiz** ve **boşta**
 (ölü uç noktalı) tüketiciler raporlanır, asla sessizce atılmaz. Sistem deposu yalnızca
 bir dizin veya git deposudur — $0, çevrimdışı, yeniden hesaplanabilir.
+
+<!-- system-walkthrough -->
+### Adım adım, bir servisler klasörü
+
+Diyelim ki servisleriniz tek bir üst klasörde, her biri kendi dizininde yaşıyor:
+
+```text
+myproject/                ← üst klasör = paylaşılan "sistem deposu"
+├── orders/               ← bir servis (Go)
+├── web/                  ← bir servis (React/TS)
+└── payments/             ← bir servis (Python)
+```
+
+**1. Her servisi derleyin ve yayımlayın** — üst klasördeki bir depoya (`--to .`).
+`publish` mevcut bir haritayı yeniden kullanır, bu yüzden kod değişikliklerini almak için önce derleyin:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+Servis adı varsayılan olarak klasör adıdır; `--as <name>` ile değiştirin.
+
+> ⚠️ **Yeniden yayımlarken:** `publish` mevcut bir haritayı yeniden **derlemez**.
+> Kodu değiştirdikten sonra her zaman önce `graffiti build <service>` çalıştırın
+> (yukarıdaki döngü bunu yapar) ve ardından `publish` yapın — aksi halde eskimiş
+> bir harita yayımlarsınız.
+
+**2. Sistem grafiğini oluşturun** — haritaları birleştirin ve bağlantıları otomatik keşfedin:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. Kullanın:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (servisler en üst ağaç düzeyi olarak)
+graffiti system impact orders   # orders değişirse kim bozulur (doğrudan + geçişli)
+graffiti system audit           # boşta tüketiciler · yetim sağlayıcılar · belirsizler (sıfır olmayan çıkış → CI kapısı)
+graffiti system status          # son derlemeden bu yana hangi servisler kaydı
+graffiti system query "where is the order created"   # tüm sistem genelinde LLM kullanmayan erişim
+graffiti system list            # kayıtlı servisler
+```
+
+**Üst klasöre ne iner:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # servislerin kaydı (bunu commit'leyin)
+├── overlay.json                # keşfedilen bağlantılar (türetilmiş — .gitignore güvenli)
+├── system.html                 # görsel sistem haritası
+└── services/<name>/map.json    # her servisin yayımlanmış haritası
+```
+
+**Bağlantı doğruluğunu artırın.** Otomatik algılama şunları kapsar: Go (net/http,
+gin/chi/echo), Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor, frontend
+istemcileri (React/Vue/Angular/Svelte), gRPC ve Kafka/NATS. Bu yeterli olmadığında,
+şunlardan birini bir servis köküne bırakın (önce en yüksek güven):
+
+| Dosya | Sağladığı |
+|------|-------|
+| `graffiti.contract.json` | açık `provides` / `consumes` — herhangi bir yığın, en yüksek güven |
+| `openapi.json` / `swagger.json` | HTTP rotaları `provides` olarak |
+| `*.proto` | gRPC metotları `provides` olarak |
+
+Asgari `graffiti.contract.json`:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**CI'yı ölü uç noktalara karşı kapılayın** — bir tüketici hiçbir şeyin sağlamadığı
+bir uç noktaya işaret ettiğinde `audit` sıfır olmayan çıkış yapar:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## Nasıl çalışır
 

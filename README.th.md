@@ -69,6 +69,41 @@ GRAFFITI_VERSION=v0.1.0 INSTALL_DIR="$HOME/.local/bin" \
 ช่วยติดตั้ง graffiti ของ amazopic ให้ที โดยดาวน์โหลดไบนารี static ที่ถูกต้องสำหรับ OS/สถาปัตยกรรมของฉันจากรีลีสล่าสุดที่ github.com/amazopic/graffiti (หรือ build จากซอร์สด้วย `make build` ถ้ามี Go อยู่แล้ว), วางมันไว้บน PATH ของฉันในชื่อ `graffiti` แล้วตรวจสอบด้วย `graffiti version` จากนั้นรัน `graffiti .` ที่รากของ repo ฉันเพื่อสร้างแผนที่, รัน `graffiti init --hook` เพื่อตั้งค่า graffiti ให้เข้ากับ Claude Code และสุดท้ายเปิด `.graffiti/map.html` เพื่อให้ฉันเห็นกราฟ ถามฉันก่อนทุกขั้นตอนด้วย
 ```
 
+<!-- quickstart -->
+## เริ่มใช้งานเร็ว (60 วินาที)
+
+```bash
+# 1 — ติดตั้ง (หรือ build จากซอร์สด้วย `make build`)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — สร้างแผนที่ของ repo คุณ (เขียน .graffiti/map.json, MAP.md, map.html)
+cd your-repo
+graffiti .
+
+# 3 — ดูกราฟ
+open .graffiti/map.html        # macOS — ใช้ `xdg-open` บน Linux, `start` บน Windows
+
+# 4 — ถามคำถามกับมัน: ไม่ต้องใช้ LLM, ไม่ต้องใช้ API key
+graffiti query "where is the user authenticated"
+```
+
+จากนั้นเชื่อมมันเข้ากับผู้ช่วย AI ของคุณเพียงครั้งเดียว:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + grep→query nudge
+graffiti serve          # หรือเปิดเผยแผนที่ให้ MCP client ใดก็ได้ผ่าน stdio
+```
+
+**ตัวอย่างคำถามเพิ่มเติม** — `query` คืนซับกราฟที่จำกัดขอบเขตภายในงบประมาณแบบยืดหยุ่น
+ที่ประมาณ ~2,000 โทเค็น ดังนั้นบริบทจึงเล็กและประหยัด (ใส่เครื่องหมายคำพูดให้กับคำถาม):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # ระบุพาธอื่น
+```
+<!-- /quickstart -->
+
 ## Build
 
 ```bash
@@ -222,6 +257,91 @@ graffiti system query "where is the cart fetched and served"
 ที่ **กำกวม (ambiguous)** และ **ลอยค้าง (dangling — ปลายทางตาย)** จะถูกรายงานออกมา
 ไม่ถูกทิ้งไปอย่างเงียบ ๆ ที่เก็บของระบบเป็นเพียงไดเรกทอรีหรือ git repo เท่านั้น — ราคา
 $0, ออฟไลน์, คำนวณใหม่ได้
+
+<!-- system-walkthrough -->
+### โฟลเดอร์ของเซอร์วิสต่าง ๆ ทีละขั้นตอน
+
+สมมติว่าเซอร์วิสของคุณอยู่ในโฟลเดอร์แม่เดียวกัน แต่ละตัวอยู่ในไดเรกทอรีของตัวเอง:
+
+```text
+myproject/                ← โฟลเดอร์แม่ = "ที่เก็บของระบบ" ที่ใช้ร่วมกัน
+├── orders/               ← เซอร์วิสหนึ่งตัว (Go)
+├── web/                  ← เซอร์วิสหนึ่งตัว (React/TS)
+└── payments/             ← เซอร์วิสหนึ่งตัว (Python)
+```
+
+**1. Build และ publish แต่ละเซอร์วิส** ลงในที่เก็บที่โฟลเดอร์แม่ (`--to .`)
+`publish` จะนำแผนที่ที่มีอยู่มาใช้ซ้ำ ดังนั้นให้ build ก่อนเพื่อรับการเปลี่ยนแปลงของโค้ด:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+ชื่อเซอร์วิสจะตั้งค่าเริ่มต้นเป็นชื่อโฟลเดอร์ของมัน; ใช้ `--as <name>` เพื่อกำหนดเอง
+
+> ⚠️ **เมื่อ publish ซ้ำ:** `publish` **ไม่** build แผนที่ที่มีอยู่ใหม่ หลังจาก
+> เปลี่ยนโค้ด ให้รัน `graffiti build <service>` ก่อนเสมอ (ลูปด้านบนทำให้แล้ว)
+> แล้วจึง `publish` — มิฉะนั้นคุณจะ publish แผนที่ที่ล้าสมัย
+
+**2. Build กราฟของระบบ** — รวมแผนที่เข้าด้วยกันและค้นพบลิงก์โดยอัตโนมัติ:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. ใช้งานมัน:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html (services as the top tree level)
+graffiti system impact orders   # who breaks if orders changes (direct + transitive)
+graffiti system audit           # dangling consumers · orphan providers · ambiguous (non-zero exit → CI gate)
+graffiti system status          # which services drifted since the last build
+graffiti system query "where is the order created"   # LLM-free retrieval across the whole system
+graffiti system list            # registered services
+```
+
+**สิ่งที่ปรากฏในโฟลเดอร์แม่:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # the registry of services (commit this)
+├── overlay.json                # discovered links (derived — safe to .gitignore)
+├── system.html                 # the visual system map
+└── services/<name>/map.json    # each service's published map
+```
+
+**ปรับปรุงความแม่นยำของลิงก์** การตรวจจับอัตโนมัติครอบคลุม Go (net/http, gin/chi/echo),
+Flask, FastAPI, Django/DRF, Spring, NestJS, ASP.NET, Ktor, ไคลเอนต์ฝั่งหน้า
+(React/Vue/Angular/Svelte), gRPC และ Kafka/NATS เมื่อแค่นั้นยังไม่พอ ให้วาง
+ไฟล์อย่างใดอย่างหนึ่งต่อไปนี้ลงในรากของเซอร์วิส (เรียงตามความเชื่อมั่นสูงสุดก่อน):
+
+| File | ให้อะไร |
+|------|-------|
+| `graffiti.contract.json` | ระบุ `provides` / `consumes` อย่างชัดเจน — stack ใดก็ได้, ความเชื่อมั่นสูงสุด |
+| `openapi.json` / `swagger.json` | เส้นทาง HTTP เป็น `provides` |
+| `*.proto` | เมธอด gRPC เป็น `provides` |
+
+`graffiti.contract.json` ขั้นต่ำ:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**กั้น CI ไว้ที่ endpoint ที่ตายแล้ว** — `audit` จะออกด้วยค่าไม่เป็นศูนย์เมื่อผู้เรียกใช้
+ชี้ไปยัง endpoint ที่ไม่มีใครให้บริการ:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## มันทำงานอย่างไร
 

@@ -73,6 +73,41 @@ Claude Code のセッションに貼り付けて、各ステップで `y` と答
 amazopic の graffiti をインストールしてください。github.com/amazopic/graffiti の最新リリースから、私の OS/アーキテクチャに合った静的バイナリをダウンロードし(Go が使えるなら `make build` でソースからビルドしてもかまいません)、`graffiti` として私の PATH に置き、`graffiti version` で確認してください。次に、私のリポジトリのルートで `graffiti .` を実行して地図をビルドし、`graffiti init --hook` を実行して graffiti を Claude Code に組み込み、最後に `.graffiti/map.html` を開いてグラフを見せてください。各ステップの前に確認してください。
 ```
 
+<!-- quickstart -->
+## クイックスタート(60秒)
+
+```bash
+# 1 — インストール(または `make build` でソースからビルド)
+curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+
+# 2 — リポジトリを地図化(.graffiti/map.json、MAP.md、map.html を書き出す)
+cd your-repo
+graffiti .
+
+# 3 — グラフを眺める
+open .graffiti/map.html        # macOS — Linux では `xdg-open`、Windows では `start` を使う
+
+# 4 — 質問する: LLM不要、APIキー不要
+graffiti query "where is the user authenticated"
+```
+
+そして一度だけ、AIアシスタントに組み込みます:
+
+```bash
+graffiti init --hook    # Claude Code: skill + CLAUDE.md + grep→query nudge
+graffiti serve          # または、stdio 経由で任意の MCP クライアントに地図を公開する
+```
+
+**さらに質問の例** — `query` はソフトな約2,000トークンの予算内でスコープされたサブ
+グラフを返すので、コンテキストは小さく安価に保たれます(質問は引用符で囲む):
+
+```bash
+graffiti query "login handler"
+graffiti query "what does the checkout flow touch"
+graffiti query "where is the cart fetched" ../shop   # 別のパスを対象にする
+```
+<!-- /quickstart -->
+
 ## ビルド
 
 ```bash
@@ -238,6 +273,91 @@ graffiti system query "where is the cart fetched and served"
 シューマーや**ぶら下がった(dangling、デッドエンドポイント)** コンシューマーは報告
 され、決して黙って捨てられることはありません。システムストアは単なるディレクトリ
 または git リポジトリにすぎません — $0、オフライン、再計算可能です。
+
+<!-- system-walkthrough -->
+### サービスのフォルダを、ステップごとに
+
+サービスが1つの親フォルダの中に、それぞれ独自のディレクトリで置かれているとします:
+
+```text
+myproject/                ← 親フォルダ = 共有の「システムストア」
+├── orders/               ← サービス(Go)
+├── web/                  ← サービス(React/TS)
+└── payments/             ← サービス(Python)
+```
+
+**1. 各サービスをビルドして公開する** — 親フォルダのストア(`--to .`)へ。
+`publish` は既存の地図を再利用するので、コード変更を取り込むには先にビルドします:
+
+```bash
+cd myproject
+for d in */; do
+  d=${d%/}
+  graffiti build "$d" && graffiti publish "$d" --to .
+done
+```
+
+サービス名はデフォルトでそのフォルダ名になります。`--as <name>` で上書きできます。
+
+> ⚠️ **再公開時の注意:** `publish` は既存の地図を**再ビルドしません**。コードを変更
+> した後は、必ず先に `graffiti build <service>` を実行し(上記のループはそうしてい
+> ます)、それから `publish` してください — さもないと古い地図を公開してしまいます。
+
+**2. システムグラフをビルドする** — 地図をフェデレートし、リンクを自動発見します:
+
+```bash
+graffiti system build
+# ✓ System "myproject": 3 services → 7 cross-service links (0 ambiguous, 0 dangling, 2 orphan). 0 API calls, $0.
+```
+
+**3. 使う:**
+
+```bash
+graffiti system render          # → .graffiti-system/system.html(サービスをツリーの最上位として表示)
+graffiti system impact orders   # orders が変わると誰が壊れるか(直接 + 推移的)
+graffiti system audit           # ぶら下がったコンシューマー · 孤立したプロバイダー · 曖昧なもの(非ゼロ終了 → CI ゲート)
+graffiti system status          # 前回のビルド以降にドリフトしたサービス
+graffiti system query "where is the order created"   # システム全体にまたがる LLM 不要の検索
+graffiti system list            # 登録済みのサービス
+```
+
+**親フォルダに何が書き出されるか:**
+
+```text
+myproject/.graffiti-system/
+├── system.json                 # サービスのレジストリ(これをコミットする)
+├── overlay.json                # 発見されたリンク(派生物 — .gitignore して安全)
+├── system.html                 # ビジュアルなシステム地図
+└── services/<name>/map.json    # 各サービスの公開された地図
+```
+
+**リンクの精度を高める。** 自動検出は Go(net/http、gin/chi/echo)、Flask、FastAPI、
+Django/DRF、Spring、NestJS、ASP.NET、Ktor、フロントエンドクライアント
+(React/Vue/Angular/Svelte)、gRPC、Kafka/NATS をカバーします。それで足りない場合
+は、次のいずれかをサービスのルートに置いてください(確信度の高い順):
+
+| File | Gives |
+|------|-------|
+| `graffiti.contract.json` | 明示的な `provides` / `consumes` — 任意のスタック、最も高い確信度 |
+| `openapi.json` / `swagger.json` | HTTP ルートを `provides` として |
+| `*.proto` | gRPC メソッドを `provides` として |
+
+最小限の `graffiti.contract.json`:
+
+```json
+{
+  "provides": [{ "kind": "http", "name": "GET /orders/{id}" }],
+  "consumes": [{ "kind": "rpc",  "name": "Payments.Charge" }]
+}
+```
+
+**デッドエンドポイントで CI をゲートする** — `audit` は、何も提供していないエンドポ
+イントをコンシューマーが指しているとき、非ゼロで終了します:
+
+```bash
+graffiti system build && graffiti system audit
+```
+<!-- /system-walkthrough -->
 
 ## 仕組み
 

@@ -3,7 +3,7 @@
 // All other locales are lazy-loaded per-code chunks from ./locales/<code>.js
 // ─────────────────────────────────────────────────────────────────────
 
-export const ASSET_V = '7';
+export const ASSET_V = '8';
 
 export const supportedLocales = [
   { code: 'en',   label: 'English',     native: 'English'    },
@@ -217,6 +217,43 @@ const en = {
   "faq.a.rag": "Embedding-based RAG converts code into vectors and retrieves by approximate semantic similarity, usually against a cloud vector store; graffiti instead builds an exact directed graph of calls, definitions, and imports with tree-sitter static analysis and retrieves by following real code structure. Because graffiti uses no embedding model, no vector database, and no API calls, its retrieval is offline, $0, and byte-deterministic — the same repo yields a byte-identical <code>map.json</code> you can commit and diff.",
   "faq.q.cursor": "Does graffiti work with Cursor, Copilot, and ChatGPT, or only Claude Code?",
   "faq.a.cursor": "graffiti exposes its map over an MCP stdio server (JSON-RPC 2.0) via <code>graffiti serve</code>, so any MCP-capable client can traverse the graph, and <code>graffiti query</code> prints a scoped subgraph as plain text you can paste into any assistant, including ChatGPT. Only Claude Code has first-class automated wiring today: <code>graffiti init --hook</code> installs a skill, a <code>CLAUDE.md</code> block, and a grep→query nudge. For Cursor, Copilot, or other tools, you connect them as an MCP client or paste <code>query</code> output manually — the map itself is editor-agnostic.",
+
+  "cmp.meta.title": "graffiti vs embeddings/RAG vs Cursor — code context for AI",
+  "cmp.meta.description": "graffiti vs embeddings/RAG vs Cursor for AI code context: exact graph vs approximate vectors, offline & $0 vs cloud — and how to combine them.",
+  "cmp.eyebrow": "Comparison",
+  "cmp.h1": "graffiti vs RAG vs Cursor:<br/><em>which gives your AI the best code context?</em>",
+  "cmp.intro": "There are three common ways to give an AI coding assistant context about your code — embedding-based RAG, an AI editor like Cursor, and graffiti's static code graph. Here is how they actually differ, and where graffiti fits.",
+  "cmp.tldr.label": "In one sentence",
+  "cmp.tldr.body": "graffiti gives your assistant <strong>exact</strong> structural context — the real calls, definitions and imports — fully offline and at $0, where embeddings/RAG retrieve <strong>approximate</strong> matches and editors like Cursor manage context inside the IDE. It <strong>complements</strong> both: point them at graffiti's graph over MCP.",
+  "cmp.col.dim": "Dimension",
+  "cmp.col.graffiti": "graffiti",
+  "cmp.rag.title": "graffiti vs embeddings / RAG",
+  "cmp.rag.intro": "RAG embeds your code into vectors and retrieves chunks by semantic similarity. graffiti builds an exact graph of how the code actually connects.",
+  "cmp.rag.col": "Embeddings / RAG",
+  "cmp.rag.r1": "<td>Retrieval method</td><td class=\"mut\">approximate vector (semantic) similarity</td><td>exact directed graph of calls, definitions &amp; imports</td>",
+  "cmp.rag.r2": "<td>What it returns</td><td class=\"mut\">nearest-neighbor text chunks</td><td>the real callers, callees &amp; definitions — a scoped subgraph</td>",
+  "cmp.rag.r3": "<td>Determinism</td><td class=\"mut\">varies with model &amp; index version</td><td>byte-deterministic — same repo yields an identical <code>map.json</code></td>",
+  "cmp.rag.r4": "<td>Cost &amp; infrastructure</td><td class=\"mut\">embedding model + vector database, usually paid or cloud</td><td>one static binary — $0, no model, no database</td>",
+  "cmp.rag.r5": "<td>Privacy &amp; offline</td><td class=\"mut\">often sends code to an API to embed it</td><td>fully offline; nothing about your code leaves your machine</td>",
+  "cmp.rag.r6": "<td>Setup &amp; upkeep</td><td class=\"mut\">chunk, embed, store, and re-embed on every change</td><td>run <code>graffiti .</code>; a per-file cache re-parses only what changed</td>",
+  "cmp.rag.r7": "<td>Best at</td><td class=\"mut\">fuzzy natural-language recall (“find code about X”)</td><td>structural questions: who calls what, change impact, dependencies</td>",
+  "cmp.cursor.title": "graffiti vs Cursor",
+  "cmp.cursor.intro": "Cursor is an AI editor that indexes your codebase to feed its built-in assistant. graffiti is an editor-agnostic context layer you can use anywhere — including inside Cursor.",
+  "cmp.cursor.col": "Cursor",
+  "cmp.cursor.r1": "<td>What it is</td><td class=\"mut\">an AI code editor (a full IDE) with built-in codebase indexing</td><td>a CLI that builds a code-graph context layer — editor-agnostic</td>",
+  "cmp.cursor.r2": "<td>How it gives the AI context</td><td class=\"mut\">indexes your codebase with embeddings inside the editor</td><td>a directed graph of calls/defs/imports your assistant queries</td>",
+  "cmp.cursor.r3": "<td>Where it runs</td><td class=\"mut\">cloud-assisted indexing; a privacy mode is available</td><td>fully local &amp; offline — nothing leaves your machine</td>",
+  "cmp.cursor.r4": "<td>Cost</td><td class=\"mut\">paid subscription for full features</td><td>free to build &amp; run on your own repos (Source-Available)</td>",
+  "cmp.cursor.r5": "<td>Portability</td><td class=\"mut\">context lives inside the Cursor editor</td><td>one binary, usable from any tool via MCP or paste — Claude Code, ChatGPT, Cursor</td>",
+  "cmp.cursor.r6": "<td>Determinism</td><td class=\"mut\">a managed index — not a file you can open or diff</td><td>byte-deterministic <code>map.json</code> you can commit &amp; diff</td>",
+  "cmp.cursor.r7": "<td>Use them together</td><td class=\"mut\">—</td><td>add graffiti as an MCP server so Cursor's AI can read the graph</td>",
+  "cmp.when.title": "When to use which",
+  "cmp.when.body": "<strong>Reach for embeddings/RAG</strong> when you want fuzzy, natural-language recall across code and docs. <strong>Reach for an AI editor like Cursor</strong> for inline authoring as you type. <strong>Reach for graffiti</strong> when you need exact structure — who calls what, what breaks if you change an endpoint, cross-service dependencies — fully offline, $0, and reproducible. They stack: graffiti feeds precise structure into whichever assistant you already use.",
+  "cmp.faq.title": "Comparison questions",
+  "cmp.cta.title": "Give your assistant the map.",
+  "cmp.cta.body": "One command builds the graph — free, offline, deterministic. Then query it, or wire it into Claude Code, Cursor, or ChatGPT.",
+  "cmp.cta.home": "← Back to the overview",
+  "compare.full": "Full comparison: graffiti vs embeddings/RAG vs Cursor →",
 
   "colo.title": "Graffiti",
   "colo.h.author": "Author",

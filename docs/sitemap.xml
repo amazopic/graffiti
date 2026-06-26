@@ -32,6 +32,36 @@
     <xhtml:link rel="alternate" hreflang="ur" href="https://amazopic.github.io/graffiti/?lang=ur" />
   </url>
   <url>
+    <loc>https://amazopic.github.io/graffiti/compare.html</loc>
+    <lastmod>2026-06-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://amazopic.github.io/graffiti/compare.html" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://amazopic.github.io/graffiti/compare.html?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ru" href="https://amazopic.github.io/graffiti/compare.html?lang=ru" />
+    <xhtml:link rel="alternate" hreflang="fr" href="https://amazopic.github.io/graffiti/compare.html?lang=fr" />
+    <xhtml:link rel="alternate" hreflang="de" href="https://amazopic.github.io/graffiti/compare.html?lang=de" />
+    <xhtml:link rel="alternate" hreflang="uk" href="https://amazopic.github.io/graffiti/compare.html?lang=uk" />
+    <xhtml:link rel="alternate" hreflang="sl" href="https://amazopic.github.io/graffiti/compare.html?lang=sl" />
+    <xhtml:link rel="alternate" hreflang="it" href="https://amazopic.github.io/graffiti/compare.html?lang=it" />
+    <xhtml:link rel="alternate" hreflang="es" href="https://amazopic.github.io/graffiti/compare.html?lang=es" />
+    <xhtml:link rel="alternate" hreflang="zh" href="https://amazopic.github.io/graffiti/compare.html?lang=zh" />
+    <xhtml:link rel="alternate" hreflang="ja" href="https://amazopic.github.io/graffiti/compare.html?lang=ja" />
+    <xhtml:link rel="alternate" hreflang="ko" href="https://amazopic.github.io/graffiti/compare.html?lang=ko" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://amazopic.github.io/graffiti/compare.html?lang=ar" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://amazopic.github.io/graffiti/compare.html?lang=pt" />
+    <xhtml:link rel="alternate" hreflang="tr" href="https://amazopic.github.io/graffiti/compare.html?lang=tr" />
+    <xhtml:link rel="alternate" hreflang="id" href="https://amazopic.github.io/graffiti/compare.html?lang=id" />
+    <xhtml:link rel="alternate" hreflang="vi" href="https://amazopic.github.io/graffiti/compare.html?lang=vi" />
+    <xhtml:link rel="alternate" hreflang="hi" href="https://amazopic.github.io/graffiti/compare.html?lang=hi" />
+    <xhtml:link rel="alternate" hreflang="zh-TW" href="https://amazopic.github.io/graffiti/compare.html?lang=zh-tw" />
+    <xhtml:link rel="alternate" hreflang="pl" href="https://amazopic.github.io/graffiti/compare.html?lang=pl" />
+    <xhtml:link rel="alternate" hreflang="th" href="https://amazopic.github.io/graffiti/compare.html?lang=th" />
+    <xhtml:link rel="alternate" hreflang="he" href="https://amazopic.github.io/graffiti/compare.html?lang=he" />
+    <xhtml:link rel="alternate" hreflang="bn" href="https://amazopic.github.io/graffiti/compare.html?lang=bn" />
+    <xhtml:link rel="alternate" hreflang="ur" href="https://amazopic.github.io/graffiti/compare.html?lang=ur" />
+  </url>
+  <url>
     <loc>https://amazopic.github.io/graffiti/llms.txt</loc>
     <lastmod>2026-06-26</lastmod>
     <changefreq>weekly</changefreq>

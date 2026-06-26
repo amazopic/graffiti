@@ -245,6 +245,27 @@ ChatGPT. Only Claude Code has first-class automated wiring today: graffiti init
 Copilot, or other tools, you connect them as an MCP client or paste query output
 manually — the map itself is editor-agnostic.
 
+## graffiti vs embeddings/RAG vs Cursor
+
+graffiti, embedding-based RAG, and AI editors like Cursor are three ways to give
+an AI coding assistant context about code — they are complementary, not mutually
+exclusive.
+
+- vs embeddings/RAG: RAG embeds code into vectors and retrieves chunks by
+  approximate semantic similarity (often via a cloud API plus a vector database);
+  graffiti builds an exact directed graph of calls, definitions, and imports with
+  tree-sitter and retrieves by following real structure. graffiti is fully offline,
+  $0, uses no model or vector database, and is byte-deterministic. Use RAG for
+  fuzzy natural-language recall; use graffiti for structural questions (who calls
+  what, change impact, dependencies). They combine well.
+- vs Cursor: Cursor is an AI code editor that indexes your codebase (embeddings,
+  cloud-assisted; a privacy mode is available; paid for full features) to feed its
+  built-in assistant. graffiti is an editor-agnostic CLI that builds a local,
+  deterministic code-graph context layer usable from any tool. They combine: add
+  graffiti as an MCP server (graffiti serve) so Cursor's AI can read the graph.
+
+Full comparison: https://amazopic.github.io/graffiti/compare.html
+
 ## Guarantees
 
 - 0 API calls, $0, fully offline.

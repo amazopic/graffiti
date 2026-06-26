@@ -20,6 +20,7 @@ An AI coding assistant dropped into a large repo greps blind: it never sees the 
 - [LICENSE](https://github.com/amazopic/graffiti/blob/main/LICENSE): Source-Available License (reuse-by-permission).
 - Translated READMEs (22): README.ru.md, README.fr.md, README.de.md, README.uk.md, README.sl.md, README.it.md, README.es.md, README.zh.md, README.ja.md, README.ko.md, README.ar.md, README.pt.md, README.tr.md, README.id.md, README.vi.md, README.hi.md, README.zh-tw.md, README.pl.md, README.th.md, README.he.md, README.bn.md, README.ur.md.
 - [Common user questions](https://amazopic.github.io/graffiti/llms-full.txt): need-state Q&A — cutting AI token cost, giving an assistant whole-codebase context, replacing grep, microservice API-change impact analysis, the offline/RAG-free approach, and which assistants (Claude Code, Cursor, Copilot, ChatGPT) it works with.
+- [graffiti vs embeddings/RAG vs Cursor](https://amazopic.github.io/graffiti/compare.html): a fair comparison — exact code graph vs approximate vector retrieval, offline & $0 vs cloud indexing, editor-agnostic (works inside Cursor via MCP), and when to use each. graffiti complements RAG and Cursor rather than replacing them.
 
 ## Commands
 

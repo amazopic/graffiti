@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#010102" />
+    <meta name="color-scheme" content="dark" />
+
+    <!-- Primary SEO -->
+    <title>graffiti vs embeddings/RAG vs Cursor — code context for AI</title>
+    <meta name="description" content="graffiti vs embeddings/RAG vs Cursor for AI code context: exact graph vs approximate vectors, offline & $0 vs cloud — and how to combine them." />
+    <meta name="author" content="Yevgeniy Achin" />
+    <meta name="keywords" content="graffiti vs RAG, code graph vs embeddings, graffiti vs Cursor, Cursor alternative for code context, RAG for code, embeddings for code, AI code context, offline codebase index, MCP code context, deterministic code map" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <link rel="canonical" href="https://amazopic.github.io/graffiti/compare.html" />
+
+    <!-- hreflang alternates -->
+    <link rel="alternate" hreflang="x-default" href="https://amazopic.github.io/graffiti/compare.html" />
+    <link rel="alternate" hreflang="en" href="https://amazopic.github.io/graffiti/compare.html?lang=en" />
+    <link rel="alternate" hreflang="ru" href="https://amazopic.github.io/graffiti/compare.html?lang=ru" />
+    <link rel="alternate" hreflang="fr" href="https://amazopic.github.io/graffiti/compare.html?lang=fr" />
+    <link rel="alternate" hreflang="de" href="https://amazopic.github.io/graffiti/compare.html?lang=de" />
+    <link rel="alternate" hreflang="uk" href="https://amazopic.github.io/graffiti/compare.html?lang=uk" />
+    <link rel="alternate" hreflang="sl" href="https://amazopic.github.io/graffiti/compare.html?lang=sl" />
+    <link rel="alternate" hreflang="it" href="https://amazopic.github.io/graffiti/compare.html?lang=it" />
+    <link rel="alternate" hreflang="es" href="https://amazopic.github.io/graffiti/compare.html?lang=es" />
+    <link rel="alternate" hreflang="zh" href="https://amazopic.github.io/graffiti/compare.html?lang=zh" />
+    <link rel="alternate" hreflang="ja" href="https://amazopic.github.io/graffiti/compare.html?lang=ja" />
+    <link rel="alternate" hreflang="ko" href="https://amazopic.github.io/graffiti/compare.html?lang=ko" />
+    <link rel="alternate" hreflang="ar" href="https://amazopic.github.io/graffiti/compare.html?lang=ar" />
+    <link rel="alternate" hreflang="pt-BR" href="https://amazopic.github.io/graffiti/compare.html?lang=pt" />
+    <link rel="alternate" hreflang="tr" href="https://amazopic.github.io/graffiti/compare.html?lang=tr" />
+    <link rel="alternate" hreflang="id" href="https://amazopic.github.io/graffiti/compare.html?lang=id" />
+    <link rel="alternate" hreflang="vi" href="https://amazopic.github.io/graffiti/compare.html?lang=vi" />
+    <link rel="alternate" hreflang="hi" href="https://amazopic.github.io/graffiti/compare.html?lang=hi" />
+    <link rel="alternate" hreflang="zh-TW" href="https://amazopic.github.io/graffiti/compare.html?lang=zh-tw" />
+    <link rel="alternate" hreflang="pl" href="https://amazopic.github.io/graffiti/compare.html?lang=pl" />
+    <link rel="alternate" hreflang="th" href="https://amazopic.github.io/graffiti/compare.html?lang=th" />
+    <link rel="alternate" hreflang="he" href="https://amazopic.github.io/graffiti/compare.html?lang=he" />
+    <link rel="alternate" hreflang="bn" href="https://amazopic.github.io/graffiti/compare.html?lang=bn" />
+    <link rel="alternate" hreflang="ur" href="https://amazopic.github.io/graffiti/compare.html?lang=ur" />
+
+    <!-- OpenGraph -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="graffiti vs embeddings/RAG vs Cursor — code context for AI" />
+    <meta property="og:description" content="Exact code graph vs approximate vectors, offline & $0 vs cloud — and how graffiti complements RAG and Cursor." />
+    <meta property="og:url" content="https://amazopic.github.io/graffiti/compare.html" />
+    <meta property="og:site_name" content="graffiti" />
+    <meta property="og:image" content="https://amazopic.github.io/graffiti/og-image.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="graffiti — a repository rendered as a force-directed code graph" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="graffiti vs embeddings/RAG vs Cursor" />
+    <meta name="twitter:description" content="Exact code graph vs approximate vectors, offline & $0 vs cloud — and how they combine." />
+    <meta name="twitter:image" content="https://amazopic.github.io/graffiti/og-image.svg" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/tokens.css?v=8" />
+    <link rel="stylesheet" href="css/base.css?v=8" />
+    <link rel="stylesheet" href="css/sections.css?v=8" />
+
+    <!-- JSON-LD: BreadcrumbList -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "graffiti", "item": "https://amazopic.github.io/graffiti/" },
+        { "@type": "ListItem", "position": 2, "name": "graffiti vs embeddings/RAG vs Cursor", "item": "https://amazopic.github.io/graffiti/compare.html" }
+      ]
+    }
+    </script>
+
+    <!-- JSON-LD: WebPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": "graffiti vs embeddings/RAG vs Cursor",
+      "description": "A fair comparison of graffiti, embedding-based RAG, and Cursor for giving an AI coding assistant context about your code — and how they work together.",
+      "url": "https://amazopic.github.io/graffiti/compare.html",
+      "inLanguage": "en",
+      "isPartOf": { "@type": "WebSite", "name": "graffiti", "url": "https://amazopic.github.io/graffiti/" },
+      "about": { "@type": "SoftwareApplication", "name": "graffiti", "applicationCategory": "DeveloperApplication", "url": "https://amazopic.github.io/graffiti/" },
+      "author": { "@id": "https://github.com/amazopic#person" },
+      "mainEntityOfPage": "https://amazopic.github.io/graffiti/compare.html"
+    }
+    </script>
+
+    <!-- JSON-LD: FAQPage (comparison questions) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntityOfPage": "https://amazopic.github.io/graffiti/compare.html",
+      "mainEntity": [
+        { "@type": "Question", "name": "How is graffiti different from RAG or embeddings for code?", "acceptedAnswer": { "@type": "Answer", "text": "Embedding-based RAG converts code into vectors and retrieves by approximate semantic similarity, usually against a cloud vector store; graffiti instead builds an exact directed graph of calls, definitions, and imports with tree-sitter static analysis and retrieves by following real code structure. Because graffiti uses no embedding model, no vector database, and no API calls, its retrieval is offline, $0, and byte-deterministic — the same repo yields a byte-identical map.json you can commit and diff." }},
+        { "@type": "Question", "name": "Does graffiti work with Cursor, Copilot, and ChatGPT, or only Claude Code?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti exposes its map over an MCP stdio server (JSON-RPC 2.0) via graffiti serve, so any MCP-capable client can traverse the graph, and graffiti query prints a scoped subgraph as plain text you can paste into any assistant, including ChatGPT. Only Claude Code has first-class automated wiring today: graffiti init --hook installs a skill, a CLAUDE.md block, and a grep to query nudge. For Cursor, Copilot, or other tools, you connect them as an MCP client or paste query output manually — the map itself is editor-agnostic." }},
+        { "@type": "Question", "name": "Is there a free, offline alternative to cloud code indexing, embeddings, or RAG?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti is a single static Go binary that builds a code graph entirely on your machine with 0 API calls and $0 cost — no model, no embeddings, no vector database, and no network, so nothing about your code leaves your machine. That makes it a fully offline alternative to cloud code-search and indexing services that require an account and bill per token. Building and running graffiti on your own repositories is free under its Source-Available license." }}
+      ]
+    }
+    </script>
+  </head>
+  <body data-meta-title="cmp.meta.title" data-meta-desc="cmp.meta.description">
+    <main>
+
+      <!-- ═══════════════════ HEADER ═══════════════════ -->
+      <section class="s-compare" aria-labelledby="cmp-title" id="top">
+        <div class="wrap">
+          <header class="hero-meta">
+            <a class="hero-meta__brand" href="index.html" data-i18n="hero.brand">graffiti · code graph</a>
+            <div class="hero-meta__right">
+              <a class="hero-meta__github" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener" aria-label="View on GitHub">
+                <span aria-hidden="true">★</span> <span data-i18n="hero.meta.github">GitHub</span>
+              </a>
+              <div class="lang-switcher" data-lang-switcher>
+                <button class="lang-switcher__toggle" type="button" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="lang-switcher__label" data-i18n="lang.label">Language</span>
+                  <span class="lang-switcher__current" data-current-lang>EN</span>
+                  <span class="lang-switcher__chev" aria-hidden="true">▾</span>
+                </button>
+                <ul class="lang-switcher__menu" role="listbox" data-lang-menu hidden></ul>
+              </div>
+            </div>
+          </header>
+
+          <span class="compare-sub" data-i18n="cmp.eyebrow" style="display:block; margin-top:2rem;">Comparison</span>
+          <h1 id="cmp-title" class="compare-title" data-i18n-html="cmp.h1">graffiti vs RAG vs Cursor:<br/><em>which gives your AI the best code context?</em></h1>
+          <p class="install__intro" data-i18n="cmp.intro">There are three common ways to give an AI coding assistant context about your code — embedding-based RAG, an AI editor like Cursor, and graffiti's static code graph. Here is how they actually differ, and where graffiti fits.</p>
+
+          <div class="install__code-wrap" style="margin-top:2rem;">
+            <span class="smcp" style="color:var(--primary-hover); display:block; margin-bottom:0.5rem; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.08em; font-size:var(--fs-xs);" data-i18n="cmp.tldr.label">In one sentence</span>
+            <p data-i18n-html="cmp.tldr.body" style="color:var(--ink); font-size:var(--fs-lg); line-height:1.6;">graffiti gives your assistant <strong>exact</strong> structural context — the real calls, definitions and imports — fully offline and at $0, where embeddings/RAG retrieve <strong>approximate</strong> matches and editors like Cursor manage context inside the IDE. It <strong>complements</strong> both: point them at graffiti's graph over MCP.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">⬡</span>
+        <a class="section-divider__link" href="index.html#install"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.install">Install in 30s</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">⬡</span>
+      </div>
+
+      <!-- ═══════════════════ vs RAG ═══════════════════ -->
+      <section class="s-compare" aria-labelledby="cmp-rag-title" id="rag">
+        <div class="wrap">
+          <h2 id="cmp-rag-title" class="compare-title" data-i18n="cmp.rag.title">graffiti vs embeddings / RAG</h2>
+          <p class="install__intro" data-i18n="cmp.rag.intro">RAG embeds your code into vectors and retrieves chunks by semantic similarity. graffiti builds an exact graph of how the code actually connects.</p>
+          <div style="overflow-x:auto;">
+            <table class="compare-table">
+              <thead>
+                <tr>
+                  <th data-i18n="cmp.col.dim">Dimension</th>
+                  <th data-i18n="cmp.rag.col">Embeddings / RAG</th>
+                  <th data-i18n="cmp.col.graffiti">graffiti</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-i18n-html="cmp.rag.r1"><td>Retrieval method</td><td class="mut">approximate vector (semantic) similarity</td><td>exact directed graph of calls, definitions &amp; imports</td></tr>
+                <tr data-i18n-html="cmp.rag.r2"><td>What it returns</td><td class="mut">nearest-neighbor text chunks</td><td>the real callers, callees &amp; definitions — a scoped subgraph</td></tr>
+                <tr data-i18n-html="cmp.rag.r3"><td>Determinism</td><td class="mut">varies with model &amp; index version</td><td>byte-deterministic — same repo yields an identical <code>map.json</code></td></tr>
+                <tr data-i18n-html="cmp.rag.r4"><td>Cost &amp; infrastructure</td><td class="mut">embedding model + vector database, usually paid or cloud</td><td>one static binary — $0, no model, no database</td></tr>
+                <tr data-i18n-html="cmp.rag.r5"><td>Privacy &amp; offline</td><td class="mut">often sends code to an API to embed it</td><td>fully offline; nothing about your code leaves your machine</td></tr>
+                <tr data-i18n-html="cmp.rag.r6"><td>Setup &amp; upkeep</td><td class="mut">chunk, embed, store, and re-embed on every change</td><td>run <code>graffiti .</code>; a per-file cache re-parses only what changed</td></tr>
+                <tr data-i18n-html="cmp.rag.r7"><td>Best at</td><td class="mut">fuzzy natural-language recall (“find code about X”)</td><td>structural questions: who calls what, change impact, dependencies</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">✶</span>
+        <a class="section-divider__link" href="https://github.com/amazopic/graffiti" target="_blank" rel="noopener"><span aria-hidden="true">★</span> <span data-i18n="hero.cta.github">View on GitHub</span> <span class="ext" aria-hidden="true">↗</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">✶</span>
+      </div>
+
+      <!-- ═══════════════════ vs Cursor ═══════════════════ -->
+      <section class="s-compare" aria-labelledby="cmp-cursor-title" id="cursor">
+        <div class="wrap">
+          <h2 id="cmp-cursor-title" class="compare-title" data-i18n="cmp.cursor.title">graffiti vs Cursor</h2>
+          <p class="install__intro" data-i18n="cmp.cursor.intro">Cursor is an AI editor that indexes your codebase to feed its built-in assistant. graffiti is an editor-agnostic context layer you can use anywhere — including inside Cursor.</p>
+          <div style="overflow-x:auto;">
+            <table class="compare-table">
+              <thead>
+                <tr>
+                  <th data-i18n="cmp.col.dim">Dimension</th>
+                  <th data-i18n="cmp.cursor.col">Cursor</th>
+                  <th data-i18n="cmp.col.graffiti">graffiti</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr data-i18n-html="cmp.cursor.r1"><td>What it is</td><td class="mut">an AI code editor (a full IDE) with built-in codebase indexing</td><td>a CLI that builds a code-graph context layer — editor-agnostic</td></tr>
+                <tr data-i18n-html="cmp.cursor.r2"><td>How it gives the AI context</td><td class="mut">indexes your codebase with embeddings inside the editor</td><td>a directed graph of calls/defs/imports your assistant queries</td></tr>
+                <tr data-i18n-html="cmp.cursor.r3"><td>Where it runs</td><td class="mut">cloud-assisted indexing; a privacy mode is available</td><td>fully local &amp; offline — nothing leaves your machine</td></tr>
+                <tr data-i18n-html="cmp.cursor.r4"><td>Cost</td><td class="mut">paid subscription for full features</td><td>free to build &amp; run on your own repos (Source-Available)</td></tr>
+                <tr data-i18n-html="cmp.cursor.r5"><td>Portability</td><td class="mut">context lives inside the Cursor editor</td><td>one binary, usable from any tool via MCP or paste — Claude Code, ChatGPT, Cursor</td></tr>
+                <tr data-i18n-html="cmp.cursor.r6"><td>Determinism</td><td class="mut">a managed index — not a file you can open or diff</td><td>byte-deterministic <code>map.json</code> you can commit &amp; diff</td></tr>
+                <tr data-i18n-html="cmp.cursor.r7"><td>Use them together</td><td class="mut">—</td><td>add graffiti as an MCP server so Cursor's AI can read the graph</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider">
+        <span class="section-divider__ornament" aria-hidden="true">☞</span>
+        <a class="section-divider__link" href="index.html#system"><span aria-hidden="true">★</span> <span data-i18n="sys.eyebrow">★ Service architecture · the killer feature</span></a>
+        <span class="section-divider__ornament" aria-hidden="true">☞</span>
+      </div>
+
+      <!-- ═══════════════════ WHEN TO USE ═══════════════════ -->
+      <section class="s-compare" aria-labelledby="cmp-when-title" id="when">
+        <div class="wrap">
+          <h2 id="cmp-when-title" class="compare-title" data-i18n="cmp.when.title">When to use which</h2>
+          <p data-i18n-html="cmp.when.body" style="color:var(--ink-muted); font-size:var(--fs-lg); line-height:1.7; max-width:60ch;"><strong>Reach for embeddings/RAG</strong> when you want fuzzy, natural-language recall across code and docs. <strong>Reach for an AI editor like Cursor</strong> for inline authoring as you type. <strong>Reach for graffiti</strong> when you need exact structure — who calls what, what breaks if you change an endpoint, cross-service dependencies — fully offline, $0, and reproducible. They stack: graffiti feeds precise structure into whichever assistant you already use.</p>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ FAQ ═══════════════════ -->
+      <section class="s-faq" aria-labelledby="cmp-faq-title" id="faq">
+        <div class="wrap">
+          <h2 id="cmp-faq-title" class="faq-title" data-i18n="cmp.faq.title">Comparison questions</h2>
+          <div class="faq-list">
+            <details class="faq-item" open><summary data-i18n="faq.q.rag">How is graffiti different from RAG or embeddings for code?</summary><div class="faq-item__a" data-i18n-html="faq.a.rag"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.cursor">Does graffiti work with Cursor, Copilot, and ChatGPT, or only Claude Code?</summary><div class="faq-item__a" data-i18n-html="faq.a.cursor"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.altindex">Is there a free, offline alternative to cloud code indexing, embeddings, or RAG?</summary><div class="faq-item__a" data-i18n-html="faq.a.altindex"></div></details>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ CTA ═══════════════════ -->
+      <section class="s-install" aria-labelledby="cmp-cta-title" id="cta">
+        <div class="wrap">
+          <h2 id="cmp-cta-title" class="install-title" data-i18n="cmp.cta.title">Give your assistant the map.</h2>
+          <p class="install__intro" data-i18n="cmp.cta.body">One command builds the graph — free, offline, deterministic. Then query it, or wire it into Claude Code, Cursor, or ChatGPT.</p>
+          <div class="install__code-wrap" style="margin-top:1.5rem;">
+            <button class="copy-btn" data-copy="#cmp-cmd" data-i18n="ui.copy">Copy</button>
+<pre class="code mono" id="cmp-cmd">curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh
+graffiti .                 <span class="cmt"># build the code graph</span>
+graffiti serve             <span class="cmt"># expose it over MCP (Cursor, Claude Code, …)</span></pre>
+          </div>
+          <p style="margin-top:1.5rem;"><a class="section-divider__link" href="index.html" data-i18n="cmp.cta.home">← Back to the overview</a></p>
+        </div>
+      </section>
+
+      <!-- ═══════════════════ COLOPHON ═══════════════════ -->
+      <footer class="s-colophon colophon" aria-labelledby="cmp-colophon-title">
+        <div class="wrap">
+          <h2 id="cmp-colophon-title" class="display" style="font-size:clamp(2.5rem,6vw,4.5rem); margin-bottom:2.5rem; color:var(--paper);" data-i18n="colo.title">Graffiti</h2>
+          <div class="colophon-grid">
+            <div>
+              <h3 data-i18n="colo.h.author">Author</h3>
+              <p>Yevgeniy Achin</p>
+              <p style="margin-top:0.5rem;"><a href="mailto:amazopic@gmail.com">amazopic@gmail.com</a></p>
+            </div>
+            <div>
+              <h3 data-i18n="colo.h.license">License</h3>
+              <p data-i18n="colo.license.body">Source-Available — reuse only with prior written permission.</p>
+            </div>
+            <div>
+              <h3 data-i18n="colo.h.links">Links</h3>
+              <ul>
+                <li><a href="index.html" data-i18n="cmp.cta.home">← Back to the overview</a></li>
+                <li><a href="https://github.com/amazopic/graffiti" data-i18n="colo.links.repo">GitHub repo ↗</a></li>
+                <li><a href="https://github.com/amazopic/graffiti/blob/main/README.md" data-i18n="colo.links.readme">Read README ↗</a></li>
+                <li><a href="llms.txt">/llms.txt</a> · <a href="llms-full.txt">/llms-full.txt</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="colophon-meta">
+            <span data-i18n="colo.meta.copyright">© 2026 Yevgeniy Achin · Source-Available</span>
+            <span data-i18n="colo.meta.made">Made for AI coding assistants</span>
+            <span data-i18n="colo.meta.issue">Issue 01 · v0.1.0</span>
+          </div>
+        </div>
+      </footer>
+
+    </main>
+
+    <div class="toast" role="status" aria-live="polite"></div>
+
+    <noscript>
+      <p style="text-align:center; padding:1rem; color:#888;">This comparison reads best with JavaScript enabled, but all content is present for crawlers. See the <a href="https://github.com/amazopic/graffiti/blob/main/README.md">README</a>.</p>
+    </noscript>
+
+    <script type="module" src="js/main.js?v=8"></script>
+  </body>
+</html>

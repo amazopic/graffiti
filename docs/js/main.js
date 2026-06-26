@@ -9,7 +9,7 @@
 
 import {
   supportedLocales, ensureLocale, t, detectLocale, persistLocale, defaultLocale,
-} from './i18n.js?v=7';
+} from './i18n.js?v=8';
 
 // ─── i18n application ────────────────────────────────────────────────
 let current = defaultLocale;
@@ -24,9 +24,11 @@ function applyI18n(locale) {
   document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
     el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label'), locale));
   });
-  document.title = t('meta.title', locale);
+  // Per-page meta keys: a page may override via <body data-meta-title="…" data-meta-desc="…">.
+  const ds = (document.body && document.body.dataset) || {};
+  document.title = t(ds.metaTitle || 'meta.title', locale);
   const desc = document.querySelector('meta[name="description"]');
-  if (desc) desc.setAttribute('content', t('meta.description', locale));
+  if (desc) desc.setAttribute('content', t(ds.metaDesc || 'meta.description', locale));
 }
 
 async function setLocale(code) {

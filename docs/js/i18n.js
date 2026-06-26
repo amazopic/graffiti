@@ -3,7 +3,7 @@
 // All other locales are lazy-loaded per-code chunks from ./locales/<code>.js
 // ─────────────────────────────────────────────────────────────────────
 
-export const ASSET_V = '8';
+export const ASSET_V = '9';
 
 export const supportedLocales = [
   { code: 'en',   label: 'English',     native: 'English'    },
@@ -298,15 +298,13 @@ export function t(key, locale = defaultLocale) {
 }
 
 export function detectLocale() {
-  // English is the default. The user explicitly opts into another language
-  // via the switcher or via ?lang=xx — we do NOT auto-detect from the browser.
+  // English is the default on every load. A language is selected only via an
+  // explicit ?lang=xx in the URL (the switcher also writes it there). We do NOT
+  // auto-detect from the browser and do NOT restore a previously-saved choice —
+  // a fresh visit, with no ?lang, always renders in English.
   const params = new URLSearchParams(location.search);
   const q = params.get('lang');
   if (q && supportedLocales.some(l => l.code === q)) return q;
-  try {
-    const saved = localStorage.getItem('lang');
-    if (saved && supportedLocales.some(l => l.code === saved)) return saved;
-  } catch (_) { /* private mode etc. */ }
   return defaultLocale;
 }
 

@@ -8,8 +8,8 @@
 // ─────────────────────────────────────────────────────────────────────
 
 import {
-  supportedLocales, ensureLocale, t, detectLocale, persistLocale, defaultLocale,
-} from './i18n.js?v=8';
+  supportedLocales, ensureLocale, t, detectLocale, defaultLocale,
+} from './i18n.js?v=9';
 
 // ─── i18n application ────────────────────────────────────────────────
 let current = defaultLocale;
@@ -40,7 +40,19 @@ async function setLocale(code) {
   applyI18n(code);
   const cur = document.querySelector('[data-current-lang]');
   if (cur) cur.textContent = (meta.code || 'en').toUpperCase();
-  persistLocale(code);
+}
+
+// A user-initiated switch: apply the language and reflect it in the URL (?lang=)
+// so the localized view is shareable and survives reload — WITHOUT persisting a
+// non-English default for future fresh visits (English stays the default).
+function selectLocale(code) {
+  setLocale(code);
+  try {
+    const u = new URL(location.href);
+    if (code === defaultLocale) u.searchParams.delete('lang');
+    else u.searchParams.set('lang', code);
+    history.replaceState(null, '', u);
+  } catch (_) { /* noop */ }
 }
 
 // ─── Language switcher ───────────────────────────────────────────────
@@ -66,11 +78,11 @@ function initLangSwitcher() {
   menu.addEventListener('click', e => {
     const li = e.target.closest('li[data-code]');
     if (!li) return;
-    setLocale(li.dataset.code);
+    selectLocale(li.dataset.code);
     close();
   });
   menu.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target.dataset.code) { setLocale(e.target.dataset.code); close(); toggle.focus(); }
+    if (e.key === 'Enter' && e.target.dataset.code) { selectLocale(e.target.dataset.code); close(); toggle.focus(); }
   });
   document.addEventListener('click', () => { if (!menu.hidden) close(); });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
@@ -344,6 +356,9 @@ function initGraph() {
 
 // ─── Boot ────────────────────────────────────────────────────────────
 function boot() {
+  // Clear any language choice persisted by older builds so every fresh load
+  // defaults to English (the current language comes only from ?lang= now).
+  try { localStorage.removeItem('lang'); } catch (_) { /* noop */ }
   initLangSwitcher();
   initCopy();
   initReveal();

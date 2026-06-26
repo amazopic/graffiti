@@ -7,10 +7,11 @@
     <meta name="color-scheme" content="dark" />
 
     <!-- Primary SEO -->
-    <title>graffiti — turn any repo into a queryable code graph for AI</title>
-    <meta name="description" content="graffiti turns each repo into a directed code graph your AI assistant reads instead of grepping — and federates many microservices into one system graph with automatic cross-service links (HTTP, gRPC, queues). One static Go binary: zero API keys, $0, fully offline, deterministic." />
+    <title>graffiti — code graph for AI: stop grep, cut tokens</title>
+    <meta name="description" content="Cut the tokens your AI assistant burns grepping a big repo: graffiti turns it into a code graph your assistant queries instead. Free, offline, one binary." />
     <meta name="author" content="Yevgeniy Achin" />
-    <meta name="keywords" content="code graph, knowledge graph, ai coding assistant, claude code, mcp, tree-sitter, static analysis, code map, repo graph, golang, developer tools, offline, deterministic, code intelligence" />
+    <meta name="keywords" content="reduce AI token cost, give AI context on a large codebase, code graph for AI coding assistant, stop grepping codebase, microservice dependencies, API change impact analysis, offline code intelligence no API key, RAG embeddings alternative, MCP server codebase context, claude code, cursor, copilot, multi-repo code graph, call graph, tree-sitter static analysis, deterministic code map, golang" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <link rel="canonical" href="https://amazopic.github.io/graffiti/" />
 
     <!-- hreflang alternates -->
@@ -76,9 +77,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" />
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/tokens.css?v=6" />
-    <link rel="stylesheet" href="css/base.css?v=6" />
-    <link rel="stylesheet" href="css/sections.css?v=6" />
+    <link rel="stylesheet" href="css/tokens.css?v=7" />
+    <link rel="stylesheet" href="css/base.css?v=7" />
+    <link rel="stylesheet" href="css/sections.css?v=7" />
 
     <!-- JSON-LD: SoftwareApplication -->
     <script type="application/ld+json">
@@ -91,8 +92,10 @@
       "description": "graffiti turns a code repository into a directed knowledge graph an AI coding assistant can query instead of grepping. A single static Go binary with zero API keys, $0 cost, fully offline and byte-deterministic. Builds map.json, MAP.md and an interactive offline map.html; ships an LLM-free query, an MCP server, Claude Code integration and multi-repo federation.",
       "softwareVersion": "0.1.0",
       "datePublished": "2026-06-17",
-      "author": { "@type": "Person", "name": "Yevgeniy Achin", "email": "amazopic@gmail.com", "url": "https://github.com/amazopic" },
-      "publisher": { "@type": "Person", "name": "Yevgeniy Achin" },
+      "author": { "@type": "Person", "@id": "https://github.com/amazopic#person", "name": "Yevgeniy Achin", "email": "amazopic@gmail.com", "url": "https://github.com/amazopic", "sameAs": ["https://github.com/amazopic"] },
+      "publisher": { "@id": "https://github.com/amazopic#person" },
+      "sameAs": ["https://github.com/amazopic/graffiti"],
+      "mainEntityOfPage": "https://amazopic.github.io/graffiti/",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "license": "Source-Available (Reuse-by-Permission)",
       "url": "https://amazopic.github.io/graffiti/",
@@ -122,6 +125,7 @@
     {
       "@context": "https://schema.org",
       "@type": "FAQPage",
+      "mainEntityOfPage": "https://amazopic.github.io/graffiti/",
       "mainEntity": [
         { "@type": "Question", "name": "What is graffiti?", "acceptedAnswer": { "@type": "Answer", "text": "A single static command-line binary that turns a code repository into a directed knowledge graph — nodes for files, functions, types and modules; edges for calls, definitions and imports. It writes the graph as map.json, a human digest MAP.md, and an interactive offline map.html, so an AI coding assistant can read structure instead of grepping blind." }},
         { "@type": "Question", "name": "How does it build the graph without an LLM?", "acceptedAnswer": { "@type": "Answer", "text": "It parses each file with tree-sitter grammars (pure-Go, no CGO), extracts definitions and references, resolves the edges, clusters the result into modules, and serializes it. No model, no embeddings, no network — just static analysis. That's why it's free and deterministic." }},
@@ -130,7 +134,14 @@
         { "@type": "Question", "name": "What does byte-deterministic mean here?", "acceptedAnswer": { "@type": "Answer", "text": "The same repository always produces a byte-identical map.json — modulo a single generated_at timestamp and the root folder name. Everything is sorted. You can commit the map and review changes to it in a diff like any other file." }},
         { "@type": "Question", "name": "How does the Claude Code integration work?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti init installs a skill plus a CLAUDE.md block telling the assistant to prefer graffiti query over grep when a map exists. With --hook it also adds a PreToolUse nudge before Grep/Glob. It is idempotent and never blocks a tool." }},
         { "@type": "Question", "name": "Can my assistant query it over MCP?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. graffiti serve exposes the map over an MCP stdio server (JSON-RPC 2.0), so any MCP-capable client can traverse the graph through tools. There is also an LLM-free graffiti query that returns a scoped subgraph within a soft token budget." }},
-        { "@type": "Question", "name": "Is it free? Can I use it commercially?", "acceptedAnswer": { "@type": "Answer", "text": "Building and running graffiti on your own repositories is free under the Source-Available License. Any reuse, redistribution, fork, or inclusion in another project requires prior written permission from the author. Reasonable requests for personal, educational, and non-commercial use are typically granted." }}
+        { "@type": "Question", "name": "Is it free? Can I use it commercially?", "acceptedAnswer": { "@type": "Answer", "text": "Building and running graffiti on your own repositories is free under the Source-Available License. Any reuse, redistribution, fork, or inclusion in another project requires prior written permission from the author. Reasonable requests for personal, educational, and non-commercial use are typically granted." }},
+        { "@type": "Question", "@id": "https://amazopic.github.io/graffiti/#faq-tokens", "name": "How do I reduce the tokens my AI assistant burns reading a large codebase?", "acceptedAnswer": { "@type": "Answer", "text": "Instead of having your assistant grep and read whole files, graffiti turns the repo into a directed code graph and its LLM-free graffiti query returns only a scoped subgraph of the relevant callers, callees, and definitions within a soft ~2,000-token budget. That keeps each answer's context small and cheap — illustratively up to ~50% fewer tokens, though actual savings vary by repo and task. There is no model and no embeddings in the loop, so the retrieval itself costs $0." }},
+        { "@type": "Question", "@id": "https://amazopic.github.io/graffiti/#faq-context", "name": "How can I give my AI assistant context about a whole large codebase?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti builds a directed knowledge graph of the entire repository — nodes for files, functions, methods, types, and modules, and edges for calls, definitions, and imports — and writes it as map.json plus a human MAP.md and an offline map.html. Your assistant reads that map (via graffiti query or the MCP server) so it sees the shape of the code, including which module is the load-bearing wall, instead of guessing from a few opened files. One graffiti . produces the map for any repo it supports." }},
+        { "@type": "Question", "@id": "https://amazopic.github.io/graffiti/#faq-grep", "name": "How do I stop my AI coding assistant from grepping and reading whole files?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti precomputes a directed graph of calls, definitions, and imports that the assistant traverses instead of grepping line by line. graffiti init --hook wires Claude Code with a skill, a CLAUDE.md instruction to prefer graffiti query over grep when a map exists, and a PreToolUse nudge before Grep/Glob (the hook never blocks a tool). The result is a scoped subgraph of the actual callers and callees rather than full-file reads." }},
+        { "@type": "Question", "@id": "https://amazopic.github.io/graffiti/#faq-microservices", "name": "How do I find out which microservices break if I change an API endpoint?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti's system orchestration maps each service repo and auto-discovers the cross-service links between them — HTTP, gRPC, and queues — from each service's contract surface (openapi.json, .proto, framework routes, or an explicit graffiti.contract.json). After graffiti system build, run graffiti system impact <service[::endpoint]> to list who breaks, direct and transitive, and graffiti system audit to report dangling consumers, orphan providers, and ambiguous links — and to fail CI (non-zero exit) when a consumer points at an endpoint nothing provides. It runs fully offline at $0." }},
+        { "@type": "Question", "@id": "https://amazopic.github.io/graffiti/#faq-offline", "name": "Is there a free, offline alternative to cloud code indexing, embeddings, or RAG?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti is a single static Go binary that builds a code graph entirely on your machine with 0 API calls and $0 cost — no model, no embeddings, no vector database, and no network, so nothing about your code leaves your machine. That makes it a fully offline alternative to cloud code-search and indexing services that require an account and bill per token. Building and running graffiti on your own repositories is free under its Source-Available license." }},
+        { "@type": "Question", "@id": "https://amazopic.github.io/graffiti/#faq-rag", "name": "How is graffiti different from RAG or embeddings for code?", "acceptedAnswer": { "@type": "Answer", "text": "Embedding-based RAG converts code into vectors and retrieves by approximate semantic similarity, usually against a cloud vector store; graffiti instead builds an exact directed graph of calls, definitions, and imports with tree-sitter static analysis and retrieves by following real code structure. Because graffiti uses no embedding model, no vector database, and no API calls, its retrieval is offline, $0, and byte-deterministic — the same repo yields a byte-identical map.json you can commit and diff." }},
+        { "@type": "Question", "@id": "https://amazopic.github.io/graffiti/#faq-cursor", "name": "Does graffiti work with Cursor, Copilot, and ChatGPT, or only Claude Code?", "acceptedAnswer": { "@type": "Answer", "text": "graffiti exposes its map over an MCP stdio server (JSON-RPC 2.0) via graffiti serve, so any MCP-capable client can traverse the graph, and graffiti query prints a scoped subgraph as plain text you can paste into any assistant, including ChatGPT. Only Claude Code has first-class automated wiring today: graffiti init --hook installs a skill, a CLAUDE.md block, and a grep→query nudge. For Cursor, Copilot, or other tools, you connect them as an MCP client or paste query output manually — the map itself is editor-agnostic." }}
       ]
     }
     </script>
@@ -143,8 +154,11 @@
       "name": "graffiti",
       "alternateName": ["graffiti code graph", "graffiti for Claude Code"],
       "url": "https://amazopic.github.io/graffiti/",
+      "mainEntityOfPage": "https://amazopic.github.io/graffiti/",
+      "sameAs": ["https://github.com/amazopic/graffiti"],
       "inLanguage": ["en", "ru", "fr", "de", "uk", "sl", "it", "es", "zh", "ja", "ko", "ar", "pt", "tr", "id", "vi", "hi", "zh-TW", "pl", "th", "he", "bn", "ur"],
-      "publisher": { "@type": "Person", "name": "Yevgeniy Achin" }
+      "author": { "@id": "https://github.com/amazopic#person" },
+      "publisher": { "@id": "https://github.com/amazopic#person" }
     }
     </script>
 
@@ -156,6 +170,7 @@
       "name": "Install graffiti and map your repository",
       "description": "Install the graffiti binary, build the map for a repository, and wire it into Claude Code.",
       "totalTime": "PT1M",
+      "author": { "@id": "https://github.com/amazopic#person" },
       "tool": [{ "@type": "HowToTool", "name": "curl or Go toolchain" }],
       "step": [
         { "@type": "HowToStep", "name": "Get the binary", "text": "curl -fsSL https://raw.githubusercontent.com/amazopic/graffiti/main/scripts/install.sh | sh" },
@@ -570,6 +585,13 @@ graffiti query "auth flow"   <span class="cmt"># LLM-free scoped subgraph</span>
           <h2 id="faq-title" class="faq-title" data-i18n-html="faq.title">Frequently<br/>Asked</h2>
           <div class="faq-list">
             <details class="faq-item"><summary data-i18n="faq.q.what">What is graffiti?</summary><div class="faq-item__a" data-i18n-html="faq.a.what"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.tokens">How do I reduce the tokens my AI assistant burns reading a large codebase?</summary><div class="faq-item__a" data-i18n-html="faq.a.tokens"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.context">How can I give my AI assistant context about a whole large codebase?</summary><div class="faq-item__a" data-i18n-html="faq.a.context"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.grep">How do I stop my AI coding assistant from grepping and reading whole files?</summary><div class="faq-item__a" data-i18n-html="faq.a.grep"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.microservices">How do I find out which microservices break if I change an API endpoint?</summary><div class="faq-item__a" data-i18n-html="faq.a.microservices"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.altindex">Is there a free, offline alternative to cloud code indexing, embeddings, or RAG?</summary><div class="faq-item__a" data-i18n-html="faq.a.altindex"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.rag">How is graffiti different from RAG or embeddings for code?</summary><div class="faq-item__a" data-i18n-html="faq.a.rag"></div></details>
+            <details class="faq-item"><summary data-i18n="faq.q.cursor">Does graffiti work with Cursor, Copilot, and ChatGPT, or only Claude Code?</summary><div class="faq-item__a" data-i18n-html="faq.a.cursor"></div></details>
             <details class="faq-item"><summary data-i18n="faq.q.how">How does it build the graph without an LLM?</summary><div class="faq-item__a" data-i18n-html="faq.a.how"></div></details>
             <details class="faq-item"><summary data-i18n="faq.q.langs">Which languages does it support?</summary><div class="faq-item__a" data-i18n-html="faq.a.langs"></div></details>
             <details class="faq-item"><summary data-i18n="faq.q.offline">Does it really need no API key or network?</summary><div class="faq-item__a" data-i18n-html="faq.a.offline"></div></details>
@@ -633,6 +655,6 @@ graffiti query "auth flow"   <span class="cmt"># LLM-free scoped subgraph</span>
       <p style="padding:2rem;text-align:center;">This page is enhanced with JavaScript. graffiti is fully documented in the <a href="https://github.com/amazopic/graffiti">GitHub repository</a>.</p>
     </noscript>
 
-    <script type="module" src="js/main.js?v=6"></script>
+    <script type="module" src="js/main.js?v=7"></script>
   </body>
 </html>

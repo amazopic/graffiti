@@ -3,7 +3,7 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://amazopic.github.io/graffiti/</loc>
-    <lastmod>2026-06-17</lastmod>
+    <lastmod>2026-06-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://amazopic.github.io/graffiti/" />
@@ -33,13 +33,13 @@
   </url>
   <url>
     <loc>https://amazopic.github.io/graffiti/llms.txt</loc>
-    <lastmod>2026-06-17</lastmod>
+    <lastmod>2026-06-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://amazopic.github.io/graffiti/llms-full.txt</loc>
-    <lastmod>2026-06-17</lastmod>
+    <lastmod>2026-06-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.5</priority>
   </url>
